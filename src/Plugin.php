@@ -27,6 +27,7 @@ final class Plugin {
 		Modules\PluginHealth::class,
 		Modules\Tweaks::class,
 		Modules\Duplicate::class,
+		Modules\Smtp::class,
 	];
 
 	private static ?Plugin $instance = null;
