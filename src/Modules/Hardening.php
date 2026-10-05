@@ -94,7 +94,7 @@ final class Hardening extends AbstractModule {
 			'xmlrpc'           => [
 				'type'  => 'toggle',
 				'label' => __( 'Disable XML-RPC', 'wphouse' ),
-				'help'  => __( 'xmlrpc.php answers 403. Skipped automatically when Jetpack or WooPayments is active.', 'wphouse' ),
+				'help'  => __( 'xmlrpc.php answers 403. The WordPress mobile app and old desktop editors stop working with this site. Skipped automatically when Jetpack or WooPayments is active.', 'wphouse' ),
 			],
 			'headers'          => [
 				'type'  => 'toggle',

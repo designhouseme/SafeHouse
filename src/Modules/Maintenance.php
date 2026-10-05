@@ -91,6 +91,9 @@ final class Maintenance extends AbstractModule {
 		}
 
 		$minutes = (int) $this->opt( 'retry_after' );
+		if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+			define( 'DONOTCACHEPAGE', true ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- shared page-cache convention (LiteSpeed, WP Rocket, W3TC, WP Super Cache).
+		}
 		nocache_headers();
 		status_header( 503 );
 		header( 'Retry-After: ' . max( 300, $minutes * MINUTE_IN_SECONDS ) );

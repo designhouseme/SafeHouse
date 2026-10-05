@@ -110,7 +110,10 @@ final class Plugin {
 		}
 	}
 
-	public static function activate(): void {
+	public static function activate( bool $network_wide = false ): void {
+		if ( is_multisite() && $network_wide ) {
+			wp_die( esc_html__( 'WPHouse 0.x supports single sites only. Activate it per site instead of network-wide.', 'wphouse' ), '', [ 'back_link' => true ] );
+		}
 		Log::install();
 		self::schedule_events();
 	}
