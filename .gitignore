@@ -6,4 +6,3 @@
 .phpunit.result.cache
 .DS_Store
 /.playwright-mcp/
-/composer.lock

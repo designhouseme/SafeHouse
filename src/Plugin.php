@@ -18,8 +18,10 @@ defined( 'ABSPATH' ) || exit;
 
 final class Plugin {
 
-	/** @var array<string, class-string<AbstractModule>> */
-	private const MODULES = [];
+	/** @var array<int, class-string<AbstractModule>> */
+	private const MODULES = [
+		Modules\Hardening::class,
+	];
 
 	private static ?Plugin $instance = null;
 
