@@ -28,6 +28,7 @@ final class Plugin {
 		Modules\Tweaks::class,
 		Modules\Duplicate::class,
 		Modules\Smtp::class,
+		Modules\Scripts::class,
 	];
 
 	private static ?Plugin $instance = null;
