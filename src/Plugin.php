@@ -26,6 +26,7 @@ final class Plugin {
 		Modules\Watch::class,
 		Modules\PluginHealth::class,
 		Modules\Tweaks::class,
+		Modules\Duplicate::class,
 	];
 
 	private static ?Plugin $instance = null;
