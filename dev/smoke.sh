@@ -12,18 +12,21 @@ check() { # <name> <expected> <actual>
 	if [ "$2" = "$3" ]; then echo "ok    $1"; else echo "FAIL  $1 (expected '$2', got '$3')"; fails=$((fails + 1)); fi
 }
 
-backup=$(wp option get wphouse_settings --format=json)
-wf=$(wp eval 'echo (int) wfConfig::get("loginSec_disableAuthorScan"), (int) wfConfig::get("loginSec_maskLoginErrors");')
+has_wf=$(wp eval 'echo class_exists("wfConfig") ? 1 : 0;')
+has_woo=$(wp eval 'echo class_exists("WooCommerce") ? 1 : 0;')
+backup=$(wp option get wphouse_settings --format=json || echo '{}')
+[ "$has_wf" = 1 ] && wf=$(wp eval 'echo (int) wfConfig::get("loginSec_disableAuthorScan"), (int) wfConfig::get("loginSec_maskLoginErrors");')
 restore() {
 	wp option update wphouse_settings "$backup" --format=json >/dev/null
-	wp eval "wfConfig::set('loginSec_disableAuthorScan', ${wf:0:1}); wfConfig::set('loginSec_maskLoginErrors', ${wf:1:1});" >/dev/null
+	[ "$has_wf" = 1 ] && wp eval "wfConfig::set('loginSec_disableAuthorScan', ${wf:0:1}); wfConfig::set('loginSec_maskLoginErrors', ${wf:1:1});" >/dev/null
 	wp wphouse lock >/dev/null
 }
 trap restore EXIT
+echo "WordPress $(wp core version), PHP $(wp eval 'echo PHP_VERSION;'), WooCommerce: $has_woo, Wordfence: $has_wf"
 
 # Our own code paths, not Wordfence's: switch its overlapping options off for the run.
 wp eval '
-wfConfig::set("loginSec_disableAuthorScan", 0); wfConfig::set("loginSec_maskLoginErrors", 0);
+if ( class_exists( "wfConfig" ) ) { wfConfig::set("loginSec_disableAuthorScan", 0); wfConfig::set("loginSec_maskLoginErrors", 0); }
 $o = get_option("wphouse_settings", []);
 foreach (["hardening","lockdown","watch","plugin_health","tweaks","duplicate","smtp","scripts"] as $m) { $o["modules"][$m] = true; }
 $o["modules"]["maintenance"] = false;
@@ -38,17 +41,40 @@ check "?author=1 redirects home"          301 "$(code "$U/?author=1")"
 check "REST users hidden from visitors"   401 "$(code "$U/wp-json/wp/v2/users")"
 check "REST users, uppercase route"       401 "$(code "$U/?rest_route=/wp/v2/USERS")"
 check "REST posts?author=1 still public"  200 "$(code "$U/wp-json/wp/v2/posts?author=1")"
-check "users sitemap gone"                404 "$(code "$U/wp-sitemap-users-1.xml")"
+# WordPress < 7 renders a normal page instead of a 404 for a removed sitemap provider; what matters is no user list.
+check "users sitemap not in index"        0   "$(curl -s "$U/wp-sitemap.xml" | grep -c 'wp-sitemap-users')"
+check "users sitemap lists no authors"    0   "$(curl -s "$U/wp-sitemap-users-1.xml" | grep -c '/author/')"
 check "nosniff header"                    1   "$(curl -sI "$U/" | grep -ci '^x-content-type-options: nosniff')"
 check "no generator tag"                  0   "$(curl -s "$U/" | grep -ci 'name="generator" content="WordPress')"
-login_msg() { curl -s -b "wordpress_test_cookie=WP%20Cookie%20check" --data-urlencode "log=$1" -d "pwd=wrong&testcookie=1" "$U/wp-login.php" | grep -c 'username, email address or password is incorrect'; }
-check "login error: unknown user"         1   "$(login_msg nosuchuser)"
-check "login error: known user"           1   "$(login_msg admin)"
+# Language-independent: the error for an unknown user must equal the error for a wrong password.
+login_msg() { curl -s -b "wordpress_test_cookie=WP%20Cookie%20check" --data-urlencode "log=$1" -d "pwd=wrong&testcookie=1" "$U/wp-login.php" | tr '\n' ' ' | grep -o 'id="login_error".\{0,300\}' | sed 's/<[^>]*>//g' | cut -c1-200; }
+unknown=$(login_msg nosuchuser); known=$(login_msg admin)
+check "login error shown"                 1   "$([ -n "$unknown" ] && echo 1 || echo 0)"
+check "same error, unknown vs known user" same "$([ "$unknown" = "$known" ] && echo same || echo "differs: $unknown | $known")"
+if [ "$has_woo" = 1 ]; then
+	# Real-world setup: Wordfence masking on. It does not cover the WooCommerce form, WPHouse must.
+	[ "$has_wf" = 1 ] && wp eval 'wfConfig::set("loginSec_maskLoginErrors", 1);' >/dev/null
+	MA=$(wp eval 'echo wc_get_page_permalink("myaccount");')
+	woo_login() {
+		local jar page nonce
+		jar=$(mktemp); page=$(curl -s -c "$jar" -b "$jar" "$MA")
+		nonce=$(echo "$page" | grep -o 'name="woocommerce-login-nonce" value="[^"]*"' | sed 's/.*value="//;s/"//')
+		curl -s -c "$jar" -b "$jar" --data-urlencode "username=$1" -d "password=wrong&woocommerce-login-nonce=$nonce&_wp_http_referer=%2F&login=1" "$MA" \
+			| tr '\n' ' ' | grep -o 'notice-banner__content">.\{0,300\}\|woocommerce-error.\{0,300\}' | sed 's/<[^>]*>//g' | cut -c1-160
+		rm -f "$jar"
+	}
+	wunknown=$(woo_login nosuchuser); wknown=$(woo_login admin)
+	check "Woo login error shown"            1   "$([ -n "$wunknown" ] && echo 1 || echo 0)"
+	check "Woo login: same error for both"   same "$([ "$wunknown" = "$wknown" ] && echo same || echo "differs: $wunknown | $wknown")"
+	[ "$has_wf" = 1 ] && wp eval 'wfConfig::set("loginSec_maskLoginErrors", 0);' >/dev/null
+fi
 check "file editor cap removed"           false "$(wp eval 'var_export(user_can(1, "edit_plugins"));')"
 check "X-Forwarded-For is not trusted"    203.0.113.5 "$(wp eval '$_SERVER["REMOTE_ADDR"]="203.0.113.5"; $_SERVER["HTTP_X_FORWARDED_FOR"]="1.2.3.4"; echo WPHouse\Core\Net::client_ip();')"
 
 echo "== lockdown"
-check "install blocked while locked"      1   "$(./wp.sh plugin install hello-dolly 2>&1 | grep -c 'locked by WPHouse')"
+./wp.sh plugin install hello-dolly >/dev/null 2>&1
+check "install blocked while locked"      blocked "$(wp plugin is-installed hello-dolly && echo installed || echo blocked)"
+check "blocked install logged"            install_blocked "$(wp wphouse log --limit=1 --format=csv | tail -1 | cut -d, -f2)"
 check "install cap removed"               false "$(wp eval 'var_export(user_can(1, "install_plugins"));')"
 check "update cap kept"                   true  "$(wp eval 'var_export(user_can(1, "update_plugins"));')"
 
@@ -61,7 +87,7 @@ check "footer snippet printed"            1   "$(curl -s "$U/" | grep -c 'smoke-
 echo "== maintenance"
 wp eval '$o = get_option("wphouse_settings"); $o["modules"]["maintenance"] = true; update_option("wphouse_settings", $o);' >/dev/null
 check "visitors get 503"                  503 "$(code "$U/")"
-check "Store API still answers"           200 "$(code "$U/wp-json/wc/store/v1/cart")"
+[ "$has_woo" = 1 ] && check "Store API still answers" 200 "$(code "$U/wp-json/wc/store/v1/cart")"
 check "wp-login still answers"            200 "$(code "$U/wp-login.php")"
 check "wp-cron still answers"             200 "$(code "$U/wp-cron.php")"
 

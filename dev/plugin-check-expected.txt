@@ -1,0 +1,4 @@
+,plugin_updater_detected,
+,update_modification_detected,
+,trademarked_term,
+,PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound,

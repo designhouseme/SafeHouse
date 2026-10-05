@@ -38,7 +38,7 @@ services:
       retries: 30
 
   wordpress:
-    image: wordpress:php8.3-apache
+    image: ${WP_IMAGE:-wordpress:php8.3-apache}
     depends_on:
       db:
         condition: service_healthy
@@ -50,7 +50,7 @@ services:
       - ..:/var/www/html/wp-content/plugins/wphouse
 
   wpcli:
-    image: wordpress:cli-php8.3
+    image: ${CLI_IMAGE:-wordpress:cli-php8.3}
     profiles: ["cli"]
     user: "33:33"
     depends_on:
