@@ -51,7 +51,10 @@ final class Hardening extends AbstractModule {
 		if ( Compat::wordfence_on( 'loginSec_disableAuthorScan' ) ) {
 			$covered['user_enumeration'] = 'Wordfence';
 		}
-		if ( Compat::wordfence_on( 'loginSec_maskLoginErrors' ) ) {
+		// Wordfence masks wp-login.php only; the WooCommerce My Account form still tells unknown
+		// users from wrong passwords (checked with Wordfence 9.0.2 + WooCommerce 11.1.2), so we keep
+		// ours on whenever WooCommerce is active.
+		if ( Compat::wordfence_on( 'loginSec_maskLoginErrors' ) && ! Compat::woocommerce_active() ) {
 			$covered['login_errors'] = 'Wordfence';
 		}
 		if ( Compat::wordfence_on( 'other_hideWPVersion' ) ) {
