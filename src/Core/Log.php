@@ -83,18 +83,15 @@ final class Log {
 	 */
 	public static function recent( int $limit = 50 ): array {
 		global $wpdb;
-		$table = self::table();
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- own table, read live.
-		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} ORDER BY id DESC LIMIT %d", max( 1, min( 500, $limit ) ) ) ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is not user input.
+		// Own table, always read live.
+		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i ORDER BY id DESC LIMIT %d', self::table(), max( 1, min( 500, $limit ) ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		return is_array( $rows ) ? $rows : [];
 	}
 
 	public static function purge(): void {
 		global $wpdb;
-		$table  = self::table();
 		$cutoff = gmdate( 'Y-m-d H:i:s', time() - self::RETENTION_DAYS * DAY_IN_SECONDS );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- own table.
-		$wpdb->query( $wpdb->prepare( "DELETE FROM {$table} WHERE created_at < %s", $cutoff ) );
+		$wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE created_at < %s', self::table(), $cutoff ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 	}
 
 	/**

@@ -26,9 +26,10 @@ tool() {
 	docker run --rm -u "$(id -u):$(id -g)" "${mounts[@]}" -w "$ROOT" composer:2 php "$ROOT/dev/release-tool.php" "$@"
 }
 
-set_version() { # <file> <version>
-	sed -i -E "s/^( \* Version:[[:space:]]+).*/\1$2/; s/^const WPHOUSE_VERSION = '[^']*';/const WPHOUSE_VERSION = '$2';/" "$1"
-	grep -q "const WPHOUSE_VERSION = '$2';" "$1" || die "could not set version in $1"
+set_version() { # <plugin dir> <version>
+	sed -i -E "s/^( \* Version:[[:space:]]+).*/\1$2/; s/^const WPHOUSE_VERSION = '[^']*';/const WPHOUSE_VERSION = '$2';/" "$1/wphouse.php"
+	sed -i -E "s/^Stable tag: .*/Stable tag: $2/" "$1/readme.txt"
+	grep -q "const WPHOUSE_VERSION = '$2';" "$1/wphouse.php" || die "could not set version in $1"
 }
 
 build() { # <git-ref> <version> <outdir>
@@ -39,7 +40,7 @@ build() { # <git-ref> <version> <outdir>
 	work=$(mktemp -d)
 	mkdir "$work/src"
 	git archive --format=tar "$ref" | tar -x -C "$work/src"   # honours export-ignore in .gitattributes
-	set_version "$work/src/wphouse.php" "$version"
+	set_version "$work/src" "$version"
 	grep -q "__WPHOUSE_PUBLIC_KEY__" "$work/src/src/Core/Updater.php" && die "Updater.php still has the placeholder public key"
 
 	local zip="$out/wphouse-$version.zip" keydir
@@ -79,7 +80,7 @@ case "${1:-}" in
 		[ "$(git branch --show-current)" = main ] || die "release from main"
 		git rev-parse -q --verify "refs/tags/v$version" >/dev/null && die "tag v$version exists"
 		grep -q "^## $version\b" CHANGELOG.md || die "CHANGELOG.md has no '## $version' section"
-		set_version wphouse.php "$version"
+		set_version . "$version"
 		./dev/lint.sh
 		git commit -q -am "Release $version"
 		git tag -a "v$version" -m "WPHouse $version"

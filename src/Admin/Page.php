@@ -72,8 +72,8 @@ final class Page {
 		}
 		check_admin_referer( 'wphouse_task' );
 
-		$raw           = isset( $_POST['task'] ) ? sanitize_key( str_replace( ':', '__', wp_unslash( (string) $_POST['task'] ) ) ) : '';
-		[ $id, $task ] = array_pad( explode( '__', $raw, 2 ), 2, '' );
+		$raw           = isset( $_POST['task'] ) ? sanitize_text_field( wp_unslash( $_POST['task'] ) ) : '';
+		[ $id, $task ] = array_map( 'sanitize_key', array_pad( explode( ':', $raw, 2 ), 2, '' ) );
 		$module        = $this->plugin->module( $id );
 		if ( null === $module || ! $this->plugin->is_running( $id ) || ! array_key_exists( $task, $module->tasks() ) ) {
 			wp_die( esc_html__( 'Unknown task.', 'wphouse' ), 400 );
