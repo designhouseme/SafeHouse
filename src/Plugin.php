@@ -22,6 +22,8 @@ final class Plugin {
 	/** @var array<int, class-string<AbstractModule>> */
 	private const MODULES = [
 		Modules\Hardening::class,
+		Modules\Lockdown::class,
+		Modules\Watch::class,
 	];
 
 	private static ?Plugin $instance = null;
