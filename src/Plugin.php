@@ -25,6 +25,7 @@ final class Plugin {
 		Modules\Lockdown::class,
 		Modules\Watch::class,
 		Modules\PluginHealth::class,
+		Modules\Tweaks::class,
 	];
 
 	private static ?Plugin $instance = null;
