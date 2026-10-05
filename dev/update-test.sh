@@ -27,7 +27,9 @@ wp plugin install /pkgs/base/wphouse-0.1.0.zip --activate --force >/dev/null
 [ "$(wp plugin get wphouse --field=version)" = "0.1.0" ] || fail "0.1.0 not installed"
 pass "0.1.0 installed from zip"
 
+CL=$(mktemp); cp CHANGELOG.md "$CL"; printf '\n## 0.1.1\n\n- Test changelog entry.\n' >> CHANGELOG.md
 ./dev/release.sh snapshot 0.1.1 "$T/www/wphouse" >/dev/null
+cp "$CL" CHANGELOG.md; rm -f "$CL"
 M=$T/www/wphouse/manifest.json
 
 # 1. Tampered manifest: one byte changed, signature must fail.
@@ -46,9 +48,16 @@ echo "$out" | grep -q "does not match the signed checksum" && pass "swapped zip 
 [ "$(wp plugin get wphouse --field=version)" = "0.1.0" ] || fail "version changed after rejected update"
 mv "$Z.orig" "$Z"
 
-# 3. Genuine update.
+# 3. "View details" modal and forced background updates.
+details=$(wp eval 'require_once ABSPATH . "wp-admin/includes/plugin-install.php"; $i = plugins_api("plugin_information", ["slug" => "wphouse"]); echo is_wp_error($i) ? "error" : $i->version . "|" . (str_contains($i->sections["changelog"], "Test changelog") ? "changelog" : "no-changelog");')
+[ "$details" = "0.1.1|changelog" ] && pass "details modal shows 0.1.1 and its changelog" || fail "details modal: $details"
+auto=$(wp eval 'var_export(apply_filters("auto_update_plugin", false, (object) ["plugin" => "wphouse/wphouse.php"]));')
+[ "$auto" = "true" ] && pass "auto-update forced on for WPHouse" || fail "auto-update: $auto"
+
+# 4. Genuine update, with install lockdown on: updates must still pass.
+wp wphouse module enable lockdown >/dev/null
 wp wphouse update-check | grep -q "Update available: 0.1.1" || fail "update not offered"
 wp plugin update wphouse >/dev/null
-[ "$(wp plugin get wphouse --field=version)" = "0.1.1" ] && pass "signed 0.1.1 installed" || fail "update did not install"
+[ "$(wp plugin get wphouse --field=version)" = "0.1.1" ] && pass "signed 0.1.1 installed with lockdown on" || fail "update did not install"
 wp wphouse log --limit=5
 echo "All update tests passed. Stop with: docker compose -f dev/updtest/docker-compose.yml down -v"

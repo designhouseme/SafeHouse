@@ -43,7 +43,7 @@ check "REST users, uppercase route"       401 "$(code "$U/?rest_route=/wp/v2/USE
 check "REST posts?author=1 still public"  200 "$(code "$U/wp-json/wp/v2/posts?author=1")"
 # WordPress < 7 renders a normal page instead of a 404 for a removed sitemap provider; what matters is no user list.
 check "users sitemap not in index"        0   "$(curl -s "$U/wp-sitemap.xml" | grep -c 'wp-sitemap-users')"
-check "users sitemap lists no authors"    0   "$(curl -s "$U/wp-sitemap-users-1.xml" | grep -c '/author/')"
+check "users sitemap not served"          0   "$(curl -s "$U/wp-sitemap-users-1.xml" | grep -c '<urlset')"
 check "nosniff header"                    1   "$(curl -sI "$U/" | grep -ci '^x-content-type-options: nosniff')"
 check "no generator tag"                  0   "$(curl -s "$U/" | grep -ci 'name="generator" content="WordPress')"
 # Language-independent: the error for an unknown user must equal the error for a wrong password.
