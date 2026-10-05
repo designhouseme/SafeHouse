@@ -1,0 +1,660 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: WPHouse 0.1.0\n"
+"Report-Msgid-Bugs-To: https://designhouse.me/\n"
+"Last-Translator: Design House\n"
+"Language-Team: Design House\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-10-05T21:01:25+00:00\n"
+"PO-Revision-Date: 2026-10-05 22:00+0200\n"
+"Language: pl_PL\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: wphouse\n"
+
+#. Plugin Name of the plugin
+#: wphouse.php
+msgid "WPHouse"
+msgstr "WPHouse"
+
+#. Plugin URI of the plugin
+#. Author URI of the plugin
+#: wphouse.php
+msgid "https://designhouse.me/"
+msgstr "https://designhouse.me/"
+
+#. Description of the plugin
+#: wphouse.php
+msgid "Lean, audited replacements for small utility plugins: hardening, install lockdown, change alerts, plugin health and everyday tweaks. Runs alongside Wordfence and WooCommerce."
+msgstr "Lekkie, sprawdzone zamienniki małych wtyczek narzędziowych: podstawowe zabezpieczenia, blokada instalacji, alerty o zmianach, kondycja wtyczek i codzienne usprawnienia. Działa obok Wordfence i WooCommerce."
+
+#. Author of the plugin
+#: wphouse.php
+msgid "Design House"
+msgstr "Design House"
+
+#: src/Admin/Page.php:47
+msgid "Settings"
+msgstr "Ustawienia"
+
+#: src/Admin/Page.php:58
+msgid "WPHouse safe mode is on: every module is stopped. Remove wp-content/wphouse-safe-mode or the WPHOUSE_SAFE_MODE constant to resume."
+msgstr "Tryb awaryjny WPHouse jest włączony: wszystkie moduły są zatrzymane. Usuń plik wp-content/wphouse-safe-mode lub stałą WPHOUSE_SAFE_MODE, aby je wznowić."
+
+#: src/Admin/Page.php:71
+msgid "You are not allowed to do this."
+msgstr "Nie masz uprawnień do tej operacji."
+
+#: src/Admin/Page.php:79
+msgid "Unknown task."
+msgstr "Nieznane zadanie."
+
+#: src/Admin/Page.php:95
+msgid "Small, audited replacements for single-purpose plugins. Every module is a switch. Features that Wordfence or wp-config already handle are skipped automatically."
+msgstr "Małe, sprawdzone zamienniki jednozadaniowych wtyczek. Każdy moduł włączasz osobno. Funkcje, które obsługuje już Wordfence lub wp-config.php, są automatycznie pomijane."
+
+#: src/Admin/Page.php:98
+msgid "Settings are locked by WPHOUSE_LOCK_SETTINGS in wp-config.php. Change them in code."
+msgstr "Ustawienia są zablokowane stałą WPHOUSE_LOCK_SETTINGS w wp-config.php. Zmieniaj je w kodzie."
+
+#: src/Admin/Page.php:101
+msgid "WPHOUSE_IGNORE_OVERLAPS is on: features run even where another plugin already provides them."
+msgstr "Stała WPHOUSE_IGNORE_OVERLAPS jest włączona: funkcje działają nawet tam, gdzie zapewnia je już inna wtyczka."
+
+#: src/Admin/Page.php:108
+msgid "General"
+msgstr "Ogólne"
+
+#: src/Admin/Page.php:111
+msgid "Alert recipients"
+msgstr "Odbiorcy alertów"
+
+#: src/Admin/Page.php:114
+msgid "Comma-separated. Empty means the site admin address."
+msgstr "Adresy oddzielone przecinkami. Puste pole oznacza adres administratora witryny."
+
+#: src/Admin/Page.php:148
+msgid "Unavailable"
+msgstr "Niedostępny"
+
+#: src/Admin/Page.php:150
+msgid "Running"
+msgstr "Działa"
+
+#: src/Admin/Page.php:152
+msgid "Enabled, not running"
+msgstr "Włączony, nie działa"
+
+#: src/Admin/Page.php:154
+msgid "Off"
+msgstr "Wyłączony"
+
+#: src/Admin/Page.php:168
+msgid "Pinned by WPHOUSE_MODULES in wp-config.php."
+msgstr "Ustawione na stałe przez WPHOUSE_MODULES w wp-config.php."
+
+#. translators: %s: plugin or setting name, e.g. Wordfence.
+#: src/Admin/Page.php:262
+#, php-format
+msgid "Handled by %s, skipped here."
+msgstr "Obsługuje to %s, więc tutaj pominięte."
+
+#: src/Admin/Page.php:277
+msgid "Activity log"
+msgstr "Dziennik zdarzeń"
+
+#: src/Admin/Page.php:279
+msgid "No events yet."
+msgstr "Brak zdarzeń."
+
+#: src/Admin/Page.php:283
+msgid "Time (UTC)"
+msgstr "Czas (UTC)"
+
+#: src/Admin/Page.php:284
+msgid "Event"
+msgstr "Zdarzenie"
+
+#: src/Admin/Page.php:285
+msgid "User"
+msgstr "Użytkownik"
+
+#: src/Admin/Page.php:286
+msgid "IP"
+msgstr "IP"
+
+#: src/Admin/Page.php:287
+msgid "Details"
+msgstr "Szczegóły"
+
+#: src/Core/Updater.php:155
+msgid "This WPHouse package is not listed in the signed release manifest. Update cancelled."
+msgstr "Tej paczki WPHouse nie ma w podpisanym manifeście wydania. Aktualizacja anulowana."
+
+#: src/Core/Updater.php:168
+msgid "The downloaded WPHouse package does not match the signed checksum. Update cancelled."
+msgstr "Pobrana paczka WPHouse nie zgadza się z podpisaną sumą kontrolną. Aktualizacja anulowana."
+
+#: src/Modules/Duplicate.php:34
+msgid "Duplicate posts and pages"
+msgstr "Duplikowanie wpisów i stron"
+
+#: src/Modules/Duplicate.php:38
+msgid "Adds a \"Duplicate\" link to posts, pages and custom post types. The copy is a draft with the same content, taxonomies and custom fields. WooCommerce products use WooCommerce's own duplicate action."
+msgstr "Dodaje link „Duplikuj” do wpisów, stron i własnych typów treści. Kopia to szkic z tą samą treścią, taksonomiami i polami własnymi. Produkty WooCommerce korzystają z własnej akcji duplikowania WooCommerce."
+
+#: src/Modules/Duplicate.php:61
+msgid "Duplicate"
+msgstr "Duplikuj"
+
+#: src/Modules/Duplicate.php:70
+msgid "You are not allowed to duplicate this item."
+msgstr "Nie masz uprawnień do zduplikowania tego elementu."
+
+#. translators: %s: original title.
+#: src/Modules/Duplicate.php:80
+#, php-format
+msgid "%s (copy)"
+msgstr "%s (kopia)"
+
+#: src/Modules/Hardening.php:67
+msgid "Hardening"
+msgstr "Podstawowe zabezpieczenia"
+
+#: src/Modules/Hardening.php:71
+msgid "Safe defaults: no code editor in wp-admin, no username discovery, generic login errors, no version disclosure, XML-RPC off and basic security headers."
+msgstr "Bezpieczne ustawienia domyślne: brak edytora kodu w kokpicie, brak wykrywania nazw użytkowników, ogólne komunikaty błędów logowania, ukryta wersja WordPressa, wyłączone XML-RPC i podstawowe nagłówki bezpieczeństwa."
+
+#: src/Modules/Hardening.php:78
+msgid "Disable the theme/plugin file editor"
+msgstr "Wyłącz edytor plików motywów i wtyczek"
+
+#: src/Modules/Hardening.php:82
+msgid "Block username discovery"
+msgstr "Blokuj wykrywanie nazw użytkowników"
+
+#: src/Modules/Hardening.php:83
+msgid "For visitors who are not logged in: ?author=N scans, the REST users endpoint, the users sitemap and author data in oEmbed."
+msgstr "Dla niezalogowanych odwiedzających: skanowanie ?author=N, endpoint użytkowników w REST API, mapa witryny użytkowników i dane autora w oEmbed."
+
+#: src/Modules/Hardening.php:87
+msgid "Generic login errors"
+msgstr "Ogólne komunikaty błędów logowania"
+
+#: src/Modules/Hardening.php:88
+msgid "One message for a wrong username or a wrong password, on wp-login.php and the WooCommerce login form."
+msgstr "Jeden komunikat przy błędnej nazwie użytkownika i przy błędnym haśle, na wp-login.php i w formularzu logowania WooCommerce."
+
+#: src/Modules/Hardening.php:92
+msgid "Hide the WordPress version"
+msgstr "Ukryj wersję WordPressa"
+
+#: src/Modules/Hardening.php:96
+msgid "Disable XML-RPC"
+msgstr "Wyłącz XML-RPC"
+
+#: src/Modules/Hardening.php:97
+msgid "xmlrpc.php answers 403. The WordPress mobile app and old desktop editors stop working with this site. Skipped automatically when Jetpack or WooPayments is active."
+msgstr "xmlrpc.php odpowiada kodem 403. Aplikacja mobilna WordPress i starsze edytory desktopowe przestaną działać z tą witryną. Pomijane automatycznie, gdy aktywny jest Jetpack lub WooPayments."
+
+#: src/Modules/Hardening.php:101
+msgid "Basic security headers"
+msgstr "Podstawowe nagłówki bezpieczeństwa"
+
+#: src/Modules/Hardening.php:102
+msgid "X-Content-Type-Options, Referrer-Policy and X-Frame-Options (same origin). Pages served from a full-page cache may not get them."
+msgstr "X-Content-Type-Options, Referrer-Policy i X-Frame-Options (ta sama domena). Strony serwowane z pełnej pamięci podręcznej mogą ich nie dostać."
+
+#: src/Modules/Hardening.php:106
+msgid "HSTS (1 year, this domain only)"
+msgstr "HSTS (1 rok, tylko ta domena)"
+
+#: src/Modules/Hardening.php:107
+msgid "Only on HTTPS. Browsers will refuse plain HTTP for a year, so turn it on only when HTTPS works everywhere on this domain."
+msgstr "Tylko przez HTTPS. Przeglądarki przez rok będą odrzucać zwykłe HTTP, więc włącz to dopiero, gdy HTTPS działa w całej domenie."
+
+#: src/Modules/Hardening.php:173
+msgid "Sorry, you are not allowed to list users."
+msgstr "Nie masz uprawnień do wyświetlania listy użytkowników."
+
+#: src/Modules/Hardening.php:205
+msgid "<strong>Error:</strong> The username, email address or password is incorrect."
+msgstr "<strong>Błąd:</strong> nazwa użytkownika, adres e-mail lub hasło są nieprawidłowe."
+
+#: src/Modules/Lockdown.php:40
+msgid "Install lockdown"
+msgstr "Blokada instalacji"
+
+#: src/Modules/Lockdown.php:44
+msgid "Nobody can install new plugins or themes or upload ZIP files, not even through a vulnerable plugin that skips permission checks. Updates keep working. Unlock for 30 minutes when you need to install something."
+msgstr "Nikt nie zainstaluje nowych wtyczek ani motywów ani nie wgra plików ZIP, nawet przez podatną wtyczkę, która pomija sprawdzanie uprawnień. Aktualizacje działają normalnie. Gdy trzeba coś zainstalować, odblokuj instalację na 30 minut."
+
+#: src/Modules/Lockdown.php:56
+msgid "DISALLOW_FILE_MODS in wp-config.php already blocks all installs and updates."
+msgstr "Stała DISALLOW_FILE_MODS w wp-config.php już blokuje wszystkie instalacje i aktualizacje."
+
+#: src/Modules/Lockdown.php:100
+msgid "Installing plugins and themes is locked by WPHouse. Unlock it first (Settings → WPHouse or `wp wphouse unlock`)."
+msgstr "Instalowanie wtyczek i motywów jest zablokowane przez WPHouse. Najpierw je odblokuj (Ustawienia → WPHouse lub `wp wphouse unlock`)."
+
+#: src/Modules/Lockdown.php:122
+msgid "Lock now"
+msgstr "Zablokuj teraz"
+
+#: src/Modules/Lockdown.php:127
+msgid "Unlock installs for 30 minutes"
+msgstr "Odblokuj instalację na 30 minut"
+
+#: src/Modules/Lockdown.php:133
+msgid "Installs are unlocked for 30 minutes."
+msgstr "Instalacja jest odblokowana na 30 minut."
+
+#: src/Modules/Lockdown.php:136
+msgid "Installs are locked."
+msgstr "Instalacja jest zablokowana."
+
+#. translators: %s: time, e.g. 14:35
+#: src/Modules/Lockdown.php:144
+#, php-format
+msgid "Unlocked until %s."
+msgstr "Odblokowane do %s."
+
+#: src/Modules/Lockdown.php:146
+msgid "Locked. Updates of installed plugins, themes and core still work."
+msgstr "Zablokowane. Aktualizacje zainstalowanych wtyczek, motywów i WordPressa nadal działają."
+
+#: src/Modules/Maintenance.php:37
+msgid "Maintenance mode"
+msgstr "Tryb serwisowy"
+
+#: src/Modules/Maintenance.php:41
+msgid "Visitors see a short \"back soon\" page with HTTP 503, which search engines understand as temporary. Logged-in staff see the normal site. Payment callbacks, the REST API and cron keep working."
+msgstr "Odwiedzający widzą krótką stronę „Zaraz wracamy” z kodem HTTP 503, który wyszukiwarki rozumieją jako przerwę tymczasową. Zalogowani pracownicy widzą normalną witrynę. Powiadomienia z bramek płatności, REST API i cron działają dalej."
+
+#: src/Modules/Maintenance.php:48
+msgid "Headline"
+msgstr "Nagłówek"
+
+#: src/Modules/Maintenance.php:49
+msgid "Empty: \"We will be back soon\"."
+msgstr "Puste pole: „Zaraz wracamy”."
+
+#: src/Modules/Maintenance.php:54
+msgid "Message"
+msgstr "Wiadomość"
+
+#: src/Modules/Maintenance.php:55
+msgid "Basic HTML allowed (links, bold, line breaks)."
+msgstr "Dozwolony prosty HTML (linki, pogrubienie, nowe linie)."
+
+#: src/Modules/Maintenance.php:60
+msgid "Expected duration (minutes)"
+msgstr "Przewidywany czas (minuty)"
+
+#: src/Modules/Maintenance.php:61
+msgid "Sent to search engines as Retry-After."
+msgstr "Przekazywany wyszukiwarkom w nagłówku Retry-After."
+
+#: src/Modules/Maintenance.php:67
+msgid "Who sees the normal site"
+msgstr "Kto widzi normalną witrynę"
+
+#: src/Modules/Maintenance.php:69
+msgid "Administrators"
+msgstr "Administratorzy"
+
+#: src/Modules/Maintenance.php:70
+msgid "Anyone who can edit content"
+msgstr "Każdy, kto może edytować treści"
+
+#: src/Modules/Maintenance.php:71
+msgid "Every logged-in user"
+msgstr "Każdy zalogowany użytkownik"
+
+#: src/Modules/Maintenance.php:108
+msgid "We will be back soon"
+msgstr "Zaraz wracamy"
+
+#: src/Modules/Maintenance.php:146
+msgid "Maintenance mode is on"
+msgstr "Tryb serwisowy jest włączony"
+
+#: src/Modules/PluginHealth.php:99
+msgid "Plugin health"
+msgstr "Kondycja wtyczek"
+
+#: src/Modules/PluginHealth.php:103
+msgid "Weekly check of installed plugins: closed on WordPress.org (often for security reasons), no update for two years, not from WordPress.org, one-time tools left active, inactive leftovers, and plugins a WPHouse module replaces. Results also appear in Tools → Site Health."
+msgstr "Cotygodniowy przegląd zainstalowanych wtyczek: zamknięte na WordPress.org (często z powodów bezpieczeństwa), bez aktualizacji od dwóch lat, spoza WordPress.org, jednorazowe narzędzia pozostawione jako aktywne, nieaktywne pozostałości oraz wtyczki, które zastępuje moduł WPHouse. Wyniki widać też w Narzędzia → Stan witryny."
+
+#: src/Modules/PluginHealth.php:224
+msgid "Inactive. Inactive plugins can still be attacked through their files; delete it if you do not need it."
+msgstr "Nieaktywna. Nieaktywne wtyczki nadal można zaatakować przez ich pliki; usuń ją, jeśli nie jest potrzebna."
+
+#. translators: 1: date, 2: reason code from WordPress.org, e.g. security-issue.
+#: src/Modules/PluginHealth.php:251
+#, php-format
+msgid "Closed on WordPress.org (%1$s, reason: %2$s). It gets no more updates; replace or remove it."
+msgstr "Zamknięta na WordPress.org (%1$s, powód: %2$s). Nie dostanie już aktualizacji; zastąp ją albo usuń."
+
+#. translators: %s: date of the last update.
+#: src/Modules/PluginHealth.php:257
+#, php-format
+msgid "No update since %s. Probably abandoned."
+msgstr "Brak aktualizacji od %s. Prawdopodobnie porzucona."
+
+#: src/Modules/PluginHealth.php:262
+msgid "Not on WordPress.org and no update source declared. Make sure you know where its updates come from."
+msgstr "Nie ma jej na WordPress.org i nie deklaruje źródła aktualizacji. Upewnij się, skąd przychodzą jej aktualizacje."
+
+#: src/Modules/PluginHealth.php:267
+msgid "Updates come from its vendor, not WordPress.org. Keep the licence active so security fixes arrive."
+msgstr "Aktualizacje przychodzą od producenta, nie z WordPress.org. Utrzymuj aktywną licencję, żeby docierały poprawki bezpieczeństwa."
+
+#: src/Modules/PluginHealth.php:272
+msgid "One-time tool (migration, search-replace, import, file access or debugging) left active. Delete it when the job is done."
+msgstr "Jednorazowe narzędzie (migracja, wyszukaj-i-zamień, import, dostęp do plików lub debugowanie) pozostawione jako aktywne. Usuń je po zakończeniu pracy."
+
+#. translators: %s: WPHouse module name.
+#: src/Modules/PluginHealth.php:279
+#, php-format
+msgid "WPHouse can do this: module \"%s\". Switch it on, then remove this plugin."
+msgstr "WPHouse to potrafi: moduł „%s”. Włącz go, a potem usuń tę wtyczkę."
+
+#: src/Modules/PluginHealth.php:303
+msgid "WPHouse plugin health"
+msgstr "Kondycja wtyczek (WPHouse)"
+
+#: src/Modules/PluginHealth.php:324
+msgid "No closed, abandoned or forgotten plugins found"
+msgstr "Nie znaleziono zamkniętych, porzuconych ani zapomnianych wtyczek"
+
+#: src/Modules/PluginHealth.php:325
+msgid "Some plugins need attention"
+msgstr "Niektóre wtyczki wymagają uwagi"
+
+#: src/Modules/PluginHealth.php:330
+msgid "Security"
+msgstr "Bezpieczeństwo"
+
+#. translators: 1: number of critical findings, 2: number of warnings.
+#: src/Modules/PluginHealth.php:336
+#, php-format
+msgid "%1$d critical, %2$d warnings. Details are on the WPHouse settings page."
+msgstr "Krytyczne: %1$d, ostrzeżenia: %2$d. Szczegóły na stronie ustawień WPHouse."
+
+#: src/Modules/PluginHealth.php:341
+msgid "Open WPHouse"
+msgstr "Otwórz WPHouse"
+
+#: src/Modules/PluginHealth.php:347
+#: src/Modules/Watch.php:193
+msgid "Check now"
+msgstr "Sprawdź teraz"
+
+#. translators: %s: error message.
+#: src/Modules/PluginHealth.php:354
+#, php-format
+msgid "Could not reach WordPress.org: %s"
+msgstr "Nie udało się połączyć z WordPress.org: %s"
+
+#: src/Modules/PluginHealth.php:355
+msgid "Plugin health updated."
+msgstr "Kondycja wtyczek zaktualizowana."
+
+#: src/Modules/PluginHealth.php:362
+msgid "Not checked yet. Use \"Check now\" or wait for the daily run."
+msgstr "Jeszcze nie sprawdzono. Kliknij „Sprawdź teraz” albo poczekaj na codzienne sprawdzenie."
+
+#. translators: %s: date and time.
+#: src/Modules/PluginHealth.php:366
+#, php-format
+msgid "Last check: %s."
+msgstr "Ostatnie sprawdzenie: %s."
+
+#. translators: %s: error message.
+#: src/Modules/PluginHealth.php:368
+#, php-format
+msgid "The last refresh failed: %s"
+msgstr "Ostatnie odświeżenie nie powiodło się: %s"
+
+#: src/Modules/PluginHealth.php:373
+msgid "Nothing to report."
+msgstr "Brak uwag."
+
+#: src/Modules/PluginHealth.php:376
+msgid "Plugin"
+msgstr "Wtyczka"
+
+#: src/Modules/PluginHealth.php:376
+msgid "Findings"
+msgstr "Wyniki"
+
+#: src/Modules/PluginHealth.php:378
+msgid "inactive"
+msgstr "nieaktywna"
+
+#: src/Modules/Scripts.php:39
+msgid "Header and footer scripts"
+msgstr "Skrypty w nagłówku i stopce"
+
+#: src/Modules/Scripts.php:43
+msgid "Adds tracking codes, verification tags and widgets to every front-end page. HTML and JavaScript only, never PHP. Only administrators who may post unfiltered HTML can edit them."
+msgstr "Dodaje kody śledzące, tagi weryfikacyjne i widżety do każdej strony witryny. Tylko HTML i JavaScript, nigdy PHP. Edytować je mogą wyłącznie administratorzy z uprawnieniem do niefiltrowanego HTML."
+
+#: src/Modules/Scripts.php:50
+msgid "In <head>"
+msgstr "W <head>"
+
+#: src/Modules/Scripts.php:51
+msgid "Printed early in <head>. Google Tag Manager, analytics, verification meta tags."
+msgstr "Wstawiane na początku <head>. Google Tag Manager, analityka, tagi meta weryfikacji."
+
+#: src/Modules/Scripts.php:56
+msgid "After <body>"
+msgstr "Po <body>"
+
+#: src/Modules/Scripts.php:57
+msgid "Needs a theme that calls wp_body_open() (all current themes do). GTM noscript iframe."
+msgstr "Wymaga motywu wywołującego wp_body_open() (robią to wszystkie aktualne motywy). Ramka noscript GTM."
+
+#: src/Modules/Scripts.php:62
+msgid "Before </body>"
+msgstr "Przed </body>"
+
+#: src/Modules/Scripts.php:63
+msgid "Chat widgets, pixels and other scripts that can load last."
+msgstr "Widżety czatu, piksele i inne skrypty, które mogą ładować się na końcu."
+
+#: src/Modules/Scripts.php:68
+msgid "Do not output for logged-in administrators"
+msgstr "Nie wstawiaj dla zalogowanych administratorów"
+
+#: src/Modules/Scripts.php:69
+msgid "Keeps your own visits out of analytics."
+msgstr "Twoje własne wizyty nie trafią do statystyk."
+
+#: src/Modules/Scripts.php:79
+msgid "DISALLOW_UNFILTERED_HTML is set in wp-config.php, so nobody may add raw scripts."
+msgstr "W wp-config.php ustawiono DISALLOW_UNFILTERED_HTML, więc nikt nie może dodawać surowych skryptów."
+
+#: src/Modules/Smtp.php:40
+msgid "SMTP mail"
+msgstr "Poczta SMTP"
+
+#: src/Modules/Smtp.php:44
+msgid "Sends all WordPress and WooCommerce mail through your SMTP server, with credentials kept in wp-config.php. No mail log, so password-reset links are never stored."
+msgstr "Wysyła całą pocztę WordPressa i WooCommerce przez Twój serwer SMTP, z danymi logowania w wp-config.php. Bez dziennika wiadomości, więc linki do resetu hasła nigdzie nie są zapisywane."
+
+#: src/Modules/Smtp.php:51
+msgid "From address"
+msgstr "Adres nadawcy"
+
+#: src/Modules/Smtp.php:52
+msgid "Used when the sender is not set otherwise (WooCommerce sets its own). Should be on a domain your SMTP server may send for."
+msgstr "Używany, gdy nadawca nie jest ustawiony inaczej (WooCommerce ustawia własnego). Powinien należeć do domeny, z której Twój serwer SMTP może wysyłać."
+
+#: src/Modules/Smtp.php:57
+msgid "From name"
+msgstr "Nazwa nadawcy"
+
+#: src/Modules/Smtp.php:129
+msgid "Send a test e-mail to me"
+msgstr "Wyślij do mnie testowy e-mail"
+
+#: src/Modules/Smtp.php:141
+msgid "WPHouse test e-mail"
+msgstr "Testowy e-mail WPHouse"
+
+#: src/Modules/Smtp.php:142
+msgid "If you can read this, WordPress can send mail."
+msgstr "Jeśli to czytasz, WordPress potrafi wysyłać pocztę."
+
+#. translators: %s: e-mail address.
+#: src/Modules/Smtp.php:148
+#, php-format
+msgid "Test e-mail sent to %s."
+msgstr "Testowy e-mail wysłany na adres %s."
+
+#. translators: %s: error message.
+#: src/Modules/Smtp.php:151
+#, php-format
+msgid "Sending failed: %s"
+msgstr "Wysyłka nie powiodła się: %s"
+
+#. translators: %s: error message.
+#: src/Modules/Smtp.php:151
+msgid "unknown error"
+msgstr "nieznany błąd"
+
+#: src/Modules/Smtp.php:157
+msgid "with login"
+msgstr "z logowaniem"
+
+#: src/Modules/Smtp.php:157
+msgid "without login"
+msgstr "bez logowania"
+
+#. translators: 1: SMTP host, 2: port, 3: "with login" or "without login".
+#: src/Modules/Smtp.php:160
+#, php-format
+msgid "SMTP: %1$s:%2$d, %3$s (from wp-config.php)."
+msgstr "SMTP: %1$s:%2$d, %3$s (z wp-config.php)."
+
+#: src/Modules/Smtp.php:162
+msgid "SMTP is not configured: add WPHOUSE_SMTP_HOST (and port, user, password) to wp-config.php. Until then mail goes through PHP mail(); the From settings still apply."
+msgstr "SMTP nie jest skonfigurowany: dodaj WPHOUSE_SMTP_HOST (oraz port, użytkownika i hasło) do wp-config.php. Do tego czasu poczta idzie przez PHP mail(); ustawienia nadawcy nadal działają."
+
+#: src/Modules/Tweaks.php:35
+msgid "Tweaks"
+msgstr "Usprawnienia"
+
+#: src/Modules/Tweaks.php:39
+msgid "Small switches that are usually a plugin each: comments, search, emojis, embeds, head clean-up, Heartbeat, self-pingbacks and revision limits."
+msgstr "Drobne przełączniki, z których każdy to zwykle osobna wtyczka: komentarze, wyszukiwarka, emoji, osadzanie, porządki w <head>, Heartbeat, pingbacki do siebie i limit wersji."
+
+#: src/Modules/Tweaks.php:46
+msgid "Disable comments"
+msgstr "Wyłącz komentarze"
+
+#: src/Modules/Tweaks.php:47
+msgid "Closes comments and pingbacks everywhere and hides existing ones. WooCommerce product reviews keep working when reviews are enabled in WooCommerce."
+msgstr "Zamyka komentarze i pingbacki wszędzie i ukrywa istniejące. Opinie o produktach WooCommerce działają dalej, jeśli są włączone w WooCommerce."
+
+#: src/Modules/Tweaks.php:51
+msgid "Disable front-end search"
+msgstr "Wyłącz wyszukiwarkę w witrynie"
+
+#: src/Modules/Tweaks.php:52
+msgid "Search URLs redirect to the home page (stops search-spam pages). Also disables WooCommerce product search."
+msgstr "Adresy wyszukiwania przekierowują na stronę główną (koniec ze spamowymi stronami wyników). Wyłącza też wyszukiwanie produktów WooCommerce."
+
+#: src/Modules/Tweaks.php:56
+msgid "Disable emoji scripts"
+msgstr "Wyłącz skrypty emoji"
+
+#: src/Modules/Tweaks.php:60
+msgid "Disable embedding of this site"
+msgstr "Wyłącz osadzanie tej witryny"
+
+#: src/Modules/Tweaks.php:61
+msgid "Removes oEmbed discovery and wp-embed.js. Embedding YouTube and others in your posts still works."
+msgstr "Usuwa wykrywanie oEmbed i wp-embed.js. Osadzanie YouTube i innych serwisów w Twoich wpisach nadal działa."
+
+#: src/Modules/Tweaks.php:65
+msgid "Clean up <head>"
+msgstr "Uporządkuj <head>"
+
+#: src/Modules/Tweaks.php:66
+msgid "Removes RSD, Windows Live Writer, shortlink and adjacent-post links."
+msgstr "Usuwa linki RSD, Windows Live Writer, krótki odnośnik i linki do sąsiednich wpisów."
+
+#: src/Modules/Tweaks.php:70
+msgid "Slow down Heartbeat"
+msgstr "Spowolnij Heartbeat"
+
+#: src/Modules/Tweaks.php:71
+msgid "Every 60 seconds instead of 15–60, and not loaded on the front end for visitors."
+msgstr "Co 60 sekund zamiast co 15–60 i bez ładowania w witrynie dla odwiedzających."
+
+#: src/Modules/Tweaks.php:75
+msgid "Disable self-pingbacks"
+msgstr "Wyłącz pingbacki do własnej witryny"
+
+#: src/Modules/Tweaks.php:79
+msgid "Revisions to keep"
+msgstr "Liczba zachowywanych wersji"
+
+#: src/Modules/Tweaks.php:80
+msgid "Empty keeps the WordPress default (unlimited)."
+msgstr "Puste pole zostawia domyślne ustawienie WordPressa (bez limitu)."
+
+#: src/Modules/Watch.php:40
+msgid "Change alerts"
+msgstr "Alerty o zmianach"
+
+#: src/Modules/Watch.php:44
+msgid "E-mails the alert recipients when an administrator is added, a plugin or theme appears or is activated, a mu-plugin or drop-in shows up, or wp-config.php changes. Changes are also written to the activity log."
+msgstr "Wysyła e-mail do odbiorców alertów, gdy przybędzie administrator, pojawi się lub zostanie włączona wtyczka albo motyw, pojawi się wtyczka obowiązkowa (mu-plugin) lub drop-in albo zmieni się wp-config.php. Zmiany trafiają też do dziennika zdarzeń."
+
+#: src/Modules/Watch.php:194
+msgid "Accept current state"
+msgstr "Zatwierdź obecny stan"
+
+#: src/Modules/Watch.php:201
+msgid "The current state is the new baseline."
+msgstr "Obecny stan jest nowym punktem odniesienia."
+
+#. translators: %d: number of changes.
+#: src/Modules/Watch.php:205
+#, php-format
+msgid "%d change found and reported."
+msgid_plural "%d changes found and reported."
+msgstr[0] "Znaleziono i zgłoszono %d zmianę."
+msgstr[1] "Znaleziono i zgłoszono %d zmiany."
+msgstr[2] "Znaleziono i zgłoszono %d zmian."
+
+#. translators: %d: number of changes.
+#: src/Modules/Watch.php:205
+msgid "No changes since the last check."
+msgstr "Brak zmian od ostatniego sprawdzenia."
+
+#: src/Modules/Watch.php:212
+msgid "No baseline yet. It is recorded on the first hourly check."
+msgstr "Brak punktu odniesienia. Zostanie zapisany przy pierwszym cogodzinnym sprawdzeniu."
+
+#. translators: 1: number of administrators, 2: number of plugins, 3: number of mu-plugins, 4: number of drop-ins.
+#: src/Modules/Watch.php:217
+#, php-format
+msgid "Watching %1$d administrators, %2$d plugins, %3$d must-use plugins, %4$d drop-ins and wp-config.php."
+msgstr "Obserwowane: administratorzy (%1$d), wtyczki (%2$d), wtyczki obowiązkowe (%3$d), drop-iny (%4$d) i wp-config.php."
+
+#: src/Plugin.php:115
+msgid "WPHouse 0.x supports single sites only. Activate it per site instead of network-wide."
+msgstr "WPHouse 0.x obsługuje tylko pojedyncze witryny. Włącz wtyczkę na poszczególnych witrynach, a nie w całej sieci."
+
+#: wphouse.php:32
+msgid "WPHouse requires PHP 8.1 or newer. The plugin is inactive."
+msgstr "WPHouse wymaga PHP 8.1 lub nowszego. Wtyczka jest nieaktywna."
