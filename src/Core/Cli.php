@@ -155,4 +155,26 @@ final class Cli {
 		);
 		WP_CLI\Utils\format_items( $assoc_args['format'] ?? 'table', $rows, [ 'time', 'event', 'severity', 'user', 'ip', 'message' ] );
 	}
+
+	/**
+	 * Check the update server now (clears the cached manifest).
+	 *
+	 * @subcommand update-check
+	 */
+	public function update_check(): void {
+		if ( Compat::constant_on( 'WPHOUSE_DISABLE_UPDATES' ) ) {
+			WP_CLI::error( 'Updates are disabled by WPHOUSE_DISABLE_UPDATES.' );
+		}
+		if ( Updater::is_dev_checkout() ) {
+			WP_CLI::error( 'This is a git checkout; updates are disabled so they cannot overwrite it.' );
+		}
+		$result = Updater::check_now();
+		if ( is_wp_error( $result ) ) {
+			WP_CLI::error( $result->get_error_message() );
+		}
+		$update = get_site_transient( 'update_plugins' );
+		$offer  = is_object( $update ) && isset( $update->response[ Updater::basename() ] ) ? $update->response[ Updater::basename() ] : null;
+		WP_CLI::log( 'Installed: ' . WPHOUSE_VERSION . ', latest signed release: ' . $result );
+		WP_CLI::success( $offer ? 'Update available: ' . $offer->new_version : 'Up to date.' );
+	}
 }

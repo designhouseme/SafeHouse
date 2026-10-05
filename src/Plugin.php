@@ -13,6 +13,7 @@ use WPHouse\Core\Cli;
 use WPHouse\Core\Log;
 use WPHouse\Core\SafeMode;
 use WPHouse\Core\Settings;
+use WPHouse\Core\Updater;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -55,6 +56,7 @@ final class Plugin {
 		self::schedule_events();
 		add_action( 'wphouse_daily', [ Log::class, 'purge' ] );
 		add_action( 'init', [ $plugin, 'load_textdomain' ] );
+		Updater::register(); // Also in safe mode: that is how a fix for a broken module arrives.
 
 		if ( ! SafeMode::active() ) {
 			foreach ( $plugin->modules as $id => $module ) {

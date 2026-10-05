@@ -6,14 +6,16 @@
  * Version:              0.1.0
  * Requires at least:    6.6
  * Requires PHP:         8.1
+ * Tested up to:         7.1
  * Author:               Design House
  * Author URI:           https://designhouse.me/
  * License:              GPL-2.0-or-later
  * License URI:          https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:          wphouse
  * Domain Path:          /languages
+ * Update URI:           https://updates.designhouse.me/wphouse/
  * WC requires at least: 9.0
- * WC tested up to:      10.9
+ * WC tested up to:      11.1
  *
  * @package WPHouse
  */

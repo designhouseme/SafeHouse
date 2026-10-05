@@ -1,0 +1,55 @@
+name: wphouse-updtest
+
+# Isolated site for testing self-updates. No bind mount of the repo: an update replaces the
+# plugin directory, which must never be the git working tree. "updates" plays the update host.
+x-wp-env: &wp-env
+  WORDPRESS_DB_HOST: db:3306
+  WORDPRESS_DB_USER: wordpress
+  WORDPRESS_DB_PASSWORD: wordpress
+  WORDPRESS_DB_NAME: wordpress
+  WORDPRESS_CONFIG_EXTRA: |
+    define( 'WP_ENVIRONMENT_TYPE', 'local' );
+    define( 'WPHOUSE_UPDATE_URL', 'http://updates/wphouse/manifest.json' );
+    define( 'WPHOUSE_UPDATE_PUBLIC_KEYS', [ '${WPHOUSE_TEST_PUBKEY:-}' ] );
+
+services:
+  updates:
+    image: nginx:alpine
+    volumes:
+      - ../../build/updtest/www:/usr/share/nginx/html:ro
+
+  db:
+    image: mariadb:11.4
+    environment:
+      MARIADB_DATABASE: wordpress
+      MARIADB_USER: wordpress
+      MARIADB_PASSWORD: wordpress
+      MARIADB_ROOT_PASSWORD: wordpress
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  wordpress:
+    image: wordpress:php8.3-apache
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8895:80"
+    environment: *wp-env
+    volumes:
+      - wp_core:/var/www/html
+
+  wpcli:
+    image: wordpress:cli-php8.3
+    profiles: ["cli"]
+    user: "33:33"
+    environment: *wp-env
+    volumes:
+      - wp_core:/var/www/html
+      - ../../build/updtest/pkgs:/pkgs:ro
+
+volumes:
+  wp_core:
