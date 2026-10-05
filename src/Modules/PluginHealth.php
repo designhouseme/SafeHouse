@@ -210,6 +210,9 @@ final class PluginHealth extends AbstractModule {
 		$modules = Plugin::instance()->modules();
 		$out     = [];
 		foreach ( (array) ( $report['items'] ?? [] ) as $file => $item ) {
+			if ( ! file_exists( WP_PLUGIN_DIR . '/' . $file ) ) {
+				continue; // Removed since the last check.
+			}
 			$is_active = isset( $active[ $file ] );
 			$list      = [];
 			foreach ( (array) $item['findings'] as $finding ) {
