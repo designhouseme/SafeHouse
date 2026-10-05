@@ -52,7 +52,8 @@ export function mountCollapse({ canvas, section, count, word, reduced }) {
 	function measure() {
 		const r = section.getBoundingClientRect();
 		const vh = window.innerHeight;
-		progress = clamp((vh * 0.8 - r.top) / (r.height * 0.9));
+		// Starts once the grid is in view and finishes as the section scrolls away.
+		progress = clamp((vh * 0.45 - r.top) / (vh * 0.45 + r.height * 0.45));
 	}
 
 	function draw(now) {
