@@ -1,0 +1,19 @@
+includes:
+	- vendor/szepeviktor/phpstan-wordpress/extension.neon
+parameters:
+	level: 6
+	paths:
+		- wphouse.php
+		- uninstall.php
+		- src
+	scanFiles:
+		- vendor/php-stubs/wp-cli-stubs/wp-cli-stubs.php
+		- dev/stubs/third-party.php
+	dynamicConstantNames:
+		- WPHOUSE_MODULES
+		- WPHOUSE_LOCK_SETTINGS
+		- WPHOUSE_SAFE_MODE
+		- WPHOUSE_IGNORE_OVERLAPS
+		- WPHOUSE_TRUSTED_PROXIES
+		- WPHOUSE_PROXY_HEADER
+		- WP_CLI

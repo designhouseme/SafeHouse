@@ -1,0 +1,43 @@
+.wphouse { max-width: 1040px; }
+.wphouse h1 { display: flex; align-items: baseline; gap: 8px; }
+.wphouse-version { font-size: 13px; font-weight: 400; color: #646970; }
+.wphouse-intro { max-width: 70ch; color: #3c434a; }
+
+.wphouse-card {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	padding: 16px 20px;
+	margin: 16px 0;
+}
+.wphouse-card.is-off { background: #f6f7f7; }
+.wphouse-card__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.wphouse-card__head h2 { margin: 0; font-size: 15px; }
+.wphouse-card__desc { margin: 6px 0 0; max-width: 75ch; color: #3c434a; }
+.wphouse-card .form-table { margin-top: 4px; }
+.wphouse-card .form-table th { width: 240px; padding: 12px 10px 12px 0; font-weight: 500; }
+.wphouse-card .form-table td { padding: 12px 10px; }
+
+.wphouse-switch { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.wphouse-switch input { margin: 0; }
+
+.wphouse-status { font-size: 12px; padding: 2px 8px; border-radius: 3px; white-space: nowrap; }
+.wphouse-status--on { background: #edfaef; color: #00611c; }
+.wphouse-status--off { background: #f0f0f1; color: #50575e; }
+.wphouse-status--warn { background: #fcf9e8; color: #6b4e00; }
+.wphouse-status--muted { background: #f0f0f1; color: #787c82; }
+
+.wphouse-note { margin: 8px 0 0; padding: 6px 10px; background: #f0f6fc; border-left: 3px solid #72aee6; }
+.wphouse-covered { margin-left: 8px; color: #646970; font-style: italic; }
+.wphouse-tasks { display: flex; flex-wrap: wrap; gap: 8px; }
+.wphouse textarea.code { font-family: Consolas, Monaco, monospace; font-size: 12px; }
+
+.wphouse-panel { margin-top: 8px; }
+.wphouse-panel table { margin-top: 8px; }
+.wphouse-badge { display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 3px; background: #f0f0f1; }
+.wphouse-badge--critical { background: #fcf0f1; color: #8a2424; }
+.wphouse-badge--warning { background: #fcf9e8; color: #6b4e00; }
+.wphouse-badge--info { background: #f0f6fc; color: #0a4b78; }
+
+.wphouse-log tr.wphouse-log__critical td { background: #fcf0f1; }
+.wphouse-log tr.wphouse-log__warning td { background: #fcf9e8; }

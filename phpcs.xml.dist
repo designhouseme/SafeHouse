@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<ruleset name="WPHouse">
+	<description>WordPress coding standards with the security sniffs kept strict.</description>
+
+	<file>wphouse.php</file>
+	<file>uninstall.php</file>
+	<file>src</file>
+
+	<arg name="extensions" value="php"/>
+	<arg name="colors"/>
+	<arg value="sp"/>
+
+	<config name="minimum_wp_version" value="6.6"/>
+	<config name="testVersion" value="8.1-"/>
+
+	<rule ref="WordPress-Extra">
+		<!-- PSR-4 file names (src/Core/Settings.php) instead of class-settings.php. -->
+		<exclude name="WordPress.Files.FileName"/>
+		<!-- Short array syntax and non-Yoda comparisons: we target PHP 8.1+. -->
+		<exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
+		<exclude name="WordPress.PHP.YodaConditions"/>
+		<!-- Typed properties and promoted constructor params are documented by their types. -->
+		<exclude name="Squiz.Commenting"/>
+		<exclude name="Generic.Commenting.DocComment.MissingShort"/>
+	</rule>
+
+	<rule ref="PHPCompatibilityWP"/>
+
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array"><element value="wphouse"/></property>
+		</properties>
+	</rule>
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array"><element value="wphouse"/></property>
+		</properties>
+	</rule>
+</ruleset>

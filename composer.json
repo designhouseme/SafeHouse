@@ -1,0 +1,26 @@
+{
+    "name": "designhouse/wphouse",
+    "description": "Lean, audited replacements for small WordPress utility plugins.",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "php": ">=8.1"
+    },
+    "require-dev": {
+        "wp-coding-standards/wpcs": "^3.1",
+        "phpcompatibility/phpcompatibility-wp": "^2.1",
+        "phpstan/phpstan": "^2.1",
+        "szepeviktor/phpstan-wordpress": "^2.0",
+        "php-stubs/wp-cli-stubs": "^2.11"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        },
+        "sort-packages": true
+    },
+    "scripts": {
+        "lint": ["phpcs", "phpstan analyse --memory-limit=1G"],
+        "fix": "phpcbf"
+    }
+}
