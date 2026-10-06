@@ -6,8 +6,6 @@
 /composer.lock export-ignore
 /phpcs.xml.dist export-ignore
 /phpstan.neon.dist export-ignore
-/CLAUDE.md export-ignore
-/PLAN.md export-ignore
 /CHANGELOG.md export-ignore
 /.gitignore export-ignore
 /.gitattributes export-ignore
