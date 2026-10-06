@@ -2,7 +2,7 @@
 /**
  * Plugin Name:          WPHouse
  * Plugin URI:           https://designhouse.me/
- * Description:          Lean, audited replacements for small utility plugins: hardening, install lockdown, change alerts, plugin health and everyday tweaks. Runs alongside Wordfence and WooCommerce.
+ * Description:          One plugin instead of a dozen small ones: hardening, install lockdown, change and vulnerability alerts, plugin health and everyday tweaks. Works alongside Wordfence, WooCommerce and the usual payment gateways.
  * Version:              0.1.0
  * Requires at least:    6.6
  * Requires PHP:         8.1

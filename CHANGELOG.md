@@ -9,6 +9,8 @@ Each release needs a `## x.y.z` section; its body is shown in the WordPress "Vie
 - Install lockdown: no new plugins, themes or ZIP uploads (updates keep working), timed unlock.
 - Change alerts: new administrators, plugins, themes, mu-plugins, drop-ins and wp-config.php edits.
 - Plugin health: closed, abandoned, unknown-source and forgotten plugins, also in Site Health.
+- Vulnerability alerts for sites without Wordfence, from signed Wordfence Intelligence data.
+- Integrations card for Wordfence, WooCommerce, payment gateways and Elementor.
 - Tweaks, duplicate posts, SMTP from wp-config, header/footer scripts, maintenance mode.
 - Signed self-hosted updates.
 - Design House branding on the settings page, the Updates screen and alert e-mails.
