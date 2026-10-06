@@ -32,7 +32,7 @@ final class Updater {
 
 	/** Base64 Ed25519 public keys. Keep the previous key here for one release when rotating. */
 	private const PUBLIC_KEYS = [
-		'a96AtREE2wwy9c3iXhw8ewmRm2weOS5UkOHuIsU11eU=', // 2026-10-05
+		'SOrVjhZX5PC6q78ohxcoO9zqcll7YarqDyF6hQ6knBg=', // 2026-10-06
 	];
 
 	private const CACHE_KEY      = 'shouse_update_manifest';
