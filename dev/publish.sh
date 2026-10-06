@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Publish a built release (build/x.y.z from ./dev/release.sh) to the update host: Cloudflare R2 bucket
-# shouse-updates, served as https://updates.designhouse.me/shouse/ once the custom domain is attached.
+# shouse-updates, which the updates/ Worker serves at https://updates.designhouse.me/shouse/.
 # Needs `npx wrangler login` on the Cloudflare account that owns the bucket. ./dev/publish.sh x.y.z
 set -euo pipefail
 cd "$(dirname "$0")/.."
