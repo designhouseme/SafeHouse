@@ -18,6 +18,15 @@ import('./voxel.js')
 		$('voxel').replaceWith(img);
 	});
 
+// Pixel light follows the pointer over cards and panels.
+for (const el of document.querySelectorAll('.mb-card, .ghost, .mq-item')) {
+	el.addEventListener('pointermove', (e) => {
+		const r = el.getBoundingClientRect();
+		el.style.setProperty('--mx', `${e.clientX - r.left}px`);
+		el.style.setProperty('--my', `${e.clientY - r.top}px`);
+	});
+}
+
 // The plugin strip moves on its own, so it gets a button to stop it.
 const strip = $('zastepuje');
 strip.querySelector('.mq-toggle').addEventListener('click', (e) => {

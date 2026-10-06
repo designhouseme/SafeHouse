@@ -758,6 +758,7 @@ main section { position: relative; padding: 168px 0; }
 	.lane-beam--in { animation: beam-in linear both; animation-timeline: --lanes; animation-range: entry 20% cover 40%; }
 	.lane-beam--out { animation: beam-in linear both; animation-timeline: --lanes; animation-range: cover 35% cover 55%; }
 	.lane::after { animation: flare linear both; animation-timeline: --lanes; animation-range: cover 30% cover 42%; }
+	.lane--blocked::after { animation: flare linear both, hit 2.4s linear infinite; animation-timeline: --lanes, auto; animation-range: cover 30% cover 42%, normal; animation-delay: 0s, var(--d); }
 }
 @keyframes beam-in { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 @keyframes flare { from { opacity: 0; scale: 0.3; } to { opacity: 1; scale: 1; } }
@@ -969,6 +970,154 @@ main section { position: relative; padding: 168px 0; }
 .footer-maker img { display: block; width: auto; height: 17px; }
 .footer p { margin: 0 0 0 auto; }
 
+/* ---------- motion: responses to the pointer and quiet movement in the background ---------- */
+
+/* Pixel light under the pointer. main.js keeps --mx and --my on the element. */
+.mb-card::after,
+.ghost::after,
+.mq-item::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background: radial-gradient(var(--hl-size, 200px) circle at var(--mx, 50%) var(--my, 50%), var(--hl, rgba(170, 195, 255, 0.6)), transparent 70%);
+	opacity: 0;
+	transition: opacity 0.35s;
+	pointer-events: none;
+	mask-image: linear-gradient(90deg, #000 0 3px, transparent 3px), linear-gradient(#000 0 3px, transparent 3px);
+	mask-size: 4px 4px;
+	mask-composite: intersect;
+	-webkit-mask-composite: source-in;
+}
+.ghost::after { --hl: rgba(60, 120, 255, 0.5); }
+.mq-item::after { --hl-size: 120px; --hl: rgba(156, 199, 255, 0.45); }
+.mb-card:hover::after,
+.ghost:hover::after,
+.mq-item:hover::after { opacity: 1; }
+
+/* bento */
+.mb-card { transition: translate 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.45s; }
+.mb-card:hover { translate: 0 -6px; box-shadow: 0 0 0 5px #fff, 0 44px 70px -30px rgba(40, 60, 140, 0.6); }
+.mb-card::before { transition: filter 0.45s; }
+.mb-card:hover::before { filter: brightness(1.5) saturate(1.2); }
+.mb-check li,
+.mb-mail,
+.mb-sheet,
+.mb-list-row,
+.mb-pill,
+.mb-orb,
+.mb-bot { transition: translate 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.4s, background 0.3s, box-shadow 0.3s, scale 0.5s; }
+.mb-a:hover .mb-check li:nth-child(1) { translate: -14px 0; }
+.mb-a:hover .mb-check li:nth-child(2) { translate: 10px 0; }
+.mb-a:hover .mb-check li:nth-child(3) { translate: -10px 0; opacity: 0.9; }
+.mb-b:hover .mb-mail:not(.mb-mail--back) { translate: 0 12px; }
+.mb-b:hover .mb-mail--back { translate: 0 -6px; opacity: 0.65; }
+.mb-d:hover .mb-pill { box-shadow: inset 0 0 0 1px rgba(242, 150, 70, 0.7), 0 0 24px rgba(242, 150, 70, 0.55); }
+.mb-e:hover .mb-list-row.is-bad { translate: 6px 0; }
+.mb-f:hover .mb-orb { scale: 1.08; }
+.mb-f:hover .mb-bot { opacity: 0.35; }
+.mb-g:hover .mb-sheet:not(.mb-sheet--back) { translate: 0 -12px; }
+.mb-g:hover .mb-sheet--back { translate: -8px 4px; }
+
+/* Packets of light fall down the beam into the stepped card. */
+.mb-beam::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 34%;
+	background: linear-gradient(180deg, transparent, #fff 60%, transparent);
+	animation: fall 2.8s linear infinite;
+}
+@keyframes fall { from { top: -34%; } to { top: 100%; } }
+
+/* Rings of pixels go out from the core of the bots card; the turned-away requests drift. */
+.mb-orb::before,
+.mb-orb::after {
+	content: "";
+	position: absolute;
+	inset: -40px;
+	border-radius: 50%;
+	background: radial-gradient(closest-side, transparent 78%, rgba(140, 170, 255, 0.9) 84%, transparent 92%);
+	opacity: 0;
+	animation: ring-out 3.2s ease-out infinite;
+	mask-image: linear-gradient(90deg, #000 0 3px, transparent 3px), linear-gradient(#000 0 3px, transparent 3px);
+	mask-size: 4px 4px;
+	mask-composite: intersect;
+	-webkit-mask-composite: source-in;
+}
+.mb-orb::after { animation-delay: 1.6s; }
+@keyframes ring-out { from { scale: 0.55; opacity: 0.9; } to { scale: 1.7; opacity: 0; } }
+.mb-bot { animation: drift 7s ease-in-out infinite alternate; }
+.mb-bot:nth-of-type(2) { animation-delay: -2s; animation-duration: 8s; }
+.mb-bot:nth-of-type(3) { animation-delay: -4s; animation-duration: 6.5s; }
+.mb-bot:nth-of-type(4) { animation-delay: -1s; animation-duration: 9s; }
+.mb-bot:nth-of-type(5) { animation-delay: -3s; }
+@keyframes drift { from { transform: translate(-6px, 4px); } to { transform: translate(6px, -5px); } }
+
+/* A band of light circles the twelve. */
+@property --ring-a { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.mb-c::after {
+	opacity: 1;
+	--hl-size: 0;
+	background: conic-gradient(from var(--ring-a), transparent 0 70%, rgba(156, 199, 255, 0.9) 88%, #fff 92%, transparent 94%);
+	mask-image: linear-gradient(90deg, #000 0 3px, transparent 3px), linear-gradient(#000 0 3px, transparent 3px), radial-gradient(closest-side, transparent 86%, #000 88%, #000 97%, transparent 99%);
+	mask-size: 4px 4px, 4px 4px, 100% 100%;
+	mask-composite: intersect;
+	-webkit-mask-composite: source-in;
+	animation: ring-turn 9s linear infinite;
+}
+@keyframes ring-turn { to { --ring-a: 360deg; } }
+
+/* safe mode: the panels breathe, the screen answers the pointer */
+.ghost::before { animation: breathe 5s ease-in-out infinite alternate; }
+.room-side--left .ghost:nth-child(2)::before { animation-delay: -1.5s; }
+.room-side--right .ghost:nth-child(1)::before { animation-delay: -3s; }
+.room-side--right .ghost:nth-child(2)::before { animation-delay: -4.2s; }
+@keyframes breathe { from { opacity: 0.55; } to { opacity: 1; } }
+.ghost { transition: translate 0.45s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.ghost:hover { translate: 0 -4px; }
+.screen { transition: box-shadow 0.5s, translate 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.screen:hover { translate: 0 -4px; box-shadow: 0 0 0 1px rgba(150, 180, 230, 0.7), 0 0 110px rgba(110, 160, 255, 0.65), 0 50px 90px -30px rgba(30, 50, 110, 0.5); }
+
+/* security: packets travel the beams; forged ones flash against the wall */
+.lane { --d: 0s; }
+.lane:nth-of-type(2) { --d: -0.9s; }
+.lane:nth-of-type(3) { --d: -1.7s; }
+.lane:nth-of-type(4) { --d: -0.4s; }
+.lane-beam { position: relative; overflow: hidden; }
+.lane-beam::after {
+	content: "";
+	position: absolute;
+	inset: 0 auto 0 0;
+	width: 28%;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95), transparent);
+	translate: -100% 0;
+	animation: packet 2.4s linear infinite;
+	animation-delay: var(--d);
+}
+@keyframes packet { from { translate: -100% 0; } to { translate: 360% 0; } }
+@supports not (animation-timeline: view()) {
+	.lane--blocked::after { animation: hit 2.4s linear infinite; animation-delay: var(--d); }
+}
+@keyframes hit { 0%, 80% { filter: brightness(1); } 92% { filter: brightness(2.2); } 100% { filter: brightness(1); } }
+.wall::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 20%;
+	background: linear-gradient(180deg, transparent, rgba(255, 220, 200, 0.95), transparent);
+	animation: fall 3.6s linear infinite;
+}
+
+/* dial: the minute hand ticks round */
+.dial-hand--minute { animation: tick 60s steps(60) infinite; }
+@keyframes tick { to { transform: rotate(360deg); } }
+.final-light { animation: band 6s ease-in-out infinite alternate; }
+.final-light--cold { animation-delay: -3s; }
+@keyframes band { from { opacity: 0.75; } to { opacity: 1; } }
+
 /* ---------- small screens ---------- */
 
 @media (max-width: 980px) {
@@ -1059,6 +1208,7 @@ main section { position: relative; padding: 168px 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
+	.st-on { display: none !important; }
 	html { scroll-behavior: auto; }
 	*,
 	*::before,
