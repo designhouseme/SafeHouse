@@ -738,30 +738,12 @@ main section { position: relative; padding: 168px 0; }
 	filter: drop-shadow(0 0 18px rgba(255, 80, 50, 0.8));
 }
 .wall-label { grid-column: 3; grid-row: 1; justify-self: center; margin: 0 0 6px; font-size: 13px; font-weight: 500; letter-spacing: 0.02em; white-space: nowrap; color: #ffb3a1; }
-/* Passing traffic crosses the wall at a bright point; stopped traffic flares against it. */
-.lane::after {
-	content: "";
-	z-index: 2;
-	grid-column: 3;
-	grid-row: 1;
-	justify-self: center;
-	width: 60px;
-	height: 60px;
-	border-radius: 50%;
-	background: radial-gradient(closest-side, rgba(200, 220, 255, 0.95), rgba(79, 134, 255, 0.35) 55%, transparent);
-	pointer-events: none;
-}
-.lane--pay::after { background: radial-gradient(closest-side, rgba(255, 230, 200, 0.95), rgba(242, 150, 70, 0.4) 55%, transparent); }
-.lane--blocked::after { width: 120px; height: 120px; background: radial-gradient(closest-side, #fff, rgba(255, 106, 69, 0.75) 35%, rgba(255, 60, 40, 0.15) 70%, transparent); }
 
 @supports (animation-timeline: view()) {
 	.lane-beam--in { animation: beam-in linear both; animation-timeline: --lanes; animation-range: entry 20% cover 40%; }
 	.lane-beam--out { animation: beam-in linear both; animation-timeline: --lanes; animation-range: cover 35% cover 55%; }
-	.lane::after { animation: flare linear both; animation-timeline: --lanes; animation-range: cover 30% cover 42%; }
-	.lane--blocked::after { animation: flare linear both, hit 2.4s linear infinite; animation-timeline: --lanes, auto; animation-range: cover 30% cover 42%, normal; animation-delay: 0s, var(--d); }
 }
 @keyframes beam-in { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
-@keyframes flare { from { opacity: 0; scale: 0.3; } to { opacity: 1; scale: 1; } }
 
 /* safe mode: the plugin's own screen in a lit frame, the ways in set into the wall around it */
 
@@ -1054,20 +1036,6 @@ main section { position: relative; padding: 168px 0; }
 .mb-bot:nth-of-type(5) { animation-delay: -3s; }
 @keyframes drift { from { transform: translate(-6px, 4px); } to { transform: translate(6px, -5px); } }
 
-/* A band of light circles the twelve. */
-@property --ring-a { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
-.mb-c::after {
-	opacity: 1;
-	--hl-size: 0;
-	background: conic-gradient(from var(--ring-a), transparent 0 70%, rgba(156, 199, 255, 0.9) 88%, #fff 92%, transparent 94%);
-	mask-image: linear-gradient(90deg, #000 0 3px, transparent 3px), linear-gradient(#000 0 3px, transparent 3px), radial-gradient(closest-side, transparent 86%, #000 88%, #000 97%, transparent 99%);
-	mask-size: 4px 4px, 4px 4px, 100% 100%;
-	mask-composite: intersect;
-	-webkit-mask-composite: source-in;
-	animation: ring-turn 9s linear infinite;
-}
-@keyframes ring-turn { to { --ring-a: 360deg; } }
-
 /* safe mode: the panels breathe, the screen answers the pointer */
 .ghost::before { animation: breathe 5s ease-in-out infinite alternate; }
 .room-side--left .ghost:nth-child(2)::before { animation-delay: -1.5s; }
@@ -1079,7 +1047,7 @@ main section { position: relative; padding: 168px 0; }
 .screen { transition: box-shadow 0.5s, translate 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .screen:hover { translate: 0 -4px; box-shadow: 0 0 0 1px rgba(150, 180, 230, 0.7), 0 0 110px rgba(110, 160, 255, 0.65), 0 50px 90px -30px rgba(30, 50, 110, 0.5); }
 
-/* security: packets travel the beams; forged ones flash against the wall */
+/* security: packets of light travel the beams */
 .lane { --d: 0s; }
 .lane:nth-of-type(2) { --d: -0.9s; }
 .lane:nth-of-type(3) { --d: -1.7s; }
@@ -1096,10 +1064,6 @@ main section { position: relative; padding: 168px 0; }
 	animation-delay: var(--d);
 }
 @keyframes packet { from { translate: -100% 0; } to { translate: 360% 0; } }
-@supports not (animation-timeline: view()) {
-	.lane--blocked::after { animation: hit 2.4s linear infinite; animation-delay: var(--d); }
-}
-@keyframes hit { 0%, 80% { filter: brightness(1); } 92% { filter: brightness(2.2); } 100% { filter: brightness(1); } }
 .wall::after {
 	content: "";
 	position: absolute;
@@ -1148,7 +1112,6 @@ main section { position: relative; padding: 168px 0; }
 	.lane-src { grid-area: src; padding: 0; }
 	.lane-beam--in { grid-area: in; }
 	.lane-beam--out { grid-area: out; }
-	.lane::after { grid-area: wall; }
 	.lane-out,
 	.lane--blocked .lane-out { grid-area: res; padding: 0; }
 	/* On a phone the wall would run through the text; each lane gets its own piece of it. */
