@@ -27,8 +27,10 @@ tool() {
 }
 
 set_version() { # <plugin dir> <version>
-	sed -i -E "s/^( \* Version:[[:space:]]+).*/\1$2/; s/^const WPHOUSE_VERSION = '[^']*';/const WPHOUSE_VERSION = '$2';/" "$1/wphouse.php"
-	sed -i -E "s/^Stable tag: .*/Stable tag: $2/" "$1/readme.txt"
+	# -i.bak works with both GNU and BSD (macOS) sed; plain -i does not.
+	sed -i.bak -E "s/^( \* Version:[[:space:]]+).*/\1$2/; s/^const WPHOUSE_VERSION = '[^']*';/const WPHOUSE_VERSION = '$2';/" "$1/wphouse.php"
+	sed -i.bak -E "s/^Stable tag: .*/Stable tag: $2/" "$1/readme.txt"
+	rm -f "$1/wphouse.php.bak" "$1/readme.txt.bak"
 	grep -q "const WPHOUSE_VERSION = '$2';" "$1/wphouse.php" || die "could not set version in $1"
 }
 

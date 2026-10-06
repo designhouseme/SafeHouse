@@ -34,7 +34,7 @@ M=$T/www/wphouse/manifest.json
 
 # 1. Tampered manifest: one byte changed, signature must fail.
 cp "$M" "$M.orig"
-sed -i 's/"name": "WPHouse"/"name": "WPHousf"/' "$M"
+sed -i.bak 's/"name": "WPHouse"/"name": "WPHousf"/' "$M" && rm -f "$M.bak"
 out=$(wp wphouse update-check)
 echo "$out" | grep -q "signature is invalid" && pass "tampered manifest rejected" || fail "tampered manifest: $out"
 mv "$M.orig" "$M"
