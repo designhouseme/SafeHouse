@@ -263,44 +263,48 @@
 	</section>
 
 	<section class="light safe" id="awaryjny" aria-labelledby="awaryjny-h">
-		<div class="wrap">
-			<h2 class="display" id="awaryjny-h">Coś się zepsuło?<br>Wyłączysz to jednym plikiem.</h2>
-			<p class="lede">Jeśli po zmianach strona przestanie działać i&nbsp;nie da się nawet zalogować do panelu, WPHouse wyłączysz bez panelu. Wystarczy wgrać na serwer jeden pusty plik. Wszystkie funkcje WPHouse stają, ustawienia zostają nietknięte, a&nbsp;po usunięciu pliku wszystko wraca.</p>
+		<div class="room-head">
+			<div>
+				<h2 class="display" id="awaryjny-h">Coś się zepsuło?<br>Wyłączysz to jednym plikiem.</h2>
+				<p class="lede">Jeśli po zmianach strona przestanie działać i&nbsp;nie da się nawet zalogować, WPHouse wyłączysz bez panelu: wystarczy wgrać na serwer jeden pusty plik.</p>
+			</div>
+		</div>
 
-			<div class="safe-grid">
-				<div class="files" aria-label="Zawartość katalogu wp-content">
-					<p class="files-path">/wp-content</p>
-					<ul>
-						<li><b>languages/</b><span>katalog</span></li>
-						<li><b>plugins/</b><span>katalog</span></li>
-						<li><b>themes/</b><span>katalog</span></li>
-						<li><b>uploads/</b><span>katalog</span></li>
-						<li class="files-new"><b>wphouse-safe-mode</b><span>0&nbsp;B</span></li>
-					</ul>
-				</div>
-				<div class="board" aria-label="Moduły WPHouse w trybie awaryjnym: wszystkie zatrzymane">
-					<ul>
-						<li class="was-on">Podstawowe zabezpieczenia</li>
-						<li class="was-on">Alerty o&nbsp;zmianach</li>
-						<li class="was-on">Kondycja wtyczek</li>
-						<li class="was-on">Alerty o&nbsp;lukach</li>
-						<li>Blokada instalacji</li>
-						<li>Usprawnienia</li>
-						<li>Duplikowanie</li>
-						<li>Poczta SMTP</li>
-						<li>Skrypty</li>
-						<li>Tryb serwisowy</li>
-						<li>Cache LiteSpeed</li>
-						<li>Ochrona przed botami</li>
-					</ul>
-					<div class="safe-notice">Tryb awaryjny WPHouse jest włączony: wszystkie moduły są zatrzymane. Usuń plik wp-content/wphouse-safe-mode lub stałą WPHOUSE_SAFE_MODE, aby je wznowić.</div>
+		<div class="room">
+			<div class="room-side room-side--left" aria-hidden="true">
+				<div class="ghost"><p>Przez FTP</p><code>wphouse-safe-mode</code><span>do katalogu wp-content</span></div>
+				<div class="ghost"><p>W&nbsp;wp-config.php</p><code>WPHOUSE_SAFE_MODE</code></div>
+			</div>
+
+			<div class="screen" role="img" aria-label="Panel WPHouse w trybie awaryjnym: komunikat o zatrzymaniu modułów, przełączniki dalej włączone, przy każdym module status Włączony, nie działa">
+				<div class="screen-bar"><img src="assets/wordpress.svg" alt="" width="18" height="18"><span>Mój sklep</span></div>
+				<div class="screen-body">
+					<p class="screen-notice">Tryb awaryjny WPHouse jest włączony: wszystkie moduły są zatrzymane. Usuń plik wp-content/wphouse-safe-mode lub stałą WPHOUSE_SAFE_MODE, aby je wznowić.</p>
+					<div class="screen-title">
+						<b>WPHouse</b>
+						<span class="screen-count"><span class="st-on">Działa 4 z&nbsp;12</span><span class="st-off">Działa 0 z&nbsp;12</span></span>
+					</div>
+					<div class="screen-card">
+						<ul>
+							<li><i class="sw is-on"></i><b>Podstawowe zabezpieczenia</b><span class="st"><span class="st-on">Działa</span><span class="st-off">Włączony, nie działa</span></span></li>
+							<li><i class="sw is-on"></i><b>Alerty o&nbsp;zmianach</b><span class="st"><span class="st-on">Działa</span><span class="st-off">Włączony, nie działa</span></span></li>
+							<li><i class="sw is-on"></i><b>Kondycja wtyczek</b><span class="st"><span class="st-on">Działa</span><span class="st-off">Włączony, nie działa</span></span></li>
+							<li><i class="sw is-on"></i><b>Alerty o&nbsp;lukach</b><span class="st"><span class="st-on">Działa</span><span class="st-off">Włączony, nie działa</span></span></li>
+							<li><i class="sw"></i><b>Blokada instalacji</b><span class="st"><span class="st-idle">Wyłączony</span></span></li>
+							<li><i class="sw"></i><b>Tryb serwisowy</b><span class="st"><span class="st-idle">Wyłączony</span></span></li>
+						</ul>
+					</div>
 				</div>
 			</div>
-			<dl class="safe-ways">
-				<div><dt>Dla programisty: plik do <code>wp-content</code></dt><dd><code>wphouse-safe-mode</code></dd></div>
-				<div><dt>albo w&nbsp;<code>wp-config.php</code></dt><dd><code>define( 'WPHOUSE_SAFE_MODE', true );</code></dd></div>
-				<div><dt>albo z&nbsp;terminala</dt><dd><code>wp wphouse safe-mode on</code></dd></div>
-			</dl>
+
+			<div class="room-side room-side--right" aria-hidden="true">
+				<div class="ghost"><p>Z&nbsp;terminala</p><code>wp wphouse safe-mode on</code></div>
+				<div class="ghost"><p>Usuwasz plik</p><span>i&nbsp;wszystko wraca</span></div>
+			</div>
+		</div>
+
+		<div class="room-head">
+			<p class="room-big">Wszystkie funkcje WPHouse stają od razu. Ustawienia zostają nietknięte, przełączniki dalej są włączone, a&nbsp;po usunięciu pliku strona działa tak jak przedtem.</p>
 		</div>
 	</section>
 
