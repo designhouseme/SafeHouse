@@ -140,67 +140,63 @@ msgstr "Nie masz uprawnień do zduplikowania tego elementu."
 msgid "%s (copy)"
 msgstr "%s (kopia)"
 
-#: src/Modules/Hardening.php:70
+#: src/Modules/Hardening.php:74
 msgid "Hardening"
 msgstr "Podstawowe zabezpieczenia"
 
-#: src/Modules/Hardening.php:74
-msgid "Safe defaults: no code editor in wp-admin, no username discovery, generic login errors, no version disclosure, XML-RPC off and basic security headers."
-msgstr "Bezpieczne ustawienia domyślne: brak edytora kodu w kokpicie, brak wykrywania nazw użytkowników, ogólne komunikaty błędów logowania, ukryta wersja WordPressa, wyłączone XML-RPC i podstawowe nagłówki bezpieczeństwa."
-
-#: src/Modules/Hardening.php:81
+#: src/Modules/Hardening.php:85
 msgid "Disable the theme/plugin file editor"
 msgstr "Wyłącz edytor plików motywów i wtyczek"
 
-#: src/Modules/Hardening.php:85
+#: src/Modules/Hardening.php:89
 msgid "Block username discovery"
 msgstr "Blokuj wykrywanie nazw użytkowników"
 
-#: src/Modules/Hardening.php:86
+#: src/Modules/Hardening.php:90
 msgid "For visitors who are not logged in: ?author=N scans, the REST users endpoint, the users sitemap and author data in oEmbed."
 msgstr "Dla niezalogowanych odwiedzających: skanowanie ?author=N, endpoint użytkowników w REST API, mapa witryny użytkowników i dane autora w oEmbed."
 
-#: src/Modules/Hardening.php:90
+#: src/Modules/Hardening.php:99
 msgid "Generic login errors"
 msgstr "Ogólne komunikaty błędów logowania"
 
-#: src/Modules/Hardening.php:91
+#: src/Modules/Hardening.php:100
 msgid "One message for a wrong username or a wrong password, on wp-login.php and the WooCommerce login form."
 msgstr "Jeden komunikat przy błędnej nazwie użytkownika i przy błędnym haśle, na wp-login.php i w formularzu logowania WooCommerce."
 
-#: src/Modules/Hardening.php:95
+#: src/Modules/Hardening.php:104
 msgid "Hide the WordPress version"
 msgstr "Ukryj wersję WordPressa"
 
-#: src/Modules/Hardening.php:99
+#: src/Modules/Hardening.php:108
 msgid "Disable XML-RPC"
 msgstr "Wyłącz XML-RPC"
 
-#: src/Modules/Hardening.php:100
+#: src/Modules/Hardening.php:109
 msgid "xmlrpc.php answers 403. The WordPress mobile app and old desktop editors stop working with this site. Skipped automatically when Jetpack or WooPayments is active."
 msgstr "xmlrpc.php odpowiada kodem 403. Aplikacja mobilna WordPress i starsze edytory desktopowe przestaną działać z tą witryną. Pomijane automatycznie, gdy aktywny jest Jetpack lub WooPayments."
 
-#: src/Modules/Hardening.php:104
+#: src/Modules/Hardening.php:113
 msgid "Basic security headers"
 msgstr "Podstawowe nagłówki bezpieczeństwa"
 
-#: src/Modules/Hardening.php:105
+#: src/Modules/Hardening.php:114
 msgid "X-Content-Type-Options, Referrer-Policy and X-Frame-Options (same origin). Pages served from a full-page cache may not get them."
 msgstr "X-Content-Type-Options, Referrer-Policy i X-Frame-Options (ta sama domena). Strony serwowane z pełnej pamięci podręcznej mogą ich nie dostać."
 
-#: src/Modules/Hardening.php:109
+#: src/Modules/Hardening.php:118
 msgid "HSTS (1 year, this domain only)"
 msgstr "HSTS (1 rok, tylko ta domena)"
 
-#: src/Modules/Hardening.php:110
+#: src/Modules/Hardening.php:119
 msgid "Only on HTTPS. Browsers will refuse plain HTTP for a year, so turn it on only when HTTPS works everywhere on this domain."
 msgstr "Tylko przez HTTPS. Przeglądarki przez rok będą odrzucać zwykłe HTTP, więc włącz to dopiero, gdy HTTPS działa w całej domenie."
 
-#: src/Modules/Hardening.php:176
+#: src/Modules/Hardening.php:189
 msgid "Sorry, you are not allowed to list users."
 msgstr "Nie masz uprawnień do wyświetlania listy użytkowników."
 
-#: src/Modules/Hardening.php:208
+#: src/Modules/Hardening.php:306
 msgid "<strong>Error:</strong> The username, email address or password is incorrect."
 msgstr "<strong>Błąd:</strong> nazwa użytkownika, adres e-mail lub hasło są nieprawidłowe."
 
@@ -302,122 +298,123 @@ msgstr "Zaraz wracamy"
 msgid "Maintenance mode is on"
 msgstr "Tryb serwisowy jest włączony"
 
-#: src/Modules/PluginHealth.php:100
+#: src/Modules/PluginHealth.php:105
 msgid "Plugin health"
 msgstr "Kondycja wtyczek"
 
-#: src/Modules/PluginHealth.php:104
+#: src/Modules/PluginHealth.php:109
 msgid "Weekly check of installed plugins: closed on WordPress.org (often for security reasons), no update for two years, not from WordPress.org, one-time tools left active, inactive leftovers, and plugins a WPHouse module replaces. Results also appear in Tools → Site Health."
 msgstr "Cotygodniowy przegląd zainstalowanych wtyczek: zamknięte na WordPress.org (często z powodów bezpieczeństwa), bez aktualizacji od dwóch lat, spoza WordPress.org, jednorazowe narzędzia pozostawione jako aktywne, nieaktywne pozostałości oraz wtyczki, które zastępuje moduł WPHouse. Wyniki widać też w Narzędzia → Stan witryny."
 
-#: src/Modules/PluginHealth.php:228
+#: src/Modules/PluginHealth.php:233
 msgid "Inactive. Inactive plugins can still be attacked through their files; delete it if you do not need it."
 msgstr "Nieaktywna. Nieaktywne wtyczki nadal można zaatakować przez ich pliki; usuń ją, jeśli nie jest potrzebna."
 
 #. translators: 1: date, 2: reason code from WordPress.org, e.g. security-issue.
-#: src/Modules/PluginHealth.php:255
+#: src/Modules/PluginHealth.php:260
 #, php-format
 msgid "Closed on WordPress.org (%1$s, reason: %2$s). It gets no more updates; replace or remove it."
 msgstr "Zamknięta na WordPress.org (%1$s, powód: %2$s). Nie dostanie już aktualizacji; zastąp ją albo usuń."
 
 #. translators: %s: date of the last update.
-#: src/Modules/PluginHealth.php:261
+#: src/Modules/PluginHealth.php:266
 #, php-format
 msgid "No update since %s. Probably abandoned."
 msgstr "Brak aktualizacji od %s. Prawdopodobnie porzucona."
 
-#: src/Modules/PluginHealth.php:266
+#: src/Modules/PluginHealth.php:271
 msgid "Not on WordPress.org and no update source declared. Make sure you know where its updates come from."
 msgstr "Nie ma jej na WordPress.org i nie deklaruje źródła aktualizacji. Upewnij się, skąd przychodzą jej aktualizacje."
 
-#: src/Modules/PluginHealth.php:271
+#: src/Modules/PluginHealth.php:276
 msgid "Updates come from its vendor, not WordPress.org. Keep the licence active so security fixes arrive."
 msgstr "Aktualizacje przychodzą od producenta, nie z WordPress.org. Utrzymuj aktywną licencję, żeby docierały poprawki bezpieczeństwa."
 
-#: src/Modules/PluginHealth.php:276
+#: src/Modules/PluginHealth.php:281
 msgid "One-time tool (migration, search-replace, import, file access or debugging) left active. Delete it when the job is done."
 msgstr "Jednorazowe narzędzie (migracja, wyszukaj-i-zamień, import, dostęp do plików lub debugowanie) pozostawione jako aktywne. Usuń je po zakończeniu pracy."
 
 #. translators: %s: WPHouse module name.
-#: src/Modules/PluginHealth.php:283
+#: src/Modules/PluginHealth.php:288
 #, php-format
 msgid "WPHouse can do this: module \"%s\". Switch it on, then remove this plugin."
 msgstr "WPHouse to potrafi: moduł „%s”. Włącz go, a potem usuń tę wtyczkę."
 
-#: src/Modules/PluginHealth.php:307
+#: src/Modules/PluginHealth.php:312
 msgid "WPHouse plugin health"
 msgstr "Kondycja wtyczek (WPHouse)"
 
-#: src/Modules/PluginHealth.php:328
+#: src/Modules/PluginHealth.php:333
 msgid "No closed, abandoned or forgotten plugins found"
 msgstr "Nie znaleziono zamkniętych, porzuconych ani zapomnianych wtyczek"
 
-#: src/Modules/PluginHealth.php:329
+#: src/Modules/PluginHealth.php:334
 msgid "Some plugins need attention"
 msgstr "Niektóre wtyczki wymagają uwagi"
 
-#: src/Modules/PluginHealth.php:334
+#: src/Modules/Hardening.php:270
+#: src/Modules/PluginHealth.php:339
 #: src/Modules/Vulnerabilities.php:301
 msgid "Security"
 msgstr "Bezpieczeństwo"
 
 #. translators: 1: number of critical findings, 2: number of warnings.
-#: src/Modules/PluginHealth.php:340
+#: src/Modules/PluginHealth.php:345
 #, php-format
 msgid "%1$d critical, %2$d warnings. Details are on the WPHouse settings page."
 msgstr "Krytyczne: %1$d, ostrzeżenia: %2$d. Szczegóły na stronie ustawień WPHouse."
 
-#: src/Modules/PluginHealth.php:345
+#: src/Modules/PluginHealth.php:350
 msgid "Open WPHouse"
 msgstr "Otwórz WPHouse"
 
-#: src/Modules/PluginHealth.php:351
+#: src/Modules/PluginHealth.php:356
 #: src/Modules/Vulnerabilities.php:311
-#: src/Modules/Watch.php:193
+#: src/Modules/Watch.php:238
 msgid "Check now"
 msgstr "Sprawdź teraz"
 
 #. translators: %s: error message.
-#: src/Modules/PluginHealth.php:358
+#: src/Modules/PluginHealth.php:363
 #, php-format
 msgid "Could not reach WordPress.org: %s"
 msgstr "Nie udało się połączyć z WordPress.org: %s"
 
-#: src/Modules/PluginHealth.php:359
+#: src/Modules/PluginHealth.php:364
 msgid "Plugin health updated."
 msgstr "Kondycja wtyczek zaktualizowana."
 
-#: src/Modules/PluginHealth.php:366
+#: src/Modules/PluginHealth.php:371
 msgid "Not checked yet. Use \"Check now\" or wait for the daily run."
 msgstr "Jeszcze nie sprawdzono. Kliknij „Sprawdź teraz” albo poczekaj na codzienne sprawdzenie."
 
 #. translators: %s: date and time.
-#: src/Modules/PluginHealth.php:370
+#: src/Modules/PluginHealth.php:375
 #: src/Modules/Vulnerabilities.php:330
 #, php-format
 msgid "Last check: %s."
 msgstr "Ostatnie sprawdzenie: %s."
 
 #. translators: %s: error message.
-#: src/Modules/PluginHealth.php:372
+#: src/Modules/PluginHealth.php:377
 #, php-format
 msgid "The last refresh failed: %s"
 msgstr "Ostatnie odświeżenie nie powiodło się: %s"
 
-#: src/Modules/PluginHealth.php:377
+#: src/Modules/PluginHealth.php:382
 msgid "Nothing to report."
 msgstr "Brak uwag."
 
-#: src/Modules/PluginHealth.php:380
+#: src/Modules/PluginHealth.php:385
 msgid "Plugin"
 msgstr "Wtyczka"
 
-#: src/Modules/PluginHealth.php:380
+#: src/Modules/PluginHealth.php:385
 msgid "Findings"
 msgstr "Wyniki"
 
 #: src/Admin/Page.php:430
-#: src/Modules/PluginHealth.php:382
+#: src/Modules/PluginHealth.php:387
 msgid "inactive"
 msgstr "nieaktywna"
 
@@ -596,24 +593,20 @@ msgstr "Liczba zachowywanych wersji"
 msgid "Empty keeps the WordPress default (unlimited)."
 msgstr "Puste pole zostawia domyślne ustawienie WordPressa (bez limitu)."
 
-#: src/Modules/Watch.php:40
+#: src/Modules/Watch.php:43
 msgid "Change alerts"
 msgstr "Alerty o zmianach"
 
-#: src/Modules/Watch.php:44
-msgid "E-mails the alert recipients when an administrator is added, a plugin or theme appears or is activated, a mu-plugin or drop-in shows up, or wp-config.php changes. Changes are also written to the activity log."
-msgstr "Wysyła e-mail do odbiorców alertów, gdy przybędzie administrator, pojawi się lub zostanie włączona wtyczka albo motyw, pojawi się wtyczka obowiązkowa (mu-plugin) lub drop-in albo zmieni się wp-config.php. Zmiany trafiają też do dziennika zdarzeń."
-
-#: src/Modules/Watch.php:194
+#: src/Modules/Watch.php:239
 msgid "Accept current state"
 msgstr "Zatwierdź obecny stan"
 
-#: src/Modules/Watch.php:201
+#: src/Modules/Watch.php:246
 msgid "The current state is the new baseline."
 msgstr "Obecny stan jest nowym punktem odniesienia."
 
 #. translators: %d: number of changes.
-#: src/Modules/Watch.php:205
+#: src/Modules/Watch.php:250
 #, php-format
 msgid "%d change found and reported."
 msgid_plural "%d changes found and reported."
@@ -622,21 +615,15 @@ msgstr[1] "Znaleziono i zgłoszono %d zmiany."
 msgstr[2] "Znaleziono i zgłoszono %d zmian."
 
 #. translators: %d: number of changes.
-#: src/Modules/Watch.php:205
+#: src/Modules/Watch.php:250
 msgid "No changes since the last check."
 msgstr "Brak zmian od ostatniego sprawdzenia."
 
-#: src/Modules/Watch.php:212
+#: src/Modules/Watch.php:257
 msgid "No baseline yet. It is recorded on the first hourly check."
 msgstr "Brak punktu odniesienia. Zostanie zapisany przy pierwszym cogodzinnym sprawdzeniu."
 
-#. translators: 1: number of administrators, 2: number of plugins, 3: number of mu-plugins, 4: number of drop-ins.
-#: src/Modules/Watch.php:217
-#, php-format
-msgid "Watching %1$d administrators, %2$d plugins, %3$d must-use plugins, %4$d drop-ins and wp-config.php."
-msgstr "Obserwowane: administratorzy (%1$d), wtyczki (%2$d), wtyczki obowiązkowe (%3$d), drop-iny (%4$d) i wp-config.php."
-
-#: src/Plugin.php:124
+#: src/Plugin.php:125
 msgid "WPHouse 0.x supports single sites only. Activate it per site instead of network-wide."
 msgstr "WPHouse 0.x obsługuje tylko pojedyncze witryny. Włącz wtyczkę na poszczególnych witrynach, a nie w całej sieci."
 
@@ -956,3 +943,161 @@ msgstr "Cache obiektów WPHouse nie może połączyć się z Redisem"
 #, php-format
 msgid "WordPress is using its own cache for now, so the site works but is slower. Reason: %s"
 msgstr "WordPress używa na razie własnego cache, więc strona działa, ale wolniej. Powód: %s"
+
+#: src/Modules/Bots.php:77
+msgid "Bot protection"
+msgstr "Ochrona przed botami"
+
+#: src/Modules/Bots.php:81
+msgid "Stops automated sign-ups, spam comments, password-reset floods, login attempts and fake orders. A honeypot works on its own; Cloudflare Turnstile is added when its keys are in wp-config.php."
+msgstr "Zatrzymuje automatyczne rejestracje, spam w komentarzach, zalew próśb o reset hasła, próby logowania i fałszywe zamówienia. Honeypot działa sam; Cloudflare Turnstile dochodzi, gdy jego klucze są w wp-config.php."
+
+#: src/Modules/Bots.php:88
+msgid "Honeypot on registration, lost password and comments"
+msgstr "Honeypot przy rejestracji, resecie hasła i komentarzach"
+
+#: src/Modules/Bots.php:89
+msgid "An invisible trap field plus proof that a person used the form in a browser. Needs no outside service. Visitors with JavaScript turned off cannot register, reset a password or comment."
+msgstr "Niewidoczne pole-pułapka i dowód, że formularza użył człowiek w przeglądarce. Nie wymaga zewnętrznej usługi. Odwiedzający z wyłączonym JavaScriptem nie zarejestrują się, nie zresetują hasła ani nie skomentują."
+
+#: src/Modules/Bots.php:93
+msgid "Turnstile on login"
+msgstr "Turnstile przy logowaniu"
+
+#: src/Modules/Bots.php:94
+msgid "wp-login.php, login forms made with wp_login_form() and the WooCommerce login form."
+msgstr "wp-login.php, formularze logowania z wp_login_form() i formularz logowania WooCommerce."
+
+#: src/Modules/Bots.php:98
+msgid "Turnstile on registration"
+msgstr "Turnstile przy rejestracji"
+
+#: src/Modules/Bots.php:99
+msgid "WordPress and WooCommerce My Account registration."
+msgstr "Rejestracja w WordPressie i na stronie Moje konto WooCommerce."
+
+#: src/Modules/Bots.php:103
+msgid "Turnstile on lost password"
+msgstr "Turnstile przy resecie hasła"
+
+#: src/Modules/Bots.php:107
+msgid "Turnstile on comments and reviews"
+msgstr "Turnstile przy komentarzach i opiniach"
+
+#: src/Modules/Bots.php:108
+msgid "For visitors who are not logged in."
+msgstr "Dla niezalogowanych odwiedzających."
+
+#: src/Modules/Bots.php:112
+msgid "Turnstile on checkout"
+msgstr "Turnstile przy zamówieniu"
+
+#: src/Modules/Bots.php:113
+msgid "Classic and block checkout, including orders sent straight to the Store API. Express payment buttons outside the checkout page (such as Apple Pay or Google Pay on product pages) cannot pass this check, so turn it off on sites that use them."
+msgstr "Klasyczny i blokowy formularz zamówienia, także zamówienia wysyłane prosto do Store API. Przyciski szybkich płatności poza stroną zamówienia (np. Apple Pay lub Google Pay na stronie produktu) nie przejdą tej kontroli, więc na stronach, które ich używają, wyłącz tę opcję."
+
+#: src/Modules/Bots.php:117
+msgid "When Cloudflare cannot be reached"
+msgstr "Gdy Cloudflare jest nieosiągalny"
+
+#: src/Modules/Bots.php:118
+msgid "Applies only when this server cannot reach Cloudflare, or Cloudflare rejects the secret key. A visitor whose browser blocks Turnstile is still asked to try again."
+msgstr "Dotyczy tylko sytuacji, gdy ten serwer nie może połączyć się z Cloudflare albo Cloudflare odrzuca klucz tajny. Odwiedzający, którego przeglądarka blokuje Turnstile, i tak zobaczy prośbę o ponowną próbę."
+
+#: src/Modules/Bots.php:120
+msgid "Let the submission through and log it"
+msgstr "Przepuść formularz i zapisz to w dzienniku"
+
+#: src/Modules/Bots.php:121
+msgid "Block the submission"
+msgstr "Zablokuj formularz"
+
+#: src/Modules/Bots.php:175
+msgid "Leave this field empty"
+msgstr "Zostaw to pole puste"
+
+#: src/Modules/Bots.php:309
+msgid "This looks like an automated submission. Please make sure JavaScript is on and try again."
+msgstr "To wygląda na automatyczne wysłanie formularza. Upewnij się, że JavaScript jest włączony, i spróbuj ponownie."
+
+#: src/Modules/Bots.php:326
+msgid "The anti-bot check is unavailable right now. Please try again in a few minutes."
+msgstr "Weryfikacja antybotowa jest teraz niedostępna. Spróbuj ponownie za kilka minut."
+
+#: src/Modules/Bots.php:329
+msgid "The anti-bot check did not pass. Please wait for it to finish and try again."
+msgstr "Weryfikacja antybotowa nie powiodła się. Poczekaj, aż się zakończy, i spróbuj ponownie."
+
+#: src/Modules/Bots.php:368
+msgid "Turnstile is off: add WPHOUSE_TURNSTILE_SITE_KEY and WPHOUSE_TURNSTILE_SECRET_KEY to wp-config.php. The honeypot works without them."
+msgstr "Turnstile jest wyłączony: dodaj WPHOUSE_TURNSTILE_SITE_KEY i WPHOUSE_TURNSTILE_SECRET_KEY do wp-config.php. Honeypot działa bez nich."
+
+#: src/Modules/Bots.php:370
+msgid "Turnstile is off: wp-config.php has Cloudflare test keys, which always give the same answer and are not allowed on a production site."
+msgstr "Turnstile jest wyłączony: w wp-config.php są testowe klucze Cloudflare, które zawsze dają tę samą odpowiedź i nie są dozwolone na stronie produkcyjnej."
+
+#: src/Modules/Bots.php:372
+msgid "Turnstile is on, with keys from wp-config.php."
+msgstr "Turnstile jest włączony, z kluczami z wp-config.php."
+
+#: src/Modules/Hardening.php:78
+msgid "Safe defaults: no code editor in wp-admin, no username discovery, no admin-level role for new accounts, generic login errors, no version disclosure, XML-RPC off and basic security headers. Adds a registration check to Site Health."
+msgstr "Bezpieczne ustawienia domyślne: brak edytora kodu w kokpicie, brak wykrywania nazw użytkowników, żadnej roli administracyjnej dla nowych kont, ogólne komunikaty błędów logowania, ukryta wersja WordPressa, wyłączone XML-RPC i podstawowe nagłówki bezpieczeństwa. Dodaje test rejestracji w Zdrowiu witryny."
+
+#: src/Modules/Hardening.php:94
+msgid "Keep new accounts out of admin-level roles"
+msgstr "Nie dawaj nowym kontom ról administracyjnych"
+
+#: src/Modules/Hardening.php:95
+msgid "If the default role for new accounts can manage users, plugins, options, the shop or raw HTML (for example after a database attack), new accounts get Subscriber instead."
+msgstr "Jeśli domyślna rola nowych kont może zarządzać użytkownikami, wtyczkami, ustawieniami, sklepem albo surowym HTML (np. po ataku na bazę danych), nowe konta dostają zamiast niej rolę Subskrybent."
+
+#: src/Modules/Hardening.php:226
+msgid "WPHouse registration check"
+msgstr "Test rejestracji WPHouse"
+
+#: src/Modules/Hardening.php:244
+msgid "New accounts are set to get an admin-level role"
+msgstr "Nowe konta mają dostawać rolę administracyjną"
+
+#. translators: %s: role name, e.g. Administrator.
+#: src/Modules/Hardening.php:247
+#, php-format
+msgid "The default role for new accounts is %s, which can manage the site. Attackers set this so that they can register their own administrator. Change it in Settings → General and check who changed it."
+msgstr "Domyślna rola nowych kont to %s, a ta rola może zarządzać stroną. Atakujący ustawiają to, żeby zarejestrować własnego administratora. Zmień to w Ustawienia → Ogólne i sprawdź, kto to zmienił."
+
+#: src/Modules/Hardening.php:251
+msgid "Until then WPHouse gives new accounts the Subscriber role."
+msgstr "Do tego czasu WPHouse nadaje nowym kontom rolę Subskrybent."
+
+#: src/Modules/Hardening.php:255
+msgid "Anyone can register an account"
+msgstr "Każdy może założyć konto"
+
+#. translators: %s: role name, e.g. Subscriber.
+#: src/Modules/Hardening.php:258
+#, php-format
+msgid "The \"Anyone can register\" setting is on, with %s as the role for new accounts. Bots use open registration for spam accounts and to probe plugins that trust any logged-in user. If the site does not need WordPress accounts, turn it off in Settings → General. WooCommerce customer accounts have their own setting and keep working."
+msgstr "Ustawienie „Każdy może się zarejestrować” jest włączone, a nowe konta dostają rolę %s. Boty używają otwartej rejestracji do zakładania kont ze spamem i do sprawdzania wtyczek, które ufają każdemu zalogowanemu. Jeśli strona nie potrzebuje kont WordPressa, wyłącz to w Ustawienia → Ogólne. Konta klientów WooCommerce mają osobne ustawienie i dalej działają."
+
+#: src/Modules/Hardening.php:263
+msgid "Registration is closed"
+msgstr "Rejestracja jest zamknięta"
+
+#: src/Modules/Hardening.php:264
+msgid "Only administrators can create WordPress accounts."
+msgstr "Tylko administratorzy mogą tworzyć konta WordPressa."
+
+#: src/Modules/Hardening.php:274
+msgid "Open general settings"
+msgstr "Otwórz ustawienia ogólne"
+
+#: src/Modules/Watch.php:47
+msgid "E-mails the alert recipients when an administrator is added, a plugin or theme appears or is activated, a mu-plugin or drop-in shows up, wp-config.php changes, or someone opens registration or changes the default role, admin e-mail or site address. Changes are also written to the activity log."
+msgstr "Wysyła e-mail do odbiorców alertów, gdy przybędzie administrator, pojawi się lub zostanie włączona wtyczka albo motyw, pojawi się wtyczka obowiązkowa (mu-plugin) lub drop-in, zmieni się wp-config.php albo ktoś otworzy rejestrację lub zmieni domyślną rolę, e-mail administratora czy adres strony. Zmiany trafiają też do dziennika zdarzeń."
+
+#. translators: 1: number of administrators, 2: number of plugins, 3: number of mu-plugins, 4: number of drop-ins, 5: number of site settings.
+#: src/Modules/Watch.php:262
+#, php-format
+msgid "Watching %1$d administrators, %2$d plugins, %3$d must-use plugins, %4$d drop-ins, wp-config.php and %5$d site settings."
+msgstr "Obserwowane: administratorzy (%1$d), wtyczki (%2$d), wtyczki obowiązkowe (%3$d), drop-iny (%4$d), wp-config.php i ustawienia strony (%5$d)."

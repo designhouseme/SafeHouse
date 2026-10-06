@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-06T12:58:29+00:00\n"
+"POT-Creation-Date: 2026-10-06T13:03:08+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: wphouse\n"
@@ -184,7 +184,7 @@ msgid "active"
 msgstr ""
 
 #: src/Admin/Page.php:430
-#: src/Modules/PluginHealth.php:382
+#: src/Modules/PluginHealth.php:387
 msgid "inactive"
 msgstr ""
 
@@ -258,6 +258,102 @@ msgstr ""
 msgid "The downloaded WPHouse package does not match the signed checksum. Update cancelled."
 msgstr ""
 
+#: src/Modules/Bots.php:77
+msgid "Bot protection"
+msgstr ""
+
+#: src/Modules/Bots.php:81
+msgid "Stops automated sign-ups, spam comments, password-reset floods, login attempts and fake orders. A honeypot works on its own; Cloudflare Turnstile is added when its keys are in wp-config.php."
+msgstr ""
+
+#: src/Modules/Bots.php:88
+msgid "Honeypot on registration, lost password and comments"
+msgstr ""
+
+#: src/Modules/Bots.php:89
+msgid "An invisible trap field plus proof that a person used the form in a browser. Needs no outside service. Visitors with JavaScript turned off cannot register, reset a password or comment."
+msgstr ""
+
+#: src/Modules/Bots.php:93
+msgid "Turnstile on login"
+msgstr ""
+
+#: src/Modules/Bots.php:94
+msgid "wp-login.php, login forms made with wp_login_form() and the WooCommerce login form."
+msgstr ""
+
+#: src/Modules/Bots.php:98
+msgid "Turnstile on registration"
+msgstr ""
+
+#: src/Modules/Bots.php:99
+msgid "WordPress and WooCommerce My Account registration."
+msgstr ""
+
+#: src/Modules/Bots.php:103
+msgid "Turnstile on lost password"
+msgstr ""
+
+#: src/Modules/Bots.php:107
+msgid "Turnstile on comments and reviews"
+msgstr ""
+
+#: src/Modules/Bots.php:108
+msgid "For visitors who are not logged in."
+msgstr ""
+
+#: src/Modules/Bots.php:112
+msgid "Turnstile on checkout"
+msgstr ""
+
+#: src/Modules/Bots.php:113
+msgid "Classic and block checkout, including orders sent straight to the Store API. Express payment buttons outside the checkout page (such as Apple Pay or Google Pay on product pages) cannot pass this check, so turn it off on sites that use them."
+msgstr ""
+
+#: src/Modules/Bots.php:117
+msgid "When Cloudflare cannot be reached"
+msgstr ""
+
+#: src/Modules/Bots.php:118
+msgid "Applies only when this server cannot reach Cloudflare, or Cloudflare rejects the secret key. A visitor whose browser blocks Turnstile is still asked to try again."
+msgstr ""
+
+#: src/Modules/Bots.php:120
+msgid "Let the submission through and log it"
+msgstr ""
+
+#: src/Modules/Bots.php:121
+msgid "Block the submission"
+msgstr ""
+
+#: src/Modules/Bots.php:175
+msgid "Leave this field empty"
+msgstr ""
+
+#: src/Modules/Bots.php:309
+msgid "This looks like an automated submission. Please make sure JavaScript is on and try again."
+msgstr ""
+
+#: src/Modules/Bots.php:326
+msgid "The anti-bot check is unavailable right now. Please try again in a few minutes."
+msgstr ""
+
+#: src/Modules/Bots.php:329
+msgid "The anti-bot check did not pass. Please wait for it to finish and try again."
+msgstr ""
+
+#: src/Modules/Bots.php:368
+msgid "Turnstile is off: add WPHOUSE_TURNSTILE_SITE_KEY and WPHOUSE_TURNSTILE_SECRET_KEY to wp-config.php. The honeypot works without them."
+msgstr ""
+
+#: src/Modules/Bots.php:370
+msgid "Turnstile is off: wp-config.php has Cloudflare test keys, which always give the same answer and are not allowed on a production site."
+msgstr ""
+
+#: src/Modules/Bots.php:372
+msgid "Turnstile is on, with keys from wp-config.php."
+msgstr ""
+
 #: src/Modules/Duplicate.php:34
 msgid "Duplicate posts and pages"
 msgstr ""
@@ -280,67 +376,121 @@ msgstr ""
 msgid "%s (copy)"
 msgstr ""
 
-#: src/Modules/Hardening.php:70
+#: src/Modules/Hardening.php:74
 msgid "Hardening"
 msgstr ""
 
-#: src/Modules/Hardening.php:74
-msgid "Safe defaults: no code editor in wp-admin, no username discovery, generic login errors, no version disclosure, XML-RPC off and basic security headers."
-msgstr ""
-
-#: src/Modules/Hardening.php:81
-msgid "Disable the theme/plugin file editor"
+#: src/Modules/Hardening.php:78
+msgid "Safe defaults: no code editor in wp-admin, no username discovery, no admin-level role for new accounts, generic login errors, no version disclosure, XML-RPC off and basic security headers. Adds a registration check to Site Health."
 msgstr ""
 
 #: src/Modules/Hardening.php:85
+msgid "Disable the theme/plugin file editor"
+msgstr ""
+
+#: src/Modules/Hardening.php:89
 msgid "Block username discovery"
 msgstr ""
 
-#: src/Modules/Hardening.php:86
+#: src/Modules/Hardening.php:90
 msgid "For visitors who are not logged in: ?author=N scans, the REST users endpoint, the users sitemap and author data in oEmbed."
 msgstr ""
 
-#: src/Modules/Hardening.php:90
-msgid "Generic login errors"
-msgstr ""
-
-#: src/Modules/Hardening.php:91
-msgid "One message for a wrong username or a wrong password, on wp-login.php and the WooCommerce login form."
+#: src/Modules/Hardening.php:94
+msgid "Keep new accounts out of admin-level roles"
 msgstr ""
 
 #: src/Modules/Hardening.php:95
-msgid "Hide the WordPress version"
+msgid "If the default role for new accounts can manage users, plugins, options, the shop or raw HTML (for example after a database attack), new accounts get Subscriber instead."
 msgstr ""
 
 #: src/Modules/Hardening.php:99
-msgid "Disable XML-RPC"
+msgid "Generic login errors"
 msgstr ""
 
 #: src/Modules/Hardening.php:100
-msgid "xmlrpc.php answers 403. The WordPress mobile app and old desktop editors stop working with this site. Skipped automatically when Jetpack or WooPayments is active."
+msgid "One message for a wrong username or a wrong password, on wp-login.php and the WooCommerce login form."
 msgstr ""
 
 #: src/Modules/Hardening.php:104
-msgid "Basic security headers"
+msgid "Hide the WordPress version"
 msgstr ""
 
-#: src/Modules/Hardening.php:105
-msgid "X-Content-Type-Options, Referrer-Policy and X-Frame-Options (same origin). Pages served from a full-page cache may not get them."
+#: src/Modules/Hardening.php:108
+msgid "Disable XML-RPC"
 msgstr ""
 
 #: src/Modules/Hardening.php:109
+msgid "xmlrpc.php answers 403. The WordPress mobile app and old desktop editors stop working with this site. Skipped automatically when Jetpack or WooPayments is active."
+msgstr ""
+
+#: src/Modules/Hardening.php:113
+msgid "Basic security headers"
+msgstr ""
+
+#: src/Modules/Hardening.php:114
+msgid "X-Content-Type-Options, Referrer-Policy and X-Frame-Options (same origin). Pages served from a full-page cache may not get them."
+msgstr ""
+
+#: src/Modules/Hardening.php:118
 msgid "HSTS (1 year, this domain only)"
 msgstr ""
 
-#: src/Modules/Hardening.php:110
+#: src/Modules/Hardening.php:119
 msgid "Only on HTTPS. Browsers will refuse plain HTTP for a year, so turn it on only when HTTPS works everywhere on this domain."
 msgstr ""
 
-#: src/Modules/Hardening.php:176
+#: src/Modules/Hardening.php:189
 msgid "Sorry, you are not allowed to list users."
 msgstr ""
 
-#: src/Modules/Hardening.php:208
+#: src/Modules/Hardening.php:226
+msgid "WPHouse registration check"
+msgstr ""
+
+#: src/Modules/Hardening.php:244
+msgid "New accounts are set to get an admin-level role"
+msgstr ""
+
+#. translators: %s: role name, e.g. Administrator.
+#: src/Modules/Hardening.php:247
+#, php-format
+msgid "The default role for new accounts is %s, which can manage the site. Attackers set this so that they can register their own administrator. Change it in Settings → General and check who changed it."
+msgstr ""
+
+#: src/Modules/Hardening.php:251
+msgid "Until then WPHouse gives new accounts the Subscriber role."
+msgstr ""
+
+#: src/Modules/Hardening.php:255
+msgid "Anyone can register an account"
+msgstr ""
+
+#. translators: %s: role name, e.g. Subscriber.
+#: src/Modules/Hardening.php:258
+#, php-format
+msgid "The \"Anyone can register\" setting is on, with %s as the role for new accounts. Bots use open registration for spam accounts and to probe plugins that trust any logged-in user. If the site does not need WordPress accounts, turn it off in Settings → General. WooCommerce customer accounts have their own setting and keep working."
+msgstr ""
+
+#: src/Modules/Hardening.php:263
+msgid "Registration is closed"
+msgstr ""
+
+#: src/Modules/Hardening.php:264
+msgid "Only administrators can create WordPress accounts."
+msgstr ""
+
+#: src/Modules/Hardening.php:270
+#: src/Modules/PluginHealth.php:339
+#: src/Modules/Vulnerabilities.php:301
+msgid "Security"
+msgstr ""
+
+#: src/Modules/Hardening.php:274
+msgid "Open general settings"
+msgstr ""
+
+#: src/Modules/Hardening.php:306
 msgid "<strong>Error:</strong> The username, email address or password is incorrect."
 msgstr ""
 
@@ -518,117 +668,112 @@ msgstr ""
 msgid "Maintenance mode is on"
 msgstr ""
 
-#: src/Modules/PluginHealth.php:100
+#: src/Modules/PluginHealth.php:105
 msgid "Plugin health"
 msgstr ""
 
-#: src/Modules/PluginHealth.php:104
+#: src/Modules/PluginHealth.php:109
 msgid "Weekly check of installed plugins: closed on WordPress.org (often for security reasons), no update for two years, not from WordPress.org, one-time tools left active, inactive leftovers, and plugins a WPHouse module replaces. Results also appear in Tools → Site Health."
 msgstr ""
 
-#: src/Modules/PluginHealth.php:228
+#: src/Modules/PluginHealth.php:233
 msgid "Inactive. Inactive plugins can still be attacked through their files; delete it if you do not need it."
 msgstr ""
 
 #. translators: 1: date, 2: reason code from WordPress.org, e.g. security-issue.
-#: src/Modules/PluginHealth.php:255
+#: src/Modules/PluginHealth.php:260
 #, php-format
 msgid "Closed on WordPress.org (%1$s, reason: %2$s). It gets no more updates; replace or remove it."
 msgstr ""
 
 #. translators: %s: date of the last update.
-#: src/Modules/PluginHealth.php:261
+#: src/Modules/PluginHealth.php:266
 #, php-format
 msgid "No update since %s. Probably abandoned."
 msgstr ""
 
-#: src/Modules/PluginHealth.php:266
+#: src/Modules/PluginHealth.php:271
 msgid "Not on WordPress.org and no update source declared. Make sure you know where its updates come from."
 msgstr ""
 
-#: src/Modules/PluginHealth.php:271
+#: src/Modules/PluginHealth.php:276
 msgid "Updates come from its vendor, not WordPress.org. Keep the licence active so security fixes arrive."
 msgstr ""
 
-#: src/Modules/PluginHealth.php:276
+#: src/Modules/PluginHealth.php:281
 msgid "One-time tool (migration, search-replace, import, file access or debugging) left active. Delete it when the job is done."
 msgstr ""
 
 #. translators: %s: WPHouse module name.
-#: src/Modules/PluginHealth.php:283
+#: src/Modules/PluginHealth.php:288
 #, php-format
 msgid "WPHouse can do this: module \"%s\". Switch it on, then remove this plugin."
 msgstr ""
 
-#: src/Modules/PluginHealth.php:307
+#: src/Modules/PluginHealth.php:312
 msgid "WPHouse plugin health"
 msgstr ""
 
-#: src/Modules/PluginHealth.php:328
+#: src/Modules/PluginHealth.php:333
 msgid "No closed, abandoned or forgotten plugins found"
 msgstr ""
 
-#: src/Modules/PluginHealth.php:329
+#: src/Modules/PluginHealth.php:334
 msgid "Some plugins need attention"
 msgstr ""
 
-#: src/Modules/PluginHealth.php:334
-#: src/Modules/Vulnerabilities.php:301
-msgid "Security"
-msgstr ""
-
 #. translators: 1: number of critical findings, 2: number of warnings.
-#: src/Modules/PluginHealth.php:340
+#: src/Modules/PluginHealth.php:345
 #, php-format
 msgid "%1$d critical, %2$d warnings. Details are on the WPHouse settings page."
 msgstr ""
 
-#: src/Modules/PluginHealth.php:345
+#: src/Modules/PluginHealth.php:350
 msgid "Open WPHouse"
 msgstr ""
 
-#: src/Modules/PluginHealth.php:351
+#: src/Modules/PluginHealth.php:356
 #: src/Modules/Vulnerabilities.php:311
-#: src/Modules/Watch.php:193
+#: src/Modules/Watch.php:238
 msgid "Check now"
 msgstr ""
 
 #. translators: %s: error message.
-#: src/Modules/PluginHealth.php:358
+#: src/Modules/PluginHealth.php:363
 #, php-format
 msgid "Could not reach WordPress.org: %s"
 msgstr ""
 
-#: src/Modules/PluginHealth.php:359
+#: src/Modules/PluginHealth.php:364
 msgid "Plugin health updated."
 msgstr ""
 
-#: src/Modules/PluginHealth.php:366
+#: src/Modules/PluginHealth.php:371
 msgid "Not checked yet. Use \"Check now\" or wait for the daily run."
 msgstr ""
 
 #. translators: %s: date and time.
-#: src/Modules/PluginHealth.php:370
+#: src/Modules/PluginHealth.php:375
 #: src/Modules/Vulnerabilities.php:330
 #, php-format
 msgid "Last check: %s."
 msgstr ""
 
 #. translators: %s: error message.
-#: src/Modules/PluginHealth.php:372
+#: src/Modules/PluginHealth.php:377
 #, php-format
 msgid "The last refresh failed: %s"
 msgstr ""
 
-#: src/Modules/PluginHealth.php:377
+#: src/Modules/PluginHealth.php:382
 msgid "Nothing to report."
 msgstr ""
 
-#: src/Modules/PluginHealth.php:380
+#: src/Modules/PluginHealth.php:385
 msgid "Plugin"
 msgstr ""
 
-#: src/Modules/PluginHealth.php:380
+#: src/Modules/PluginHealth.php:385
 msgid "Findings"
 msgstr ""
 
@@ -908,24 +1053,24 @@ msgstr ""
 msgid "%1$s %2$s%3$s: %4$s. No fixed version yet: deactivate it if you can do without it."
 msgstr ""
 
-#: src/Modules/Watch.php:40
+#: src/Modules/Watch.php:43
 msgid "Change alerts"
 msgstr ""
 
-#: src/Modules/Watch.php:44
-msgid "E-mails the alert recipients when an administrator is added, a plugin or theme appears or is activated, a mu-plugin or drop-in shows up, or wp-config.php changes. Changes are also written to the activity log."
+#: src/Modules/Watch.php:47
+msgid "E-mails the alert recipients when an administrator is added, a plugin or theme appears or is activated, a mu-plugin or drop-in shows up, wp-config.php changes, or someone opens registration or changes the default role, admin e-mail or site address. Changes are also written to the activity log."
 msgstr ""
 
-#: src/Modules/Watch.php:194
+#: src/Modules/Watch.php:239
 msgid "Accept current state"
 msgstr ""
 
-#: src/Modules/Watch.php:201
+#: src/Modules/Watch.php:246
 msgid "The current state is the new baseline."
 msgstr ""
 
 #. translators: %d: number of changes.
-#: src/Modules/Watch.php:205
+#: src/Modules/Watch.php:250
 #, php-format
 msgid "%d change found and reported."
 msgid_plural "%d changes found and reported."
@@ -933,21 +1078,21 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: number of changes.
-#: src/Modules/Watch.php:205
+#: src/Modules/Watch.php:250
 msgid "No changes since the last check."
 msgstr ""
 
-#: src/Modules/Watch.php:212
+#: src/Modules/Watch.php:257
 msgid "No baseline yet. It is recorded on the first hourly check."
 msgstr ""
 
-#. translators: 1: number of administrators, 2: number of plugins, 3: number of mu-plugins, 4: number of drop-ins.
-#: src/Modules/Watch.php:217
+#. translators: 1: number of administrators, 2: number of plugins, 3: number of mu-plugins, 4: number of drop-ins, 5: number of site settings.
+#: src/Modules/Watch.php:262
 #, php-format
-msgid "Watching %1$d administrators, %2$d plugins, %3$d must-use plugins, %4$d drop-ins and wp-config.php."
+msgid "Watching %1$d administrators, %2$d plugins, %3$d must-use plugins, %4$d drop-ins, wp-config.php and %5$d site settings."
 msgstr ""
 
-#: src/Plugin.php:124
+#: src/Plugin.php:125
 msgid "WPHouse 0.x supports single sites only. Activate it per site instead of network-wide."
 msgstr ""
 
