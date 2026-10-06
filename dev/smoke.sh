@@ -84,6 +84,89 @@ check "comment on a post is refused"      403 "$(code -d 'comment_post_ID=1&auth
 check "head snippet printed"              1   "$(curl -s "$U/" | grep -c 'smoke-head')"
 check "footer snippet printed"            1   "$(curl -s "$U/" | grep -c 'smoke-foot')"
 
+echo "== bots"
+# Comments back on (tweaks), a valid From address so lost-password mail goes out, registration open.
+wp eval '$o = get_option("wphouse_settings"); $o["modules"]["tweaks"] = false; $o["modules"]["bots"] = true; $o["smtp"]["from_email"] = "wordpress@example.test";
+$o["bots"] = ["honeypot"=>true,"turnstile_login"=>true,"turnstile_register"=>true,"turnstile_lostpassword"=>true,"turnstile_comments"=>true,"turnstile_checkout"=>true,"when_unavailable"=>"allow"]; update_option("wphouse_settings", $o);' >/dev/null
+reg_before=$(wp option get users_can_register); woo_reg_before=$(wp option get woocommerce_enable_myaccount_registration)
+wp option update users_can_register 1 >/dev/null
+[ "$has_woo" = 1 ] && wp option update woocommerce_enable_myaccount_registration yes >/dev/null
+n=$RANDOM
+proof=$(curl -s "$U/wp-login.php?action=register" | grep -o 'data-proof="[^"]*"' | head -1 | sed 's/data-proof="//;s/"//')
+check "honeypot printed on registration"  1   "$([ -n "$proof" ] && echo 1 || echo 0)"
+check "register without proof refused"    200 "$(code -d "user_login=bot$n&user_email=bot$n@example.test&wphouse_url=&wphouse_proof=" "$U/wp-login.php?action=register")"
+check "register with filled trap refused" 200 "$(code -d "user_login=bot$n&user_email=bot$n@example.test&wphouse_url=http://spam.test&wphouse_proof=$proof" "$U/wp-login.php?action=register")"
+check "register with proof accepted"      302 "$(code -d "user_login=hp$n&user_email=hp$n@example.test&wphouse_url=&wphouse_proof=$proof" "$U/wp-login.php?action=register")"
+check "lost password without proof"       200 "$(code -d "user_login=admin" "$U/wp-login.php?action=lostpassword")"
+check "lost password with proof"          302 "$(code -d "user_login=admin&wphouse_url=&wphouse_proof=$proof" "$U/wp-login.php?action=lostpassword")"
+check "comment without proof refused"     403 "$(code -d "comment_post_ID=1&author=a&email=a@b.test&comment=bot$n" "$U/wp-comments-post.php")"
+check "comment with proof accepted"       302 "$(code -d "comment_post_ID=1&author=a&email=a@b.test&comment=human$n&wphouse_url=&wphouse_proof=$proof" "$U/wp-comments-post.php")"
+check "login has no honeypot"             302 "$(code -b "wordpress_test_cookie=WP%20Cookie%20check" -d "log=admin&pwd=admin&testcookie=1" "$U/wp-login.php")"
+check "admin password reset unaffected"   true "$(wp eval 'var_export(true === retrieve_password("admin"));')"
+if [ "$has_woo" = 1 ]; then
+	woo_register() { # <email> <extra fields>
+		local jar nonce
+		jar=$(mktemp)
+		nonce=$(curl -s -c "$jar" -b "$jar" "$MA" | grep -o 'name="woocommerce-register-nonce" value="[^"]*"' | sed 's/.*value="//;s/"//')
+		code -c "$jar" -b "$jar" -d "email=$1&woocommerce-register-nonce=$nonce&_wp_http_referer=%2F&register=1$2" "$MA"
+		rm -f "$jar"
+	}
+	check "Woo register without proof"      200 "$(woo_register "wbot$n@example.test" "")"
+	check "Woo register with proof"         302 "$(woo_register "whp$n@example.test" "&wphouse_url=&wphouse_proof=$proof")"
+fi
+
+# Cloudflare test keys: this site key always issues XXXX.DUMMY.TOKEN.XXXX, the 1x secret accepts it, the 2x secret rejects all.
+T=XXXX.DUMMY.TOKEN.XXXX
+# opcache rereads wp-config.php at most every 2 s.
+wpconf() { wp config "$@" >/dev/null; sleep 3; }
+wp config set WPHOUSE_TURNSTILE_SITE_KEY 1x00000000000000000000AA >/dev/null
+wpconf set WPHOUSE_TURNSTILE_SECRET_KEY 1x0000000000000000000000000000000AA
+wlogin() { code -b "wordpress_test_cookie=WP%20Cookie%20check" -d "log=admin&pwd=admin&testcookie=1$1" "$U/wp-login.php"; }
+check "widget on wp-login"                1   "$(curl -s "$U/wp-login.php" | grep -c 'class="wphouse-turnstile"')"
+check "login without token refused"       200 "$(wlogin "")"
+check "login with token accepted"         302 "$(wlogin "&cf-turnstile-response=$T")"
+# The accepted comment above would trip the 15-second flood check.
+wp comment delete "$(wp comment list --search="human$n" --field=comment_ID)" --force >/dev/null
+check "comment without token refused"     403 "$(code -d "comment_post_ID=1&author=a&email=a@b.test&comment=t$n&wphouse_url=&wphouse_proof=$proof" "$U/wp-comments-post.php")"
+if [ "$has_woo" = 1 ]; then
+	SA="$U/wp-json/wc/store/v1"
+	# A valid body, so that WooCommerce's own parameter check (400) does not answer first.
+	B='{"billing_address":{"first_name":"A","last_name":"B","address_1":"X 1","city":"Y","postcode":"00-001","country":"PL","email":"a@b.test"},"payment_method":"cod"}'
+	sapi() { code -H 'Content-Type: application/json' -d "$B" "$@"; }
+	check "Store API checkout, no token"    403 "$(sapi -X POST "$SA/checkout")"
+	check "Store API, calc_totals bypass"   403 "$(sapi -X POST "$SA/checkout?__experimental_calc_totals=1")"
+	check "Store API, uppercase route"      403 "$(sapi -X POST "$U/?rest_route=/wc/store/v1/CHECKOUT")"
+	check "Store API, method override"      403 "$(sapi -X GET "$SA/checkout?_method=POST")"
+	check "Store API, override header"      403 "$(sapi -X GET -H 'X-HTTP-Method-Override: POST' "$SA/checkout")"
+	check "Store API, order-pay route"      403 "$(sapi -X POST "$SA/checkout/1")"
+	check "Store API, inside a batch"       403 "$(curl -s -X POST -H 'Content-Type: application/json' -d "{\"requests\":[{\"path\":\"/wc/store/v1/checkout\",\"method\":\"POST\",\"body\":$B}]}" "$SA/batch" | grep -o '"status":[0-9]*' | head -1 | cut -d: -f2)"
+	# 401 is WooCommerce asking for its nonce: our check let the request through.
+	check "Store API checkout with token"   401 "$(sapi -X POST -H "X-WPHouse-Turnstile: $T" "$SA/checkout")"
+	check "Store API update (PUT) untouched" 401 "$(sapi -X PUT "$SA/checkout?__experimental_calc_totals=1")"
+fi
+wpconf set WPHOUSE_TURNSTILE_SECRET_KEY 2x0000000000000000000000000000000AA
+check "token rejected by Cloudflare"      200 "$(wlogin "&cf-turnstile-response=$T")"
+# Cloudflare unreachable from the server: the setting decides.
+wpconf set WPHOUSE_TURNSTILE_SECRET_KEY 1x0000000000000000000000000000000AA
+docker compose exec -T wordpress sh -c 'mkdir -p wp-content/mu-plugins && echo "<?php add_filter(\"pre_http_request\", fn(\$r, \$a, \$url) => str_contains(\$url, \"challenges.cloudflare.com\") ? new WP_Error(\"http_request_failed\", \"down\") : \$r, 10, 3);" > wp-content/mu-plugins/wphouse-smoke-cf-down.php' >/dev/null 2>&1
+check "Cloudflare down, allow: login"     302 "$(wlogin "&cf-turnstile-response=$T")"
+check "Cloudflare down, empty token"      200 "$(wlogin "")"
+wp eval '$o = get_option("wphouse_settings"); $o["bots"]["when_unavailable"] = "block"; update_option("wphouse_settings", $o);' >/dev/null
+check "Cloudflare down, block: login"     200 "$(wlogin "&cf-turnstile-response=$T")"
+docker compose exec -T wordpress rm -f wp-content/mu-plugins/wphouse-smoke-cf-down.php >/dev/null 2>&1
+if [ "$has_wf" = 1 ]; then
+	ls_before=$(wp eval '$s = \WordfenceLS\Controller_Settings::shared(); echo wp_json_encode(array_map(fn($k) => $s->get($k), ["enable-auth-captcha"=>"enable-auth-captcha","recaptcha-site-key"=>"recaptcha-site-key","recaptcha-secret"=>"recaptcha-secret","enable-woocommerce-integration"=>"enable-woocommerce-integration"]));')
+	wp eval '\WordfenceLS\Controller_Settings::shared()->set_multiple(["enable-auth-captcha"=>true,"recaptcha-site-key"=>"smoke","recaptcha-secret"=>"smoke","enable-woocommerce-integration"=>true], true);' >/dev/null
+	check "Wordfence captcha covers login"  1   "$(wp wphouse status | grep -c 'turnstile_login: Wordfence Login Security')"
+	wp eval "\WordfenceLS\Controller_Settings::shared()->set_multiple(json_decode('$ls_before', true), true);" >/dev/null
+fi
+wp config delete WPHOUSE_TURNSTILE_SITE_KEY >/dev/null
+wp config delete WPHOUSE_TURNSTILE_SECRET_KEY >/dev/null
+wp option update users_can_register "$reg_before" >/dev/null
+[ "$has_woo" = 1 ] && wp option update woocommerce_enable_myaccount_registration "$woo_reg_before" >/dev/null
+for u in "hp$n" "whp$n"; do wp user delete "$u" --yes >/dev/null; done
+wp user list --field=user_email | grep -q "whp$n@example.test" && wp user delete "$(wp user get "whp$n@example.test" --field=ID)" --yes >/dev/null
+
 echo "== maintenance"
 wp eval '$o = get_option("wphouse_settings"); $o["modules"]["maintenance"] = true; update_option("wphouse_settings", $o);' >/dev/null
 check "visitors get 503"                  503 "$(code "$U/")"

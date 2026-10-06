@@ -33,6 +33,7 @@ final class Plugin {
 		Modules\Maintenance::class,
 		Modules\Vulnerabilities::class,
 		Modules\LiteSpeed::class,
+		Modules\Bots::class,
 	];
 
 	private static ?Plugin $instance = null;

@@ -30,6 +30,20 @@ final class Compat {
 		return (bool) \wfConfig::get( $key, false );
 	}
 
+	/**
+	 * Wordfence Login Security reCAPTCHA is on (with keys) for login and registration, and also
+	 * covers the WooCommerce forms when WooCommerce is active. Checked against Wordfence 9.0.2.
+	 */
+	public static function wordfence_login_captcha(): bool {
+		if ( ! class_exists( '\WordfenceLS\Controller_CAPTCHA' ) || ! class_exists( '\WordfenceLS\Controller_Settings' ) ) {
+			return false;
+		}
+		if ( ! \WordfenceLS\Controller_CAPTCHA::shared()->enabled() ) {
+			return false;
+		}
+		return ! self::woocommerce_active() || \WordfenceLS\Controller_Settings::shared()->get_bool( 'enable-woocommerce-integration' );
+	}
+
 	public static function woocommerce_active(): bool {
 		return class_exists( 'WooCommerce' );
 	}
