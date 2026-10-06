@@ -23,6 +23,9 @@ PHP
 		--admin_email=admin@example.test --skip-email
 fi
 wp config set WP_REDIS_HOST redis >/dev/null # sites set up before Redis was part of the harness
+# Docker Desktop hands requests from the host over from a private gateway address: trust it as a proxy, so
+# tests can play many visitors with X-Forwarded-For (dev/ols/login-limits-test.sh). Test site only.
+wp config set WPHOUSE_TRUSTED_PROXIES "[ '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16' ]" --raw >/dev/null
 wp theme install twentytwentyfive --activate >/dev/null 2>&1 || true
 wp plugin install woocommerce ${WOO_VERSION:+--version=$WOO_VERSION} --activate >/dev/null
 wp plugin activate wphouse >/dev/null

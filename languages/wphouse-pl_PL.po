@@ -298,124 +298,125 @@ msgstr "Zaraz wracamy"
 msgid "Maintenance mode is on"
 msgstr "Tryb serwisowy jest włączony"
 
-#: src/Modules/PluginHealth.php:105
+#: src/Modules/PluginHealth.php:110
 msgid "Plugin health"
 msgstr "Kondycja wtyczek"
 
-#: src/Modules/PluginHealth.php:109
+#: src/Modules/PluginHealth.php:114
 msgid "Weekly check of installed plugins: closed on WordPress.org (often for security reasons), no update for two years, not from WordPress.org, one-time tools left active, inactive leftovers, and plugins a WPHouse module replaces. Results also appear in Tools → Site Health."
 msgstr "Cotygodniowy przegląd zainstalowanych wtyczek: zamknięte na WordPress.org (często z powodów bezpieczeństwa), bez aktualizacji od dwóch lat, spoza WordPress.org, jednorazowe narzędzia pozostawione jako aktywne, nieaktywne pozostałości oraz wtyczki, które zastępuje moduł WPHouse. Wyniki widać też w Narzędzia → Stan witryny."
 
-#: src/Modules/PluginHealth.php:233
+#: src/Modules/PluginHealth.php:238
 msgid "Inactive. Inactive plugins can still be attacked through their files; delete it if you do not need it."
 msgstr "Nieaktywna. Nieaktywne wtyczki nadal można zaatakować przez ich pliki; usuń ją, jeśli nie jest potrzebna."
 
 #. translators: 1: date, 2: reason code from WordPress.org, e.g. security-issue.
-#: src/Modules/PluginHealth.php:260
+#: src/Modules/PluginHealth.php:265
 #, php-format
 msgid "Closed on WordPress.org (%1$s, reason: %2$s). It gets no more updates; replace or remove it."
 msgstr "Zamknięta na WordPress.org (%1$s, powód: %2$s). Nie dostanie już aktualizacji; zastąp ją albo usuń."
 
 #. translators: %s: date of the last update.
-#: src/Modules/PluginHealth.php:266
+#: src/Modules/PluginHealth.php:271
 #, php-format
 msgid "No update since %s. Probably abandoned."
 msgstr "Brak aktualizacji od %s. Prawdopodobnie porzucona."
 
-#: src/Modules/PluginHealth.php:271
+#: src/Modules/PluginHealth.php:276
 msgid "Not on WordPress.org and no update source declared. Make sure you know where its updates come from."
 msgstr "Nie ma jej na WordPress.org i nie deklaruje źródła aktualizacji. Upewnij się, skąd przychodzą jej aktualizacje."
 
-#: src/Modules/PluginHealth.php:276
+#: src/Modules/PluginHealth.php:281
 msgid "Updates come from its vendor, not WordPress.org. Keep the licence active so security fixes arrive."
 msgstr "Aktualizacje przychodzą od producenta, nie z WordPress.org. Utrzymuj aktywną licencję, żeby docierały poprawki bezpieczeństwa."
 
-#: src/Modules/PluginHealth.php:281
+#: src/Modules/PluginHealth.php:286
 msgid "One-time tool (migration, search-replace, import, file access or debugging) left active. Delete it when the job is done."
 msgstr "Jednorazowe narzędzie (migracja, wyszukaj-i-zamień, import, dostęp do plików lub debugowanie) pozostawione jako aktywne. Usuń je po zakończeniu pracy."
 
 #. translators: %s: WPHouse module name.
-#: src/Modules/PluginHealth.php:288
+#: src/Modules/PluginHealth.php:293
 #, php-format
 msgid "WPHouse can do this: module \"%s\". Switch it on, then remove this plugin."
 msgstr "WPHouse to potrafi: moduł „%s”. Włącz go, a potem usuń tę wtyczkę."
 
-#: src/Modules/PluginHealth.php:312
+#: src/Modules/PluginHealth.php:317
 msgid "WPHouse plugin health"
 msgstr "Kondycja wtyczek (WPHouse)"
 
-#: src/Modules/PluginHealth.php:333
+#: src/Modules/PluginHealth.php:338
 msgid "No closed, abandoned or forgotten plugins found"
 msgstr "Nie znaleziono zamkniętych, porzuconych ani zapomnianych wtyczek"
 
-#: src/Modules/PluginHealth.php:334
+#: src/Modules/PluginHealth.php:339
 msgid "Some plugins need attention"
 msgstr "Niektóre wtyczki wymagają uwagi"
 
 #: src/Core/Net.php:155
 #: src/Modules/Hardening.php:270
-#: src/Modules/PluginHealth.php:339
+#: src/Modules/LoginLimits.php:354
+#: src/Modules/PluginHealth.php:344
 #: src/Modules/Vulnerabilities.php:301
 msgid "Security"
 msgstr "Bezpieczeństwo"
 
 #. translators: 1: number of critical findings, 2: number of warnings.
-#: src/Modules/PluginHealth.php:345
+#: src/Modules/PluginHealth.php:350
 #, php-format
 msgid "%1$d critical, %2$d warnings. Details are on the WPHouse settings page."
 msgstr "Krytyczne: %1$d, ostrzeżenia: %2$d. Szczegóły na stronie ustawień WPHouse."
 
-#: src/Modules/PluginHealth.php:350
+#: src/Modules/PluginHealth.php:355
 msgid "Open WPHouse"
 msgstr "Otwórz WPHouse"
 
-#: src/Modules/PluginHealth.php:356
+#: src/Modules/PluginHealth.php:361
 #: src/Modules/Vulnerabilities.php:311
 #: src/Modules/Watch.php:238
 msgid "Check now"
 msgstr "Sprawdź teraz"
 
 #. translators: %s: error message.
-#: src/Modules/PluginHealth.php:363
+#: src/Modules/PluginHealth.php:368
 #, php-format
 msgid "Could not reach WordPress.org: %s"
 msgstr "Nie udało się połączyć z WordPress.org: %s"
 
-#: src/Modules/PluginHealth.php:364
+#: src/Modules/PluginHealth.php:369
 msgid "Plugin health updated."
 msgstr "Kondycja wtyczek zaktualizowana."
 
-#: src/Modules/PluginHealth.php:371
+#: src/Modules/PluginHealth.php:376
 msgid "Not checked yet. Use \"Check now\" or wait for the daily run."
 msgstr "Jeszcze nie sprawdzono. Kliknij „Sprawdź teraz” albo poczekaj na codzienne sprawdzenie."
 
 #. translators: %s: date and time.
-#: src/Modules/PluginHealth.php:375
+#: src/Modules/PluginHealth.php:380
 #: src/Modules/Vulnerabilities.php:330
 #, php-format
 msgid "Last check: %s."
 msgstr "Ostatnie sprawdzenie: %s."
 
 #. translators: %s: error message.
-#: src/Modules/PluginHealth.php:377
+#: src/Modules/PluginHealth.php:382
 #, php-format
 msgid "The last refresh failed: %s"
 msgstr "Ostatnie odświeżenie nie powiodło się: %s"
 
-#: src/Modules/PluginHealth.php:382
+#: src/Modules/PluginHealth.php:387
 msgid "Nothing to report."
 msgstr "Brak uwag."
 
-#: src/Modules/PluginHealth.php:385
+#: src/Modules/PluginHealth.php:390
 msgid "Plugin"
 msgstr "Wtyczka"
 
-#: src/Modules/PluginHealth.php:385
+#: src/Modules/PluginHealth.php:390
 msgid "Findings"
 msgstr "Wyniki"
 
 #: src/Admin/Page.php:450
-#: src/Modules/PluginHealth.php:387
+#: src/Modules/PluginHealth.php:392
 msgid "inactive"
 msgstr "nieaktywna"
 
@@ -624,7 +625,7 @@ msgstr "Brak zmian od ostatniego sprawdzenia."
 msgid "No baseline yet. It is recorded on the first hourly check."
 msgstr "Brak punktu odniesienia. Zostanie zapisany przy pierwszym cogodzinnym sprawdzeniu."
 
-#: src/Plugin.php:126
+#: src/Plugin.php:127
 msgid "WPHouse 0.x supports single sites only. Activate it per site instead of network-wide."
 msgstr "WPHouse 0.x obsługuje tylko pojedyncze witryny. Włącz wtyczkę na poszczególnych witrynach, a nie w całej sieci."
 
@@ -1146,3 +1147,123 @@ msgstr "WPHouse jest ustawiony na Cloudflare, ale to żądanie nie przeszło prz
 #: src/Core/Net.php:149
 msgid "That is fine when you reach the server directly. If the site no longer uses Cloudflare, set \"Proxy in front of the site\" back to none."
 msgstr "To normalne, gdy łączysz się z serwerem bezpośrednio. Jeśli strona nie korzysta już z Cloudflare, ustaw „Proxy przed stroną” z powrotem na brak."
+
+#: src/Modules/LoginLimits.php:72
+msgid "Login limits"
+msgstr "Limity logowania"
+
+#: src/Modules/LoginLimits.php:76
+msgid "Stops password guessing on the login forms, XML-RPC and application passwords. Too many failures from one address lock it out, longer each time. An account under attack is paused only for devices that never logged into it; devices that did keep working, so nobody can lock the owner out."
+msgstr "Zatrzymuje zgadywanie haseł w formularzach logowania, XML-RPC i hasłach aplikacji. Zbyt wiele pomyłek z jednego adresu blokuje go, za każdym razem dłużej. Atakowane konto jest wstrzymane tylko dla urządzeń, które nigdy się na nie nie logowały; te, które się logowały, działają dalej, więc nikt nie zablokuje właściciela."
+
+#: src/Modules/LoginLimits.php:83
+msgid "Failures before an address is locked out"
+msgstr "Pomyłki, po których adres jest blokowany"
+
+#: src/Modules/LoginLimits.php:89
+msgid "Counted over (minutes)"
+msgstr "Liczone przez (minuty)"
+
+#: src/Modules/LoginLimits.php:95
+msgid "First lockout (minutes)"
+msgstr "Pierwsza blokada (minuty)"
+
+#: src/Modules/LoginLimits.php:96
+msgid "Each further lockout of the same address lasts four times longer, up to 24 hours."
+msgstr "Każda kolejna blokada tego samego adresu trwa cztery razy dłużej, najwyżej 24 godziny."
+
+#: src/Modules/LoginLimits.php:102
+msgid "Failures per account in an hour before new devices are paused"
+msgstr "Pomyłki na konto w ciągu godziny, po których nowe urządzenia są wstrzymane"
+
+#: src/Modules/LoginLimits.php:108
+msgid "Never lock out these addresses"
+msgstr "Nigdy nie blokuj tych adresów"
+
+#: src/Modules/LoginLimits.php:109
+msgid "One IP address or range per line, for example 203.0.113.7 or 198.51.100.0/24."
+msgstr "Jeden adres IP lub zakres w wierszu, na przykład 203.0.113.7 albo 198.51.100.0/24."
+
+#: src/Modules/LoginLimits.php:114
+msgid "E-mail when an account is paused"
+msgstr "Mail, gdy konto zostanie wstrzymane"
+
+#: src/Modules/LoginLimits.php:124
+msgid "Wordfence brute force protection is on and already limits login attempts."
+msgstr "Ochrona brute force w Wordfence jest włączona i sama ogranicza próby logowania."
+
+#. translators: %d: minutes.
+#: src/Modules/LoginLimits.php:159
+#, php-format
+msgid "Too many failed login attempts from your address. Try again in %d minute."
+msgid_plural "Too many failed login attempts from your address. Try again in %d minutes."
+msgstr[0] "Zbyt wiele nieudanych prób logowania z Twojego adresu. Spróbuj ponownie za %d minutę."
+msgstr[1] "Zbyt wiele nieudanych prób logowania z Twojego adresu. Spróbuj ponownie za %d minuty."
+msgstr[2] "Zbyt wiele nieudanych prób logowania z Twojego adresu. Spróbuj ponownie za %d minut."
+
+#: src/Modules/LoginLimits.php:163
+msgid "This account is paused for new devices after many failed attempts. Log in from a device you used before, or try again in an hour."
+msgstr "To konto jest wstrzymane dla nowych urządzeń po wielu nieudanych próbach. Zaloguj się z urządzenia, którego już używałeś, albo spróbuj za godzinę."
+
+#: src/Modules/LoginLimits.php:192
+msgid "Too many failed login attempts from your address. Try again later."
+msgstr "Zbyt wiele nieudanych prób logowania z Twojego adresu. Spróbuj później."
+
+#: src/Modules/LoginLimits.php:308
+msgid "Lift all lockouts"
+msgstr "Zdejmij wszystkie blokady"
+
+#: src/Modules/LoginLimits.php:314
+msgid "All lockouts lifted."
+msgstr "Wszystkie blokady zdjęte."
+
+#: src/Modules/LoginLimits.php:324
+msgid "Nothing is locked out right now."
+msgstr "Nic nie jest teraz zablokowane."
+
+#: src/Modules/LoginLimits.php:327
+msgid "Address or account"
+msgstr "Adres lub konto"
+
+#: src/Modules/LoginLimits.php:327
+msgid "Until (UTC)"
+msgstr "Do (UTC)"
+
+#: src/Modules/LoginLimits.php:329
+msgid "account (new devices)"
+msgstr "konto (nowe urządzenia)"
+
+#: src/Modules/LoginLimits.php:341
+msgid "WPHouse login limits"
+msgstr "Limity logowania w WPHouse"
+
+#: src/Modules/LoginLimits.php:351
+msgid "Login limits cannot block by address on this server"
+msgstr "Limity logowania nie mogą blokować po adresie na tym serwerze"
+
+#: src/Modules/LoginLimits.php:351
+msgid "Login limits block password guessing"
+msgstr "Limity logowania blokują zgadywanie haseł"
+
+#: src/Modules/LoginLimits.php:357
+msgid "Failed logins are counted per address and per account; addresses are locked out and accounts are paused for new devices."
+msgstr "Nieudane logowania są liczone na adres i na konto; adresy są blokowane, a konta wstrzymywane dla nowych urządzeń."
+
+#. translators: %s: user login.
+#: src/Modules/LoginLimits.php:387
+#, php-format
+msgid "Account %s paused for new devices"
+msgstr "Konto %s wstrzymane dla nowych urządzeń"
+
+#. translators: %s: user login.
+#: src/Modules/LoginLimits.php:387
+msgid "Many failed logins for this account came from devices that never logged into it. For an hour only devices that did can log in."
+msgstr "Wiele nieudanych logowań na to konto przyszło z urządzeń, które nigdy się na nie nie logowały. Przez godzinę logować się mogą tylko te, które to robiły."
+
+#: src/Modules/LoginLimits.php:453
+msgid "Requests come through Cloudflare, but WPHouse is not set up for it, so every visitor has a Cloudflare address. Locking one out would lock out everyone; only the per-account rule works. In WPHouse → General, set \"Proxy in front of the site\" to Cloudflare."
+msgstr "Ruch idzie przez Cloudflare, ale WPHouse nie jest na to ustawiony, więc każdy odwiedzający ma adres Cloudflare. Zablokowanie jednego zablokowałoby wszystkich; działa tylko reguła konta. W WPHouse → Ogólne ustaw „Proxy przed stroną” na Cloudflare."
+
+#: src/Modules/LoginLimits.php:454
+msgid "Requests come from a private address, so a proxy or load balancer sits in front of the site and every visitor has its address. Locking one out would lock out everyone; only the per-account rule works. Name the proxy in wp-config.php with WPHOUSE_TRUSTED_PROXIES."
+msgstr "Ruch przychodzi z adresu prywatnego, więc przed stroną stoi proxy albo load balancer i każdy odwiedzający ma jego adres. Zablokowanie jednego zablokowałoby wszystkich; działa tylko reguła konta. Wskaż proxy w wp-config.php stałą WPHOUSE_TRUSTED_PROXIES."

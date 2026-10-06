@@ -11,6 +11,7 @@ Each release needs a `## x.y.z` section; its body is shown in the WordPress "Vie
 - Change alerts: new administrators, plugins, themes, mu-plugins, drop-ins, wp-config.php edits, and changes to registration, the default role, the admin e-mail and the site address.
 - Plugin health: closed, abandoned, unknown-source and forgotten plugins, also in Site Health.
 - Vulnerability alerts for sites without Wordfence, from signed Wordfence Intelligence data.
+- Login limits: lockouts by address, accounts paused only for new devices; Cloudflare visitor addresses (`Proxy in front of the site`).
 - Integrations card for Wordfence, WooCommerce, payment gateways and Elementor.
 - LiteSpeed page cache without the LiteSpeed Cache plugin: cache headers only, safe for WooCommerce.
 - Redis object cache with signed values, installed with WP-CLI (`wp wphouse object-cache enable`).

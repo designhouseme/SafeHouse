@@ -24,6 +24,7 @@ On by default:
 * **Change alerts:** an e-mail and a log entry when an administrator is added, a plugin or theme appears or is activated, a mu-plugin or drop-in shows up, wp-config.php changes, or someone opens registration or changes the default role for new accounts, the admin e-mail or the site address. A changed admin e-mail is also reported to the previous address.
 * **Plugin health:** a weekly check for plugins closed on WordPress.org, not updated for two years, not from WordPress.org, one-time tools left active, inactive leftovers, and plugins a WPHouse module replaces. Also shown in Tools → Site Health.
 * **Vulnerability alerts:** for sites without Wordfence. Warns when the installed WordPress, a plugin or a theme has a known security vulnerability and names the version that fixes it. Urgent findings (CVSS 7 or higher, or no fix yet) appear on every admin screen; all findings appear in Site Health and are e-mailed once. While Wordfence is active the module stands down, because Wordfence warns about vulnerable software itself.
+* **Login limits:** stops password guessing on wp-login.php, the WooCommerce login form, XML-RPC and application passwords. Five failures from one address in 15 minutes lock it out for 15 minutes, and every further lockout lasts four times longer (up to 24 hours); IPv6 counts by /64. An account under attack is never locked for everyone: after ten failures in an hour it is paused only for devices that never logged into it, while devices that did (they carry a signed cookie) keep working. Behind Cloudflare or another proxy, set the proxy (see below), otherwise every visitor has the proxy's address and WPHouse blocks no addresses at all. Stands down while Wordfence brute force protection is on.
 
 Off by default:
 
@@ -40,7 +41,7 @@ Off by default:
 
 WPHouse is built to run alongside these plugins. The Integrations card on the settings page shows which of them a site has and what WPHouse does for each.
 
-* **Wordfence:** optional. When it is active, WPHouse skips what Wordfence already does: username discovery blocking, login error masking (on sites without WooCommerce, whose login form Wordfence does not cover), version hiding, vulnerability alerts, and the login and registration captcha when Wordfence Login Security has its reCAPTCHA on. WPHouse has no firewall and no malware scanner; use Wordfence or Cloudflare for those. Two-factor login and login attempt limits are not in WPHouse yet.
+* **Wordfence:** optional. When it is active, WPHouse skips what Wordfence already does: username discovery blocking, login error masking (on sites without WooCommerce, whose login form Wordfence does not cover), version hiding, vulnerability alerts, and the login and registration captcha when Wordfence Login Security has its reCAPTCHA on. WPHouse has no firewall and no malware scanner; use Wordfence or Cloudflare for those. Login limits stand down while Wordfence brute force protection is on. Two-factor login is not in WPHouse yet.
 * **WooCommerce:** compatible with HPOS and the block checkout. Generic login errors also cover the My Account form, bot protection covers the My Account forms and both checkouts, maintenance mode lets the Store API and payment callbacks through, and product reviews survive "disable comments".
 * **Payment gateways:** Autopay, Przelewy24, PayU, imoje, Paynow, Stripe, PayPal and WooPayments. Their callbacks (`?wc-api=` and the REST API) pass maintenance mode.
 * **Elementor** and Elementor Pro.
@@ -88,11 +89,12 @@ Yes. `define( 'WPHOUSE_MODULES', [ 'lockdown' => true, 'scripts' => false ] );` 
 * `WPHOUSE_IGNORE_OVERLAPS`: run WPHouse features even where Wordfence or another plugin already provides them.
 * `WPHOUSE_LOCKDOWN_UI_UNLOCK`: set to false to allow unlocking only from WP-CLI.
 * `WP_REDIS_HOST`, `WP_REDIS_PORT`, `WP_REDIS_PASSWORD`, `WP_REDIS_DATABASE`, `WP_REDIS_PREFIX` and the other `WP_REDIS_*` constants: the Redis connection for the object cache. `WPHOUSE_OBJECT_CACHE` set to false switches the cache off without removing it.
-* `WPHOUSE_TRUSTED_PROXIES` and `WPHOUSE_PROXY_HEADER`: for sites behind a proxy or CDN. Without them WPHouse takes the visitor IP from `REMOTE_ADDR` only, so it cannot be spoofed with request headers.
+* `WPHOUSE_TRUSTED_PROXIES` and `WPHOUSE_PROXY_HEADER`: for sites behind a proxy or CDN. `'cloudflare'` (or the "Proxy in front of the site" setting) trusts Cloudflare's visitor header, but only on connections from Cloudflare's own addresses; an array of ranges does the same for other proxies. Without them WPHouse takes the visitor IP from `REMOTE_ADDR` only, so it cannot be spoofed with request headers.
+* `WPHOUSE_LOGIN_ALLOWLIST`: an array of addresses or ranges that login limits never lock out.
 
 = Which WP-CLI commands are there? =
 
-`wp wphouse status`, `wp wphouse module enable|disable <module>`, `wp wphouse log`, `wp wphouse safe-mode on|off` and `wp wphouse update-check`. Modules add `wp wphouse unlock` and `wp wphouse lock` (install lockdown), `wp wphouse watch accept` (change alerts; run it at the end of deploy scripts), `wp wphouse plugin-health`, `wp wphouse vulnerabilities` and `wp wphouse cache purge` (LiteSpeed page cache). `wp wphouse object-cache enable|disable|status|flush` manages the Redis object cache.
+`wp wphouse status`, `wp wphouse module enable|disable <module>`, `wp wphouse log`, `wp wphouse safe-mode on|off` and `wp wphouse update-check`. Modules add `wp wphouse unlock` and `wp wphouse lock` (install lockdown), `wp wphouse watch accept` (change alerts; run it at the end of deploy scripts), `wp wphouse plugin-health`, `wp wphouse vulnerabilities`, `wp wphouse cache purge` (LiteSpeed page cache) and `wp wphouse login status|unlock <address or login>|--all` (login limits). `wp wphouse object-cache enable|disable|status|flush` manages the Redis object cache.
 
 = Is it translated? =
 
@@ -117,6 +119,7 @@ WPHouse sends no telemetry. The activity log stays in the site's database, store
 * Bot protection: honeypot on registration, lost password and comments; Cloudflare Turnstile on login, registration, lost password, comments and checkout, including the Store API.
 * Install lockdown, change alerts (also for open registration, the default role, the admin e-mail and the site address) and plugin health.
 * Vulnerability alerts for sites without Wordfence, from signed Wordfence Intelligence data.
+* Login limits: lockouts by address, accounts paused only for new devices, Cloudflare visitor addresses.
 * Integrations card for Wordfence, WooCommerce, payment gateways and Elementor.
 * LiteSpeed page cache without the LiteSpeed Cache plugin: cache headers only, safe for WooCommerce.
 * Redis object cache with signed values, installed with WP-CLI.

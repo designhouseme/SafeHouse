@@ -198,6 +198,9 @@ check "Cloudflare on: direct hit ignores a forged header"   198.51.100.20 "$(ech
 check "Cloudflare off: the header is not believed"          173.245.48.5  "$(echo "$cf" | cut -d" " -f4)"
 check "Cloudflare off: the visitor address counts as unknown" unknown    "$(echo "$cf" | cut -d" " -f5)"
 
+echo "== login limits (lockouts, device cookies, REST: ./dev/ols/login-limits-test.sh)"
+[ "$has_wf" = 1 ] && check "stands down while Wordfence brute force protection is on" "yes no" "$(wp wphouse status | awk '$1 == "login_limits" { print $2, $3 }')"
+
 echo "== integrations"
 check "Wordfence and WooCommerce detected"   "wordfence,woocommerce" "$(wp eval 'echo implode( ",", array_keys( WPHouse\Core\Integrations::detected() ) );')"
 

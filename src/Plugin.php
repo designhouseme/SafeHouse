@@ -34,6 +34,7 @@ final class Plugin {
 		Modules\Vulnerabilities::class,
 		Modules\LiteSpeed::class,
 		Modules\Bots::class,
+		Modules\LoginLimits::class,
 	];
 
 	private static ?Plugin $instance = null;
