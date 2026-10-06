@@ -95,6 +95,9 @@ check "empty ?wc-api= gets 503"           503 "$(code "$U/?wc-api=")"
 check "wp-login still answers"            200 "$(code "$U/wp-login.php")"
 check "wp-cron still answers"             200 "$(code "$U/wp-cron.php")"
 
+echo "== vulnerability alerts (signed data and matching: ./dev/advisory-test.sh)"
+[ "$has_wf" = 1 ] && check "stands down while Wordfence is active" "yes no" "$(wp wphouse status | awk '$1 == "vulnerabilities" { print $2, $3 }')"
+
 echo
 [ "$fails" -eq 0 ] && echo "All checks passed." || echo "$fails check(s) failed."
 exit "$fails"

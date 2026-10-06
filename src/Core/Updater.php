@@ -296,7 +296,8 @@ final class Updater {
 		return self::MANIFEST_URL;
 	}
 
-	private static function is_local(): bool {
+	/** Local or development environment: test overrides are honoured only here. */
+	public static function is_local(): bool {
 		return in_array( wp_get_environment_type(), [ 'local', 'development' ], true );
 	}
 }

@@ -30,6 +30,7 @@ final class Plugin {
 		Modules\Smtp::class,
 		Modules\Scripts::class,
 		Modules\Maintenance::class,
+		Modules\Vulnerabilities::class,
 	];
 
 	private static ?Plugin $instance = null;

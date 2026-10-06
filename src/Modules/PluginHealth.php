@@ -494,7 +494,7 @@ final class PluginHealth extends AbstractModule {
 	}
 
 	/** WordPress.org slug as core's update check knows it (hello.php is "hello-dolly"), else the folder name. */
-	private static function slug( string $file ): string {
+	public static function slug( string $file ): string {
 		static $known = null;
 		if ( null === $known ) {
 			$known   = [];
