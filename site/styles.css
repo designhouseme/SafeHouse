@@ -305,7 +305,7 @@ a { color: inherit; }
 	border: 8px solid transparent;
 	border-right-color: #f0f0f1;
 }
-.wp-ico--dh { fill: #e6ff32; }
+.wp-ico--dh { fill: currentColor; }
 
 .wp-content { min-width: 0; padding: 20px 20px 24px; }
 

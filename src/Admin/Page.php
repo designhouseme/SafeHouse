@@ -24,8 +24,8 @@ final class Page {
 
 	private const VIEWS = [ 'modules', 'integrations', 'general' ];
 
-	/** The Design House blocks from assets/icon.svg, in its lime, for the admin menu. */
-	private const MENU_ICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 151 106'%3E%3Cg fill='%23e6ff32'%3E%3Crect x='73.18' width='31.73' height='31.73' rx='5.88'/%3E%3Crect y='31.82' width='73.39' height='73.39' rx='5.88'/%3E%3Crect x='104.8' y='31.81' width='45.5' height='45.5' rx='5.88'/%3E%3C/g%3E%3C/svg%3E";
+	/** The Design House blocks from assets/icon.svg. WordPress paints a base64 SVG in the colour scheme's icon colour. */
+	private const MENU_ICON = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNTEgMTA2Ij48ZyBmaWxsPSJibGFjayI+PHJlY3QgeD0iNzMuMTgiIHdpZHRoPSIzMS43MyIgaGVpZ2h0PSIzMS43MyIgcng9IjUuODgiLz48cmVjdCB5PSIzMS44MiIgd2lkdGg9IjczLjM5IiBoZWlnaHQ9IjczLjM5IiByeD0iNS44OCIvPjxyZWN0IHg9IjEwNC44IiB5PSIzMS44MSIgd2lkdGg9IjQ1LjUiIGhlaWdodD0iNDUuNSIgcng9IjUuODgiLz48L2c+PC9zdmc+';
 
 	public function __construct( private Plugin $plugin ) {
 		add_action( 'admin_menu', [ $this, 'menu' ] );
@@ -39,7 +39,7 @@ final class Page {
 	}
 
 	public function menu(): void {
-		add_menu_page( 'WPHouse', 'WPHouse', 'manage_options', self::SLUG, [ $this, 'render' ], 'none', 81 );
+		add_menu_page( 'WPHouse', 'WPHouse', 'manage_options', self::SLUG, [ $this, 'render' ], self::MENU_ICON, 81 );
 	}
 
 	/**
@@ -57,8 +57,6 @@ final class Page {
 	}
 
 	public function assets( string $hook ): void {
-		// Registered with 'none' and painted here: WordPress would recolour a data-URI icon grey.
-		wp_add_inline_style( 'admin-menu', '#adminmenu #toplevel_page_wphouse div.wp-menu-image{background:url("' . self::MENU_ICON . '") center/20px no-repeat}' );
 		if ( 'toplevel_page_' . self::SLUG === $hook ) {
 			wp_enqueue_style( 'wphouse-admin', plugins_url( 'assets/admin.css', WPHOUSE_FILE ), [], WPHOUSE_VERSION );
 			wp_enqueue_script(
