@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
 # SafeHouse release flow. Signed manifest + checksummed zip; see plugin/src/Core/Updater.php.
 #
-#   ./dev/release.sh keygen                         create the signing key once, print the public key
-#   ./dev/release.sh <x.y.z>                        bump version, lint, commit "Release x.y.z", tag vx.y.z,
-#                                                   build signed files into build/<x.y.z>/
-#   ./dev/release.sh snapshot <x.y.z> [outdir]      build signed files from the working tree (tracked files) with any version
-#   ./dev/release.sh pubkey                         print the public key of the signing key
+#   ./dev/release.sh <x.y.z>                        bump version, lint, commit "Release x.y.z", tag vx.y.z. Pushing the
+#                                                   tag starts .github/workflows/release.yml, which builds, signs and
+#                                                   publishes after a maintainer approves the "release" environment.
+#   ./dev/release.sh build <x.y.z> [outdir]         build signed files from tag vx.y.z (default build/<x.y.z>/); refuses
+#                                                   a key that the tag's Updater.php does not trust. Used by the workflow.
+#   ./dev/release.sh snapshot <x.y.z> [outdir]      build signed files from the working tree (tracked files), any version
+#                                                   and any key (tests)
+#   ./dev/release.sh keygen | pubkey                create a signing key / print its public key
 #
 # Env:
-#   SHOUSE_SIGNING_KEY  private key file (default ~/.config/wphouse/signing.key). Never commit it.
+#   SHOUSE_SIGNING_KEY  private key file (default ~/.config/wphouse/signing.key). Never commit it. The release key
+#                       itself lives in the "release" environment of designhouseme/SafeHouse and an offline backup.
 #   SHOUSE_RELEASE_URL  public base URL of the files (default https://updates.designhouse.me/shouse)
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -34,23 +38,31 @@ set_version() { # <plugin dir> <version>
 	grep -q "const SHOUSE_VERSION = '$2';" "$1/shouse.php" || die "could not set version in $1"
 }
 
-build() { # <git-ref> <version> <outdir>
-	local ref=$1 version=$2 out=$3 work
+build() { # <git-ref> <version> <outdir> [trusted: 1 = the key must be one PUBLIC_KEYS in Updater.php lists]
+	local ref=$1 version=$2 out=$3 trusted=${4:-0} work
 	[ -f "$KEY" ] || die "no signing key at $KEY (run: ./dev/release.sh keygen)"
 	mkdir -p "$out"
 	out=$(cd "$out" && pwd)
 	work=$(mktemp -d)
 	mkdir "$work/src"
 	git archive --format=tar "$ref:plugin" | tar -x -C "$work/src"   # the plugin/ tree only: everything in it ships
+	git show "$ref:CHANGELOG.md" > "$work/CHANGELOG.md"
 	set_version "$work/src" "$version"
 	grep -q "__SHOUSE_PUBLIC_KEY__" "$work/src/src/Core/Updater.php" && die "Updater.php still has the placeholder public key"
 
 	local zip="$out/shouse-$version.zip" keydir
 	keydir=$(dirname "$KEY")
 	tool "$work" "$out" "$keydir" -- package "$work/src" "$zip"
-	tool "$out" "$keydir" -- manifest "$zip" "$out/manifest.json" "$version" "$RELEASE_URL/shouse-$version.zip" "$ROOT/CHANGELOG.md"
+	tool "$work" "$out" "$keydir" -- manifest "$zip" "$out/manifest.json" "$version" "$RELEASE_URL/shouse-$version.zip" "$work/CHANGELOG.md"
 	tool "$out" "$keydir" -- sign "$KEY" "$out/manifest.json"
-	tool "$out" "$keydir" -- verify "$(tool "$keydir" -- pubkey "$KEY")" "$out/manifest.json"
+	local pub
+	pub=$(tool "$keydir" -- pubkey "$KEY")
+	tool "$out" "$keydir" -- verify "$pub" "$out/manifest.json"
+	if [ "$trusted" = 1 ]; then
+		# The plugin installs only what one of these keys signed: a release signed with any other key would be refused by every site.
+		sed -n '/PUBLIC_KEYS = \[/,/\];/p' "$work/src/src/Core/Updater.php" | grep -qF "'$pub'" || die "the signing key ($pub) is not in PUBLIC_KEYS of v$version"
+		echo "signing key is trusted by v$version"
+	fi
 	cp "$zip" "$out/shouse-latest.zip"
 	rm -rf "$work"
 	echo
@@ -70,6 +82,13 @@ case "${1:-}" in
 	pubkey)
 		tool "$(dirname "$KEY")" -- pubkey "$KEY"
 		;;
+	build)
+		version=${2:?usage: build <x.y.z> [outdir]}
+		[[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "version must be x.y.z"
+		git rev-parse -q --verify "refs/tags/v$version" >/dev/null || die "no tag v$version"
+		git show "v$version:plugin/shouse.php" | grep -q "^const SHOUSE_VERSION = '$version';" || die "plugin/shouse.php in v$version is not version $version"
+		build "v$version" "$version" "${3:-build/$version}" 1
+		;;
 	snapshot)
 		version=${2:?usage: snapshot <version> [outdir]}
 		ref=$(git stash create)   # includes staged/unstaged changes to tracked files, leaves the tree alone
@@ -86,12 +105,12 @@ case "${1:-}" in
 		./dev/lint.sh
 		git commit -q -am "Release $version"
 		git tag -a "v$version" -m "SafeHouse $version"
-		build "v$version" "$version" "build/$version"
 		echo
-		echo "Next: git push origin main v$version, then ./dev/publish.sh $version"
-		echo "(uploads to $RELEASE_URL/ and creates the GitHub release with the same files)."
+		echo "Next: git push origin main v$version. GitHub Actions then builds and signs $version and, once you approve"
+		echo "the \"release\" environment, publishes it to $RELEASE_URL/ and as a GitHub release."
+		echo "Without Actions: ./dev/release.sh build $version && ./dev/publish.sh $version (needs the release key here)."
 		;;
 	*)
-		sed -n '2,14p' "$0"; exit 1
+		sed -n '2,19p' "$0"; exit 1
 		;;
 esac

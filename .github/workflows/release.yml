@@ -1,0 +1,67 @@
+# Builds, signs and publishes SafeHouse when a vX.Y.Z tag is pushed (./dev/release.sh x.y.z creates it).
+#
+# check    No secrets: lint, and a dry build signed with a throwaway key. Can also be run by hand.
+# publish  Waits until a maintainer approves the "release" environment, the only place that holds
+#          SHOUSE_SIGNING_KEY (the Ed25519 release key, base64, as in ~/.config/wphouse/signing.key) and
+#          SHOUSE_RELEASE_TOKEN (the upload Worker's release token, updates/ingest/). It runs no third-party PHP:
+#          it builds the zip from the tag with dev/release-tool.php, refuses a key that the tag's Updater.php
+#          does not trust, uploads through the upload Worker (which never replaces a published version's zip)
+#          and creates the GitHub release with the same files and the CHANGELOG.md section as notes.
+name: Release
+
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Lint (PHPCS, PHPStan)
+        run: ./dev/lint.sh
+      - name: Dry build, signed with a throwaway key
+        run: |
+          export SHOUSE_SIGNING_KEY="$RUNNER_TEMP/throwaway/signing.key"
+          ./dev/release.sh keygen >/dev/null
+          version=$(sed -n "s/^const SHOUSE_VERSION = '\(.*\)';/\1/p" plugin/shouse.php)
+          ./dev/release.sh snapshot "$version" "$RUNNER_TEMP/dry"
+
+  publish:
+    needs: check
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: release
+    permissions:
+      contents: write # the GitHub release
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # the tag itself, for git archive and git show
+          persist-credentials: false
+      - name: Build and sign from the tag
+        env:
+          RELEASE_KEY: ${{ secrets.SHOUSE_SIGNING_KEY }}
+        run: |
+          key="$RUNNER_TEMP/release/signing.key"
+          mkdir -p "$(dirname "$key")" && chmod 700 "$(dirname "$key")"
+          trap 'rm -f "$key"' EXIT
+          (umask 077 && printf '%s\n' "$RELEASE_KEY" > "$key")
+          SHOUSE_SIGNING_KEY="$key" ./dev/release.sh build "${GITHUB_REF_NAME#v}"
+      - name: Publish to the update host and GitHub releases
+        env:
+          SHOUSE_RELEASE_TOKEN: ${{ secrets.SHOUSE_RELEASE_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+        run: ./dev/publish.sh "${GITHUB_REF_NAME#v}"
