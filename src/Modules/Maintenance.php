@@ -17,6 +17,7 @@ namespace WPHouse\Modules;
 use WP_Admin_Bar;
 use WPHouse\Core\AbstractModule;
 use WPHouse\Core\Log;
+use WPHouse\Plugin;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -146,7 +147,7 @@ final class Maintenance extends AbstractModule {
 			[
 				'id'    => 'wphouse-maintenance',
 				'title' => esc_html__( 'Maintenance mode is on', 'wphouse' ),
-				'href'  => admin_url( 'options-general.php?page=wphouse#wphouse-maintenance' ),
+				'href'  => Plugin::settings_url( 'maintenance' ),
 				'meta'  => [ 'class' => 'wphouse-maintenance-on' ],
 			]
 		);

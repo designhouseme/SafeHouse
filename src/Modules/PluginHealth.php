@@ -342,7 +342,7 @@ final class PluginHealth extends AbstractModule {
 					$counts['warning']
 				)
 			) . '</p>',
-			'actions'     => '<a href="' . esc_url( admin_url( 'options-general.php?page=wphouse#wphouse-plugin_health' ) ) . '">' . esc_html__( 'Open WPHouse', 'wphouse' ) . '</a>',
+			'actions'     => '<a href="' . esc_url( Plugin::settings_url( 'plugin_health' ) ) . '">' . esc_html__( 'Open WPHouse', 'wphouse' ) . '</a>',
 			'test'        => 'wphouse_plugin_health',
 		];
 	}

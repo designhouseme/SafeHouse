@@ -1,6 +1,7 @@
 <?php
 /**
- * Settings → WPHouse. One form for all modules, rendered from each module's field schema.
+ * The WPHouse admin page: one form for all modules, rendered from each module's field schema,
+ * split into views (modules, integrations, general) with the activity log beside them.
  *
  * @package WPHouse
  */
@@ -21,8 +22,14 @@ final class Page {
 
 	private const SLUG = 'wphouse';
 
+	private const VIEWS = [ 'modules', 'integrations', 'general' ];
+
+	/** The Design House blocks from assets/icon.svg, in its lime, for the admin menu. */
+	private const MENU_ICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 151 106'%3E%3Cg fill='%23e6ff32'%3E%3Crect x='73.18' width='31.73' height='31.73' rx='5.88'/%3E%3Crect y='31.82' width='73.39' height='73.39' rx='5.88'/%3E%3Crect x='104.8' y='31.81' width='45.5' height='45.5' rx='5.88'/%3E%3C/g%3E%3C/svg%3E";
+
 	public function __construct( private Plugin $plugin ) {
 		add_action( 'admin_menu', [ $this, 'menu' ] );
+		add_action( 'load-toplevel_page_' . self::SLUG, [ $this, 'redirect_old_url' ] );
 		add_action( 'admin_init', [ $this->plugin->settings, 'register' ] );
 		add_action( 'admin_post_wphouse_task', [ $this, 'handle_task' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'assets' ] );
@@ -32,12 +39,38 @@ final class Page {
 	}
 
 	public function menu(): void {
-		add_options_page( 'WPHouse', 'WPHouse', 'manage_options', self::SLUG, [ $this, 'render' ] );
+		add_menu_page( 'WPHouse', 'WPHouse', 'manage_options', self::SLUG, [ $this, 'render' ], 'none', 81 );
+	}
+
+	/**
+	 * The page used to live under Settings, and old bookmarks and alert e-mails still link to
+	 * options-general.php?page=wphouse. WordPress serves a top-level page under any parent file,
+	 * so that URL still loads; move it to the real address so the menu highlights correctly.
+	 */
+	public function redirect_old_url(): void {
+		global $pagenow;
+		if ( 'admin.php' !== $pagenow ) {
+			$view = $this->current_view();
+			wp_safe_redirect( 'modules' === $view ? Plugin::settings_url() : add_query_arg( 'tab', $view, Plugin::settings_url() ) );
+			exit;
+		}
 	}
 
 	public function assets( string $hook ): void {
-		if ( 'settings_page_' . self::SLUG === $hook ) {
+		// Registered with 'none' and painted here: WordPress would recolour a data-URI icon grey.
+		wp_add_inline_style( 'admin-menu', '#adminmenu #toplevel_page_wphouse div.wp-menu-image{background:url("' . self::MENU_ICON . '") center/20px no-repeat}' );
+		if ( 'toplevel_page_' . self::SLUG === $hook ) {
 			wp_enqueue_style( 'wphouse-admin', plugins_url( 'assets/admin.css', WPHOUSE_FILE ), [], WPHOUSE_VERSION );
+			wp_enqueue_script(
+				'wphouse-admin',
+				plugins_url( 'assets/admin.js', WPHOUSE_FILE ),
+				[],
+				WPHOUSE_VERSION,
+				[
+					'in_footer' => true,
+					'strategy'  => 'defer',
+				]
+			);
 		}
 	}
 
@@ -46,7 +79,7 @@ final class Page {
 	 * @return string[]
 	 */
 	public function action_links( array $links ): array {
-		array_unshift( $links, '<a href="' . esc_url( admin_url( 'options-general.php?page=' . self::SLUG ) ) . '">' . esc_html__( 'Settings', 'wphouse' ) . '</a>' );
+		array_unshift( $links, '<a href="' . esc_url( Plugin::settings_url() ) . '">' . esc_html__( 'Settings', 'wphouse' ) . '</a>' );
 		return $links;
 	}
 
@@ -58,10 +91,10 @@ final class Page {
 	 */
 	public function footer_text( mixed $text ): mixed {
 		$screen = get_current_screen();
-		if ( null === $screen || 'settings_page_' . self::SLUG !== $screen->id ) {
+		if ( null === $screen || 'toplevel_page_' . self::SLUG !== $screen->id ) {
 			return $text;
 		}
-		return 'WPHouse &middot; <a href="https://designhouse.me/" target="_blank" rel="noopener">Design House</a>';
+		return 'WPHouse, <a href="https://designhouse.me/" target="_blank" rel="noopener">Design House</a>';
 	}
 
 	public function notices(): void {
@@ -96,23 +129,47 @@ final class Page {
 		}
 
 		set_transient( 'wphouse_notice_' . get_current_user_id(), $module->handle_task( $task ), MINUTE_IN_SECONDS );
-		wp_safe_redirect( admin_url( 'options-general.php?page=' . self::SLUG . '#wphouse-' . $id ) );
+		wp_safe_redirect( Plugin::settings_url( $id ) );
 		exit;
+	}
+
+	/** The view named by ?tab=. options.php returns there after saving, because the form's referer keeps it. */
+	private function current_view(): string {
+		$view = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- only picks a view.
+		return in_array( $view, self::VIEWS, true ) ? $view : 'modules';
 	}
 
 	public function render(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
-		$locked = Settings::locked();
+		$locked  = Settings::locked();
+		$view    = $this->current_view();
+		$labels  = [
+			'modules'      => __( 'Modules', 'wphouse' ),
+			'integrations' => __( 'Integrations', 'wphouse' ),
+			'general'      => __( 'General', 'wphouse' ),
+		];
+		$modules = $this->plugin->modules();
+		$running = count( array_filter( array_keys( $modules ), [ $this->plugin, 'is_running' ] ) );
 		?>
 		<div class="wrap wphouse">
 			<div class="wphouse-head">
 				<h1><img class="wphouse-head__icon" src="<?php echo esc_url( plugins_url( 'assets/icon.svg', WPHOUSE_FILE ) ); ?>" width="32" height="32" alt="">WPHouse <span class="wphouse-version"><?php echo esc_html( WPHOUSE_VERSION ); ?></span></h1>
+				<nav class="wphouse-tabs" aria-label="WPHouse">
+					<?php foreach ( self::VIEWS as $key ) : ?>
+						<a href="<?php echo esc_url( add_query_arg( 'tab', $key, Plugin::settings_url() ) ); ?>" data-view="<?php echo esc_attr( $key ); ?>"<?php echo $key === $view ? ' aria-current="page"' : ''; ?>><?php echo esc_html( $labels[ $key ] ); ?></a>
+					<?php endforeach; ?>
+				</nav>
+				<span class="wphouse-count">
+					<?php
+					/* translators: 1: number of modules running, 2: number of modules. */
+					echo esc_html( sprintf( __( '%1$d of %2$d running', 'wphouse' ), $running, count( $modules ) ) );
+					?>
+				</span>
 				<a class="wphouse-maker" href="https://designhouse.me/" target="_blank" rel="noopener"><img src="<?php echo esc_url( plugins_url( 'assets/designhouse.svg', WPHOUSE_FILE ) ); ?>" width="128" height="16" alt="Design House"></a>
 			</div>
 			<hr class="wp-header-end">
-			<p class="wphouse-intro"><?php esc_html_e( 'Small, audited replacements for single-purpose plugins. Every module is a switch. Features that Wordfence or wp-config already handle are skipped automatically.', 'wphouse' ); ?></p>
 
 			<?php if ( $locked ) : ?>
 				<div class="notice notice-info inline"><p><?php esc_html_e( 'Settings are locked by WPHOUSE_LOCK_SETTINGS in wp-config.php. Change them in code.', 'wphouse' ); ?></p></div>
@@ -121,40 +178,56 @@ final class Page {
 				<div class="notice notice-warning inline"><p><?php esc_html_e( 'WPHOUSE_IGNORE_OVERLAPS is on: features run even where another plugin already provides them.', 'wphouse' ); ?></p></div>
 			<?php endif; ?>
 
-			<form method="post" action="options.php" class="wphouse-form">
-				<?php settings_fields( 'wphouse' ); ?>
+			<div class="wphouse-layout">
+				<div class="wphouse-main">
+					<form method="post" action="options.php" class="wphouse-form">
+						<?php settings_fields( 'wphouse' ); ?>
 
-				<section class="wphouse-card" id="wphouse-general">
-					<header class="wphouse-card__head"><h2><?php esc_html_e( 'General', 'wphouse' ); ?></h2></header>
-					<table class="form-table" role="presentation">
-						<tr>
-							<th scope="row"><label for="wphouse-general-alert_emails"><?php esc_html_e( 'Alert recipients', 'wphouse' ); ?></label></th>
-							<td>
-								<input type="text" class="regular-text" id="wphouse-general-alert_emails" name="<?php echo esc_attr( Settings::OPTION ); ?>[general][alert_emails]" value="<?php echo esc_attr( (string) $this->plugin->settings->value( 'general', 'alert_emails', '' ) ); ?>" placeholder="<?php echo esc_attr( (string) get_option( 'admin_email' ) ); ?>" <?php disabled( $locked ); ?>>
-								<p class="description"><?php esc_html_e( 'Comma-separated. Empty means the site admin address.', 'wphouse' ); ?></p>
-							</td>
-						</tr>
-					</table>
-				</section>
+						<div class="wphouse-view" id="wphouse-view-modules"<?php echo 'modules' === $view ? '' : ' hidden'; ?>>
+							<p class="wphouse-intro"><?php esc_html_e( 'Small, audited replacements for single-purpose plugins. Every module is a switch. Features that Wordfence or wp-config already handle are skipped automatically.', 'wphouse' ); ?></p>
+							<div class="wphouse-modules">
+								<?php
+								foreach ( $modules as $id => $module ) {
+									$this->render_module( $id, $module, $locked );
+								}
+								?>
+							</div>
+						</div>
 
-				<?php $this->render_integrations(); ?>
+						<div class="wphouse-view" id="wphouse-view-integrations"<?php echo 'integrations' === $view ? '' : ' hidden'; ?>>
+							<?php $this->render_integrations(); ?>
+						</div>
 
-				<?php
-				foreach ( $this->plugin->modules() as $id => $module ) {
-					$this->render_module( $id, $module, $locked );
-				}
-				if ( ! $locked ) {
-					submit_button();
-				}
-				?>
-			</form>
+						<div class="wphouse-view" id="wphouse-view-general"<?php echo 'general' === $view ? '' : ' hidden'; ?>>
+							<section class="wphouse-card" id="wphouse-general">
+								<header class="wphouse-card__head"><h2><?php esc_html_e( 'General', 'wphouse' ); ?></h2></header>
+								<table class="form-table" role="presentation">
+									<tr>
+										<th scope="row"><label for="wphouse-general-alert_emails"><?php esc_html_e( 'Alert recipients', 'wphouse' ); ?></label></th>
+										<td>
+											<input type="text" class="regular-text" id="wphouse-general-alert_emails" name="<?php echo esc_attr( Settings::OPTION ); ?>[general][alert_emails]" value="<?php echo esc_attr( (string) $this->plugin->settings->value( 'general', 'alert_emails', '' ) ); ?>" placeholder="<?php echo esc_attr( (string) get_option( 'admin_email' ) ); ?>" <?php disabled( $locked ); ?>>
+											<p class="description"><?php esc_html_e( 'Comma-separated. Empty means the site admin address.', 'wphouse' ); ?></p>
+										</td>
+									</tr>
+								</table>
+							</section>
+						</div>
 
-			<form id="wphouse-task-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
-				<input type="hidden" name="action" value="wphouse_task">
-				<?php wp_nonce_field( 'wphouse_task' ); ?>
-			</form>
+						<?php
+						if ( ! $locked ) {
+							submit_button();
+						}
+						?>
+					</form>
 
-			<?php $this->render_log(); ?>
+					<form id="wphouse-task-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+						<input type="hidden" name="action" value="wphouse_task">
+						<?php wp_nonce_field( 'wphouse_task' ); ?>
+					</form>
+				</div>
+
+				<?php $this->render_log(); ?>
+			</div>
 		</div>
 		<?php
 	}
@@ -176,42 +249,46 @@ final class Page {
 			$status = [ 'off', __( 'Off', 'wphouse' ) ];
 		}
 		$name = Settings::OPTION . '[modules][' . $id . ']';
+		$body = 'wphouse-' . $id . '-settings';
 		?>
-		<section class="wphouse-card<?php echo $enabled ? '' : ' is-off'; ?>" id="wphouse-<?php echo esc_attr( $id ); ?>">
-			<header class="wphouse-card__head">
-				<h2><label class="wphouse-switch">
-					<input type="checkbox" name="<?php echo esc_attr( $name ); ?>" value="1" <?php checked( $enabled ); ?> <?php disabled( $locked || null !== $forced ); ?>>
-					<?php echo esc_html( $module->label() ); ?>
+		<section class="wphouse-module<?php echo $enabled ? '' : ' is-off'; ?>" id="wphouse-<?php echo esc_attr( $id ); ?>">
+			<div class="wphouse-module__head">
+				<h2 class="wphouse-module__title"><label class="wphouse-switch">
+					<input type="checkbox" role="switch" name="<?php echo esc_attr( $name ); ?>" value="1" <?php checked( $enabled ); ?> <?php disabled( $locked || null !== $forced ); ?>>
+					<span class="wphouse-module__name"><?php echo esc_html( $module->label() ); ?></span>
 				</label></h2>
 				<span class="wphouse-status wphouse-status--<?php echo esc_attr( $status[0] ); ?>"><?php echo esc_html( $status[1] ); ?></span>
-			</header>
-			<p class="wphouse-card__desc"><?php echo esc_html( $module->description() ); ?></p>
-			<?php if ( null !== $forced ) : ?>
-				<p class="wphouse-note"><?php esc_html_e( 'Pinned by WPHOUSE_MODULES in wp-config.php.', 'wphouse' ); ?></p>
-			<?php endif; ?>
-			<?php if ( ! $available ) : ?>
-				<p class="wphouse-note"><?php echo esc_html( $module->unavailable_reason() ); ?></p>
-			<?php endif; ?>
-
-			<?php $fields = $module->schema(); ?>
-			<?php if ( $fields ) : ?>
-				<table class="form-table" role="presentation">
-					<?php foreach ( $fields as $key => $field ) : ?>
-						<?php $this->render_field( $id, $key, $field, $module, $locked ); ?>
-					<?php endforeach; ?>
-				</table>
-			<?php endif; ?>
-
-			<?php if ( $running ) : ?>
-				<?php $module->render_panel(); ?>
-				<?php if ( $module->tasks() ) : ?>
-					<p class="wphouse-tasks">
-						<?php foreach ( $module->tasks() as $task => $label ) : ?>
-							<button type="submit" class="button" form="wphouse-task-form" name="task" value="<?php echo esc_attr( $id . ':' . $task ); ?>"><?php echo esc_html( $label ); ?></button>
-						<?php endforeach; ?>
-					</p>
+				<button type="button" class="button-link wphouse-module__more" aria-expanded="true" aria-controls="<?php echo esc_attr( $body ); ?>" hidden><?php esc_html_e( 'Details', 'wphouse' ); ?><span class="screen-reader-text"> <?php echo esc_html( $module->label() ); ?></span></button>
+			</div>
+			<div class="wphouse-module__body" id="<?php echo esc_attr( $body ); ?>">
+				<p class="wphouse-module__desc"><?php echo esc_html( $module->description() ); ?></p>
+				<?php if ( null !== $forced ) : ?>
+					<p class="wphouse-note"><?php esc_html_e( 'Pinned by WPHOUSE_MODULES in wp-config.php.', 'wphouse' ); ?></p>
 				<?php endif; ?>
-			<?php endif; ?>
+				<?php if ( ! $available ) : ?>
+					<p class="wphouse-note"><?php echo esc_html( $module->unavailable_reason() ); ?></p>
+				<?php endif; ?>
+
+				<?php $fields = $module->schema(); ?>
+				<?php if ( $fields ) : ?>
+					<table class="form-table" role="presentation">
+						<?php foreach ( $fields as $key => $field ) : ?>
+							<?php $this->render_field( $id, $key, $field, $module, $locked ); ?>
+						<?php endforeach; ?>
+					</table>
+				<?php endif; ?>
+
+				<?php if ( $running ) : ?>
+					<?php $module->render_panel(); ?>
+					<?php if ( $module->tasks() ) : ?>
+						<p class="wphouse-tasks">
+							<?php foreach ( $module->tasks() as $task => $label ) : ?>
+								<button type="submit" class="button" form="wphouse-task-form" name="task" value="<?php echo esc_attr( $id . ':' . $task ); ?>"><?php echo esc_html( $label ); ?></button>
+							<?php endforeach; ?>
+						</p>
+					<?php endif; ?>
+				<?php endif; ?>
+			</div>
 		</section>
 		<?php
 	}
@@ -357,34 +434,44 @@ final class Page {
 	private function render_log(): void {
 		$rows = Log::recent( 50 );
 		?>
-		<section class="wphouse-card wphouse-log" id="wphouse-log">
-			<header class="wphouse-card__head"><h2><?php esc_html_e( 'Activity log', 'wphouse' ); ?></h2></header>
+		<aside class="wphouse-log" id="wphouse-log" aria-labelledby="wphouse-log-title">
+			<h2 id="wphouse-log-title">
+				<?php esc_html_e( 'Activity log', 'wphouse' ); ?>
+				<?php if ( $rows ) : ?>
+					<span class="wphouse-log__count"><?php echo esc_html( count( $rows ) < 50 ? (string) count( $rows ) : '50+' ); ?></span>
+				<?php endif; ?>
+			</h2>
 			<?php if ( ! $rows ) : ?>
 				<p><?php esc_html_e( 'No events yet.', 'wphouse' ); ?></p>
 			<?php else : ?>
-				<table class="widefat striped">
-					<thead><tr>
-						<th><?php esc_html_e( 'Time (UTC)', 'wphouse' ); ?></th>
-						<th><?php esc_html_e( 'Event', 'wphouse' ); ?></th>
-						<th><?php esc_html_e( 'User', 'wphouse' ); ?></th>
-						<th><?php esc_html_e( 'IP', 'wphouse' ); ?></th>
-						<th><?php esc_html_e( 'Details', 'wphouse' ); ?></th>
-					</tr></thead>
-					<tbody>
+				<ol class="wphouse-log__list">
 					<?php foreach ( $rows as $row ) : ?>
-						<?php $user = (int) $row->user_id ? get_userdata( (int) $row->user_id ) : false; ?>
-						<tr class="wphouse-log__<?php echo esc_attr( $row->severity ); ?>">
-							<td><?php echo esc_html( $row->created_at ); ?></td>
-							<td><code><?php echo esc_html( $row->event ); ?></code></td>
-							<td><?php echo esc_html( $user ? $user->user_login : ( (int) $row->user_id ? '#' . $row->user_id : '—' ) ); ?></td>
-							<td><?php echo esc_html( $row->ip ); ?></td>
-							<td><?php echo esc_html( $row->message ); ?></td>
-						</tr>
+						<?php
+						$user = (int) $row->user_id ? get_userdata( (int) $row->user_id ) : false;
+						$time = strtotime( $row->created_at . ' UTC' );
+						?>
+						<li class="wphouse-log__item wphouse-log__item--<?php echo esc_attr( $row->severity ); ?>">
+							<span class="wphouse-log__msg"><?php echo esc_html( $row->message ); ?></span>
+							<span class="wphouse-log__meta">
+								<code class="wphouse-log__event"><?php echo esc_html( $row->event ); ?></code>
+								<?php if ( (int) $row->user_id ) : ?>
+									<span><?php echo esc_html( $user ? $user->user_login : '#' . $row->user_id ); ?></span>
+								<?php endif; ?>
+								<time datetime="<?php echo esc_attr( $time ? gmdate( 'c', $time ) : '' ); ?>" title="<?php echo esc_attr( $row->created_at . ' UTC' ); ?>">
+									<?php
+									/* translators: %s: time since the event, e.g. "5 mins". */
+									echo esc_html( $time ? sprintf( __( '%s ago', 'wphouse' ), human_time_diff( $time ) ) : $row->created_at );
+									?>
+								</time>
+								<?php if ( '' !== (string) $row->ip ) : ?>
+									<span><?php echo esc_html( $row->ip ); ?></span>
+								<?php endif; ?>
+							</span>
+						</li>
 					<?php endforeach; ?>
-					</tbody>
-				</table>
+				</ol>
 			<?php endif; ?>
-		</section>
+		</aside>
 		<?php
 	}
 }

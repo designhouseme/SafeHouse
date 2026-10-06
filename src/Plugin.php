@@ -102,6 +102,11 @@ final class Plugin {
 		return isset( $this->booted[ $id ] );
 	}
 
+	/** The WPHouse admin page, optionally opened at a module (by id) or section. */
+	public static function settings_url( string $anchor = '' ): string {
+		return admin_url( 'admin.php?page=wphouse' ) . ( '' !== $anchor ? '#wphouse-' . $anchor : '' );
+	}
+
 	private static function schedule_events(): void {
 		if ( ! wp_next_scheduled( 'wphouse_hourly' ) ) {
 			wp_schedule_event( time() + 300, 'hourly', 'wphouse_hourly' );

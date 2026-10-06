@@ -12,7 +12,7 @@ One plugin instead of a dozen small ones: hardening, install lockdown, change an
 
 == Description ==
 
-WPHouse replaces the single-purpose plugins most sites collect over time with one small plugin. Every feature is a module you switch on or off in Settings → WPHouse, and every module is safe in WP-CLI, cron, REST and AJAX requests.
+WPHouse replaces the single-purpose plugins most sites collect over time with one small plugin. Every feature is a module you switch on or off on the WPHouse page in the admin menu, and every module is safe in WP-CLI, cron, REST and AJAX requests.
 
 = Modules =
 
@@ -51,7 +51,7 @@ Updates come from the Design House update host, not WordPress.org. Each release 
 
 1. Upload the ZIP in Plugins → Add New → Upload Plugin, or unpack it into `wp-content/plugins/wphouse`.
 2. Activate it. WPHouse supports single sites; network activation on multisite is refused.
-3. Open Settings → WPHouse, set the alert recipients and switch modules on or off.
+3. Open WPHouse in the admin menu, set the alert recipients and switch modules on or off.
 
 == Frequently Asked Questions ==
 

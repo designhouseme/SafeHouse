@@ -1,33 +1,85 @@
-.wphouse { max-width: 1040px; }
-.wphouse-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.wphouse { max-width: 1440px; }
+
+/* header: name, views, running count, maker */
+
+.wphouse-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 24px; }
 .wphouse-head h1 { display: flex; align-items: center; gap: 10px; }
 .wphouse-head__icon { display: block; width: 32px; height: 32px; }
 .wphouse-version { align-self: flex-end; margin-bottom: 3px; font-size: 13px; font-weight: 400; color: #646970; }
+
+.wphouse-tabs { display: flex; gap: 2px; padding: 3px; border-radius: 10px; background: #e2e4e7; }
+.wphouse-tabs a { padding: 6px 14px; border-radius: 8px; font-weight: 500; color: #50575e; text-decoration: none; }
+.wphouse-tabs a:hover { color: #1d2327; }
+.wphouse-tabs a:focus { outline: none; box-shadow: 0 0 0 2px #2271b1; }
+.wphouse-tabs a[aria-current="page"] { color: #1d2327; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12); }
+
+.wphouse-count { margin-left: auto; padding: 3px 10px; border-radius: 999px; font-weight: 500; color: #00611c; background: #edfaef; }
 .wphouse-maker { display: block; padding: 6px 0; opacity: 0.8; transition: opacity 0.15s; }
 .wphouse-maker:hover,
 .wphouse-maker:focus { opacity: 1; }
 .wphouse-maker img { display: block; width: auto; height: 16px; }
-.wphouse-intro { max-width: 70ch; color: #3c434a; }
+.wphouse-intro { max-width: 70ch; margin: 0 0 12px; color: #3c434a; }
 
-.wphouse-card {
-	background: #fff;
-	border: 1px solid #c3c4c7;
-	border-radius: 4px;
-	padding: 16px 20px;
-	margin: 16px 0;
+/* the page: views on the left, the activity log beside them */
+
+.wphouse-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; margin-top: 16px; }
+.wphouse-view[hidden] { display: none; }
+
+/* modules: one row each, settings behind a disclosure */
+
+.wphouse-modules { background: #fff; border: 1px solid #dcdcde; border-radius: 8px; }
+.wphouse-module + .wphouse-module { border-top: 1px solid #f0f0f1; }
+.wphouse-module__head { display: flex; align-items: center; gap: 12px; padding: 12px 16px; }
+.wphouse-module__title { margin: 0; font-size: inherit; line-height: inherit; }
+.wphouse-module__name { font-size: 14px; font-weight: 500; color: #1d2327; }
+.wphouse-module.is-off .wphouse-module__name { color: #50575e; }
+.wphouse-module__head .wphouse-status { margin-left: auto; }
+.wphouse-module__more { min-width: 0; }
+.wphouse-module__more::after { content: ""; display: inline-block; width: 6px; height: 6px; margin: 0 2px 2px 8px; border: solid currentColor; border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); transition: transform 0.15s; }
+.wphouse-module__more[aria-expanded="true"]::after { margin-bottom: -1px; transform: rotate(-135deg); }
+.wphouse-module__body { padding: 0 16px 16px 64px; }
+.wphouse-module__body[hidden] { display: none; }
+.wphouse-module__desc { max-width: 75ch; margin: 0; color: #3c434a; }
+.wphouse-module .form-table { margin-top: 4px; }
+.wphouse-module .form-table th { width: 220px; padding: 12px 10px 12px 0; font-weight: 500; }
+.wphouse-module .form-table td { padding: 12px 10px; }
+
+/* A real checkbox drawn as a switch. */
+.wphouse-switch { display: inline-flex; align-items: center; gap: 12px; cursor: pointer; }
+.wphouse-switch input[type="checkbox"] {
+	position: relative;
+	flex: none;
+	width: 36px;
+	height: 20px;
+	margin: 0;
+	border: 0;
+	border-radius: 20px;
+	background: #c3c4c7;
+	box-shadow: none;
+	cursor: pointer;
+	appearance: none;
+	transition: background 0.15s;
 }
-.wphouse-card.is-off { background: #f6f7f7; }
-.wphouse-card__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.wphouse-card__head h2 { margin: 0; font-size: 15px; }
-.wphouse-card__desc { margin: 6px 0 0; max-width: 75ch; color: #3c434a; }
-.wphouse-card .form-table { margin-top: 4px; }
-.wphouse-card .form-table th { width: 240px; padding: 12px 10px 12px 0; font-weight: 500; }
-.wphouse-card .form-table td { padding: 12px 10px; }
+.wphouse-switch input[type="checkbox"]::before,
+.wphouse-switch input[type="checkbox"]:checked::before {
+	content: "";
+	position: absolute;
+	top: 3px;
+	left: 3px;
+	width: 14px;
+	height: 14px;
+	margin: 0;
+	border-radius: 50%;
+	background: #fff;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+	transition: translate 0.15s;
+}
+.wphouse-switch input[type="checkbox"]:checked { background: #2271b1; }
+.wphouse-switch input[type="checkbox"]:checked::before { translate: 16px 0; }
+.wphouse-switch input[type="checkbox"]:focus { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #2271b1; }
+.wphouse-switch input[type="checkbox"]:disabled { opacity: 0.5; cursor: default; }
 
-.wphouse-switch { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
-.wphouse-switch input { margin: 0; }
-
-.wphouse-status { font-size: 12px; padding: 2px 8px; border-radius: 3px; white-space: nowrap; }
+.wphouse-status { font-size: 12px; padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
 .wphouse-status--on { background: #edfaef; color: #00611c; }
 .wphouse-status--off { background: #f0f0f1; color: #50575e; }
 .wphouse-status--warn { background: #fcf9e8; color: #6b4e00; }
@@ -38,6 +90,22 @@
 .wphouse-tasks { display: flex; flex-wrap: wrap; gap: 8px; }
 .wphouse textarea.code { font-family: Consolas, Monaco, monospace; font-size: 12px; }
 
+/* integrations and general */
+
+.wphouse-card {
+	margin: 0 0 16px;
+	padding: 16px 20px;
+	border: 1px solid #dcdcde;
+	border-radius: 8px;
+	background: #fff;
+}
+.wphouse-card__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.wphouse-card__head h2 { margin: 0; font-size: 15px; }
+.wphouse-card__desc { margin: 6px 0 0; max-width: 75ch; color: #3c434a; }
+.wphouse-card .form-table { margin-top: 4px; }
+.wphouse-card .form-table th { width: 220px; padding: 12px 10px 12px 0; font-weight: 500; }
+.wphouse-card .form-table td { padding: 12px 10px; }
+
 .wphouse-panel { margin-top: 8px; }
 .wphouse-panel table { margin-top: 8px; }
 .wphouse-badge { display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 3px; background: #f0f0f1; }
@@ -47,9 +115,44 @@
 
 .wphouse-integrations { margin-top: 12px; }
 .wphouse-integrations td:first-child { width: 150px; }
-.wphouse-integrations td:nth-child(2) { width: 280px; }
+.wphouse-integrations td:nth-child(2) { width: 260px; }
 .wphouse-integrations td div + div { margin-top: 4px; }
 .wphouse-integrations .description { margin-top: 6px; }
 
-.wphouse-log tr.wphouse-log__critical td { background: #fcf0f1; }
-.wphouse-log tr.wphouse-log__warning td { background: #fcf9e8; }
+/* activity log */
+
+/* As tall as the view beside it (height 0 keeps it from stretching the row), scrolling inside. */
+.wphouse-log {
+	box-sizing: border-box;
+	height: 0;
+	min-height: max(100%, 360px);
+	overflow: auto;
+	padding: 16px 18px;
+	border: 1px solid #dcdcde;
+	border-radius: 8px;
+	background: #fff;
+}
+.wphouse-log h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 15px; }
+.wphouse-log__count { display: grid; place-items: center; min-width: 18px; height: 18px; padding: 0 6px; border-radius: 9px; font-size: 11px; font-weight: 500; color: #fff; background: #2271b1; box-sizing: border-box; }
+.wphouse-log__list { margin: 0; list-style: none; }
+.wphouse-log__item { margin: 0; padding: 10px 0; border-bottom: 1px solid #f0f0f1; }
+.wphouse-log__item:last-child { border-bottom: 0; }
+.wphouse-log__msg { display: block; font-weight: 500; color: #1d2327; overflow-wrap: anywhere; }
+.wphouse-log__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 4px; font-size: 12px; color: #787c82; overflow-wrap: anywhere; }
+/* The event name is a pill tinted by severity. */
+.wphouse-log__event { padding: 1px 8px; border-radius: 999px; font-size: 11px; color: #0a4b78; background: #f0f6fc; }
+.wphouse-log__item--warning .wphouse-log__event { color: #6b4e00; background: #fcf9e8; }
+.wphouse-log__item--critical .wphouse-log__event { color: #8a2424; background: #fcf0f1; }
+
+@media (max-width: 1100px) {
+	.wphouse-layout { grid-template-columns: minmax(0, 1fr); }
+	.wphouse-log { height: auto; min-height: 0; max-height: 480px; }
+}
+
+@media (max-width: 782px) {
+	.wphouse-count { margin-left: 0; }
+	.wphouse-module__head { flex-wrap: wrap; }
+	.wphouse-module__body { padding-left: 16px; }
+	.wphouse-module .form-table th,
+	.wphouse-card .form-table th { width: auto; }
+}

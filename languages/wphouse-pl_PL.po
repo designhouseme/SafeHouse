@@ -25,108 +25,88 @@ msgstr "WPHouse"
 msgid "https://designhouse.me/"
 msgstr "https://designhouse.me/"
 
-#. Description of the plugin
-#: wphouse.php
-msgid "Lean, audited replacements for small utility plugins: hardening, install lockdown, change alerts, plugin health and everyday tweaks. Runs alongside Wordfence and WooCommerce."
-msgstr "Lekkie, sprawdzone zamienniki małych wtyczek narzędziowych: podstawowe zabezpieczenia, blokada instalacji, alerty o zmianach, kondycja wtyczek i codzienne usprawnienia. Działa obok Wordfence i WooCommerce."
-
 #. Author of the plugin
 #: wphouse.php
 msgid "Design House"
 msgstr "Design House"
 
-#: src/Admin/Page.php:49
+#: src/Admin/Page.php:81
 msgid "Settings"
 msgstr "Ustawienia"
 
-#: src/Admin/Page.php:74
+#: src/Admin/Page.php:106
 msgid "WPHouse safe mode is on: every module is stopped. Remove wp-content/wphouse-safe-mode or the WPHOUSE_SAFE_MODE constant to resume."
 msgstr "Tryb awaryjny WPHouse jest włączony: wszystkie moduły są zatrzymane. Usuń plik wp-content/wphouse-safe-mode lub stałą WPHOUSE_SAFE_MODE, aby je wznowić."
 
-#: src/Admin/Page.php:87
+#: src/Admin/Page.php:119
 msgid "You are not allowed to do this."
 msgstr "Nie masz uprawnień do tej operacji."
 
-#: src/Admin/Page.php:95
+#: src/Admin/Page.php:127
 msgid "Unknown task."
 msgstr "Nieznane zadanie."
 
-#: src/Admin/Page.php:115
+#: src/Admin/Page.php:186
 msgid "Small, audited replacements for single-purpose plugins. Every module is a switch. Features that Wordfence or wp-config already handle are skipped automatically."
 msgstr "Małe, sprawdzone zamienniki jednozadaniowych wtyczek. Każdy moduł włączasz osobno. Funkcje, które obsługuje już Wordfence lub wp-config.php, są automatycznie pomijane."
 
-#: src/Admin/Page.php:118
+#: src/Admin/Page.php:174
 msgid "Settings are locked by WPHOUSE_LOCK_SETTINGS in wp-config.php. Change them in code."
 msgstr "Ustawienia są zablokowane stałą WPHOUSE_LOCK_SETTINGS w wp-config.php. Zmieniaj je w kodzie."
 
-#: src/Admin/Page.php:121
+#: src/Admin/Page.php:177
 msgid "WPHOUSE_IGNORE_OVERLAPS is on: features run even where another plugin already provides them."
 msgstr "Stała WPHOUSE_IGNORE_OVERLAPS jest włączona: funkcje działają nawet tam, gdzie zapewnia je już inna wtyczka."
 
-#: src/Admin/Page.php:128
+#: src/Admin/Page.php:150
+#: src/Admin/Page.php:202
 msgid "General"
 msgstr "Ogólne"
 
-#: src/Admin/Page.php:131
+#: src/Admin/Page.php:205
 msgid "Alert recipients"
 msgstr "Odbiorcy alertów"
 
-#: src/Admin/Page.php:134
+#: src/Admin/Page.php:208
 msgid "Comma-separated. Empty means the site admin address."
 msgstr "Adresy oddzielone przecinkami. Puste pole oznacza adres administratora witryny."
 
-#: src/Admin/Page.php:170
+#: src/Admin/Page.php:242
 msgid "Unavailable"
 msgstr "Niedostępny"
 
-#: src/Admin/Page.php:172
+#: src/Admin/Page.php:244
 msgid "Running"
 msgstr "Działa"
 
-#: src/Admin/Page.php:174
+#: src/Admin/Page.php:246
 msgid "Enabled, not running"
 msgstr "Włączony, nie działa"
 
-#: src/Admin/Page.php:176
+#: src/Admin/Page.php:248
 msgid "Off"
 msgstr "Wyłączony"
 
-#: src/Admin/Page.php:190
+#: src/Admin/Page.php:265
 msgid "Pinned by WPHOUSE_MODULES in wp-config.php."
 msgstr "Ustawione na stałe przez WPHOUSE_MODULES w wp-config.php."
 
 #. translators: %s: plugin or setting name, e.g. Wordfence.
-#: src/Admin/Page.php:284
+#: src/Admin/Page.php:360
 #, php-format
 msgid "Handled by %s, skipped here."
 msgstr "Obsługuje to %s, więc tutaj pominięte."
 
-#: src/Admin/Page.php:349
+#: src/Admin/Page.php:438
 msgid "Activity log"
 msgstr "Dziennik zdarzeń"
 
-#: src/Admin/Page.php:351
+#: src/Admin/Page.php:444
 msgid "No events yet."
 msgstr "Brak zdarzeń."
 
-#: src/Admin/Page.php:355
-msgid "Time (UTC)"
-msgstr "Czas (UTC)"
-
-#: src/Admin/Page.php:356
-msgid "Event"
-msgstr "Zdarzenie"
-
-#: src/Admin/Page.php:357
-msgid "User"
-msgstr "Użytkownik"
-
-#: src/Admin/Page.php:358
-msgid "IP"
-msgstr "IP"
-
-#: src/Admin/Page.php:359
-#: src/Modules/Vulnerabilities.php:421
+#: src/Admin/Page.php:260
+#: src/Modules/Vulnerabilities.php:422
 msgid "Details"
 msgstr "Szczegóły"
 
@@ -237,8 +217,8 @@ msgid "DISALLOW_FILE_MODS in wp-config.php already blocks all installs and updat
 msgstr "Stała DISALLOW_FILE_MODS w wp-config.php już blokuje wszystkie instalacje i aktualizacje."
 
 #: src/Modules/Lockdown.php:100
-msgid "Installing plugins and themes is locked by WPHouse. Unlock it first (Settings → WPHouse or `wp wphouse unlock`)."
-msgstr "Instalowanie wtyczek i motywów jest zablokowane przez WPHouse. Najpierw je odblokuj (Ustawienia → WPHouse lub `wp wphouse unlock`)."
+msgid "Installing plugins and themes is locked by WPHouse. Unlock it first (WPHouse in the admin menu or `wp wphouse unlock`)."
+msgstr "Instalowanie wtyczek i motywów jest zablokowane przez WPHouse. Najpierw je odblokuj (WPHouse w menu kokpitu lub `wp wphouse unlock`)."
 
 #: src/Modules/Lockdown.php:122
 msgid "Lock now"
@@ -266,59 +246,59 @@ msgstr "Odblokowane do %s."
 msgid "Locked. Updates of installed plugins, themes and core still work."
 msgstr "Zablokowane. Aktualizacje zainstalowanych wtyczek, motywów i WordPressa nadal działają."
 
-#: src/Modules/Maintenance.php:39
+#: src/Modules/Maintenance.php:40
 msgid "Maintenance mode"
 msgstr "Tryb serwisowy"
 
-#: src/Modules/Maintenance.php:43
+#: src/Modules/Maintenance.php:44
 msgid "Visitors see a short \"back soon\" page with HTTP 503, which search engines understand as temporary. Logged-in staff see the normal site. Payment callbacks, the REST API and cron keep working."
 msgstr "Odwiedzający widzą krótką stronę „Zaraz wracamy” z kodem HTTP 503, który wyszukiwarki rozumieją jako przerwę tymczasową. Zalogowani pracownicy widzą normalną witrynę. Powiadomienia z bramek płatności, REST API i cron działają dalej."
 
-#: src/Modules/Maintenance.php:50
+#: src/Modules/Maintenance.php:51
 msgid "Headline"
 msgstr "Nagłówek"
 
-#: src/Modules/Maintenance.php:51
+#: src/Modules/Maintenance.php:52
 msgid "Empty: \"We will be back soon\"."
 msgstr "Puste pole: „Zaraz wracamy”."
 
-#: src/Modules/Maintenance.php:56
+#: src/Modules/Maintenance.php:57
 msgid "Message"
 msgstr "Wiadomość"
 
-#: src/Modules/Maintenance.php:57
+#: src/Modules/Maintenance.php:58
 msgid "Basic HTML allowed (links, bold, line breaks)."
 msgstr "Dozwolony prosty HTML (linki, pogrubienie, nowe linie)."
 
-#: src/Modules/Maintenance.php:62
+#: src/Modules/Maintenance.php:63
 msgid "Expected duration (minutes)"
 msgstr "Przewidywany czas (minuty)"
 
-#: src/Modules/Maintenance.php:63
+#: src/Modules/Maintenance.php:64
 msgid "Sent to search engines as Retry-After."
 msgstr "Przekazywany wyszukiwarkom w nagłówku Retry-After."
 
-#: src/Modules/Maintenance.php:69
+#: src/Modules/Maintenance.php:70
 msgid "Who sees the normal site"
 msgstr "Kto widzi normalną witrynę"
 
-#: src/Modules/Maintenance.php:71
+#: src/Modules/Maintenance.php:72
 msgid "Administrators"
 msgstr "Administratorzy"
 
-#: src/Modules/Maintenance.php:72
+#: src/Modules/Maintenance.php:73
 msgid "Anyone who can edit content"
 msgstr "Każdy, kto może edytować treści"
 
-#: src/Modules/Maintenance.php:73
+#: src/Modules/Maintenance.php:74
 msgid "Every logged-in user"
 msgstr "Każdy zalogowany użytkownik"
 
-#: src/Modules/Maintenance.php:110
+#: src/Modules/Maintenance.php:111
 msgid "We will be back soon"
 msgstr "Zaraz wracamy"
 
-#: src/Modules/Maintenance.php:148
+#: src/Modules/Maintenance.php:149
 msgid "Maintenance mode is on"
 msgstr "Tryb serwisowy jest włączony"
 
@@ -377,7 +357,7 @@ msgid "Some plugins need attention"
 msgstr "Niektóre wtyczki wymagają uwagi"
 
 #: src/Modules/PluginHealth.php:334
-#: src/Modules/Vulnerabilities.php:300
+#: src/Modules/Vulnerabilities.php:301
 msgid "Security"
 msgstr "Bezpieczeństwo"
 
@@ -392,7 +372,7 @@ msgid "Open WPHouse"
 msgstr "Otwórz WPHouse"
 
 #: src/Modules/PluginHealth.php:351
-#: src/Modules/Vulnerabilities.php:310
+#: src/Modules/Vulnerabilities.php:311
 #: src/Modules/Watch.php:193
 msgid "Check now"
 msgstr "Sprawdź teraz"
@@ -413,7 +393,7 @@ msgstr "Jeszcze nie sprawdzono. Kliknij „Sprawdź teraz” albo poczekaj na co
 
 #. translators: %s: date and time.
 #: src/Modules/PluginHealth.php:370
-#: src/Modules/Vulnerabilities.php:329
+#: src/Modules/Vulnerabilities.php:330
 #, php-format
 msgid "Last check: %s."
 msgstr "Ostatnie sprawdzenie: %s."
@@ -436,7 +416,7 @@ msgstr "Wtyczka"
 msgid "Findings"
 msgstr "Wyniki"
 
-#: src/Admin/Page.php:332
+#: src/Admin/Page.php:410
 #: src/Modules/PluginHealth.php:382
 msgid "inactive"
 msgstr "nieaktywna"
@@ -656,7 +636,7 @@ msgstr "Brak punktu odniesienia. Zostanie zapisany przy pierwszym cogodzinnym sp
 msgid "Watching %1$d administrators, %2$d plugins, %3$d must-use plugins, %4$d drop-ins and wp-config.php."
 msgstr "Obserwowane: administratorzy (%1$d), wtyczki (%2$d), wtyczki obowiązkowe (%3$d), drop-iny (%4$d) i wp-config.php."
 
-#: src/Plugin.php:116
+#: src/Plugin.php:121
 msgid "WPHouse 0.x supports single sites only. Activate it per site instead of network-wide."
 msgstr "WPHouse 0.x obsługuje tylko pojedyncze witryny. Włącz wtyczkę na poszczególnych witrynach, a nie w całej sieci."
 
@@ -664,20 +644,20 @@ msgstr "WPHouse 0.x obsługuje tylko pojedyncze witryny. Włącz wtyczkę na pos
 msgid "WPHouse requires PHP 8.1 or newer. The plugin is inactive."
 msgstr "WPHouse wymaga PHP 8.1 lub nowszego. Wtyczka jest nieaktywna."
 
-#: src/Modules/Vulnerabilities.php:62
+#: src/Modules/Vulnerabilities.php:63
 msgid "Vulnerability alerts"
 msgstr "Ostrzeżenia o lukach"
 
-#: src/Modules/Vulnerabilities.php:66
+#: src/Modules/Vulnerabilities.php:67
 msgid "Warns when the installed WordPress, a plugin or a theme has a known security vulnerability, and names the version that fixes it. Meant for sites without Wordfence, which does this itself. Data from Wordfence Intelligence, signed and served by the WPHouse update host, checked every 6 hours."
 msgstr "Ostrzega, gdy zainstalowany WordPress, wtyczka lub motyw ma znaną lukę bezpieczeństwa, i podaje wersję, która ją łata. Dla stron bez Wordfence, który robi to sam. Dane z Wordfence Intelligence, podpisane i udostępniane przez serwer aktualizacji WPHouse, sprawdzane co 6 godzin."
 
-#: src/Modules/Vulnerabilities.php:78
+#: src/Modules/Vulnerabilities.php:79
 msgid "Wordfence is active and already warns about vulnerable plugins, themes and WordPress versions."
 msgstr "Wordfence jest aktywny i sam ostrzega o podatnych wtyczkach, motywach i wersjach WordPressa."
 
 #. translators: %d: number of vulnerabilities.
-#: src/Modules/Vulnerabilities.php:247
+#: src/Modules/Vulnerabilities.php:248
 #, php-format
 msgid "%d known vulnerability in installed software"
 msgid_plural "%d known vulnerabilities in installed software"
@@ -685,139 +665,177 @@ msgstr[0] "%d znana luka w zainstalowanym oprogramowaniu"
 msgstr[1] "%d znane luki w zainstalowanym oprogramowaniu"
 msgstr[2] "%d znanych luk w zainstalowanym oprogramowaniu"
 
-#: src/Modules/Vulnerabilities.php:258
+#: src/Modules/Vulnerabilities.php:259
 msgid "Security vulnerability in installed software"
 msgstr "Luka bezpieczeństwa w zainstalowanym oprogramowaniu"
 
-#: src/Modules/Vulnerabilities.php:262
-#: src/Modules/Vulnerabilities.php:304
+#: src/Modules/Vulnerabilities.php:263
+#: src/Modules/Vulnerabilities.php:305
 msgid "Go to updates"
 msgstr "Przejdź do aktualizacji"
 
-#: src/Modules/Vulnerabilities.php:263
+#: src/Modules/Vulnerabilities.php:264
 msgid "All findings"
 msgstr "Wszystkie znaleziska"
 
-#: src/Modules/Vulnerabilities.php:272
+#: src/Modules/Vulnerabilities.php:273
 msgid "WPHouse vulnerability alerts"
 msgstr "Ostrzeżenia WPHouse o lukach"
 
-#: src/Modules/Vulnerabilities.php:285
+#: src/Modules/Vulnerabilities.php:286
 msgid "Installed software has known vulnerabilities"
 msgstr "Zainstalowane oprogramowanie ma znane luki"
 
-#: src/Modules/Vulnerabilities.php:289
+#: src/Modules/Vulnerabilities.php:290
 msgid "Vulnerability data has not been downloaded yet"
 msgstr "Dane o lukach nie zostały jeszcze pobrane"
 
-#: src/Modules/Vulnerabilities.php:293
+#: src/Modules/Vulnerabilities.php:294
 msgid "No known vulnerabilities in installed software"
 msgstr "Brak znanych luk w zainstalowanym oprogramowaniu"
 
 #. translators: %s: error message.
-#: src/Modules/Vulnerabilities.php:318
+#: src/Modules/Vulnerabilities.php:319
 #, php-format
 msgid "Could not download vulnerability data: %s"
 msgstr "Nie udało się pobrać danych o lukach: %s"
 
-#: src/Modules/Vulnerabilities.php:319
+#: src/Modules/Vulnerabilities.php:320
 msgid "Vulnerability data updated."
 msgstr "Dane o lukach zostały zaktualizowane."
 
-#: src/Modules/Vulnerabilities.php:326
+#: src/Modules/Vulnerabilities.php:327
 msgid "Not checked yet. Use \"Check now\" or wait for the next hourly run."
 msgstr "Jeszcze nie sprawdzono. Użyj „Sprawdź teraz” albo poczekaj na najbliższe cogodzinne sprawdzenie."
 
 #. translators: %s: error message.
-#: src/Modules/Vulnerabilities.php:332
+#: src/Modules/Vulnerabilities.php:333
 #, php-format
 msgid "The last download failed: %s"
 msgstr "Ostatnie pobieranie nie powiodło się: %s"
 
-#: src/Modules/Vulnerabilities.php:338
+#: src/Modules/Vulnerabilities.php:339
 msgid "No known vulnerabilities in installed software."
 msgstr "Brak znanych luk w zainstalowanym oprogramowaniu."
 
-#: src/Modules/Vulnerabilities.php:341
+#: src/Modules/Vulnerabilities.php:342
 msgid "Software"
 msgstr "Oprogramowanie"
 
-#: src/Modules/Vulnerabilities.php:341
+#: src/Modules/Vulnerabilities.php:342
 msgid "Vulnerability"
 msgstr "Luka"
 
-#: src/Modules/Vulnerabilities.php:341
+#: src/Modules/Vulnerabilities.php:342
 msgid "Fixed in"
 msgstr "Poprawka w wersji"
 
-#: src/Modules/Vulnerabilities.php:346
+#: src/Modules/Vulnerabilities.php:347
 msgid "no fix yet"
 msgstr "brak poprawki"
 
 #. translators: 1: software name, 2: installed version, 3: CVSS score in brackets or empty, 4: vulnerability title, 5: fixed version(s).
-#: src/Modules/Vulnerabilities.php:407
+#: src/Modules/Vulnerabilities.php:408
 #, php-format
 msgid "%1$s %2$s%3$s: %4$s. Update to %5$s or later."
 msgstr "%1$s %2$s%3$s: %4$s. Zaktualizuj do wersji %5$s lub nowszej."
 
 #. translators: 1: software name, 2: installed version, 3: CVSS score in brackets or empty, 4: vulnerability title.
-#: src/Modules/Vulnerabilities.php:409
+#: src/Modules/Vulnerabilities.php:410
 #, php-format
 msgid "%1$s %2$s%3$s: %4$s. No fixed version yet: deactivate it if you can do without it."
 msgstr "%1$s %2$s%3$s: %4$s. Nie ma jeszcze poprawionej wersji: wyłącz to oprogramowanie, jeśli możesz się bez niego obejść."
 
-#: src/Admin/Page.php:299
+#: src/Admin/Page.php:375
 msgid "WPHouse skips what Wordfence already does (for example username discovery and login error masking) and leaves the firewall, two-factor login and malware scans to it. Vulnerability alerts stand down, because Wordfence warns about vulnerable plugins itself."
 msgstr "WPHouse pomija to, co Wordfence już robi (na przykład blokadę wyliczania użytkowników i ogólne błędy logowania), a zaporę, logowanie dwuetapowe i skaner złośliwego kodu zostawia jemu. Ostrzeżenia o lukach się wyłączają, bo Wordfence sam ostrzega o podatnych wtyczkach."
 
-#: src/Admin/Page.php:300
+#: src/Admin/Page.php:376
 msgid "Compatible with HPOS and the block checkout. Generic login errors also cover the My Account form, maintenance mode lets the Store API and payment callbacks through, and product reviews survive \"disable comments\"."
 msgstr "Zgodny z HPOS i blokowym checkoutem. Ogólne błędy logowania obejmują też formularz „Moje konto”, tryb serwisowy przepuszcza Store API i powiadomienia z płatności, a recenzje produktów zostają mimo wyłączenia komentarzy."
 
-#: src/Admin/Page.php:301
+#: src/Admin/Page.php:377
 msgid "Payment gateways"
 msgstr "Bramki płatności"
 
-#: src/Admin/Page.php:301
+#: src/Admin/Page.php:377
 msgid "Autopay, Przelewy24, PayU, imoje, Paynow, Stripe, PayPal and WooPayments. Their callbacks (?wc-api= and the REST API) pass maintenance mode, and XML-RPC stays on for WooPayments."
 msgstr "Autopay, Przelewy24, PayU, imoje, Paynow, Stripe, PayPal i WooPayments. Ich powiadomienia (?wc-api= i REST API) przechodzą przez tryb serwisowy, a dla WooPayments XML-RPC zostaje włączone."
 
-#: src/Admin/Page.php:302
+#: src/Admin/Page.php:379
 msgid "Elementor and Elementor Pro. Watched for new vulnerabilities like everything on this list."
 msgstr "Elementor i Elementor Pro. Pilnujemy ich nowych luk, jak wszystkiego na tej liście."
 
-#: src/Admin/Page.php:306
+#: src/Admin/Page.php:149
+#: src/Admin/Page.php:384
 msgid "Integrations"
 msgstr "Integracje"
 
-#: src/Admin/Page.php:307
+#: src/Admin/Page.php:385
 msgid "WPHouse is built to run alongside these plugins. Design House watches all of them for new vulnerabilities (CVE) and tells you when an update cannot wait."
 msgstr "WPHouse działa razem z tymi wtyczkami. Design House pilnuje nowych luk (CVE) we wszystkich z nich i daje znać, gdy aktualizacja nie może czekać."
 
-#: src/Admin/Page.php:310
+#: src/Admin/Page.php:388
 msgid "Integration"
 msgstr "Integracja"
 
-#: src/Admin/Page.php:311
+#: src/Admin/Page.php:389
 msgid "On this site"
 msgstr "Na tej stronie"
 
-#: src/Admin/Page.php:312
+#: src/Admin/Page.php:390
 msgid "What WPHouse does"
 msgstr "Co robi WPHouse"
 
-#: src/Admin/Page.php:322
+#: src/Admin/Page.php:400
 msgid "not installed"
 msgstr "nie zainstalowano"
 
-#: src/Admin/Page.php:326
+#: src/Admin/Page.php:404
 msgid "WPHouse vulnerability alerts cover this site. For a firewall and two-factor login, install Wordfence."
 msgstr "Tę stronę chronią ostrzeżenia WPHouse o lukach. Zaporę i logowanie dwuetapowe da Wordfence."
 
-#: src/Admin/Page.php:327
+#: src/Admin/Page.php:405
 msgid "Nothing warns about vulnerable plugins on this site: switch on WPHouse vulnerability alerts below, or install Wordfence."
 msgstr "Nic nie ostrzega na tej stronie o podatnych wtyczkach: włącz niżej ostrzeżenia WPHouse o lukach albo zainstaluj Wordfence."
 
-#: src/Admin/Page.php:332
+#: src/Admin/Page.php:410
 msgid "active"
 msgstr "aktywna"
+
+#. Description of the plugin
+#: wphouse.php
+msgid "One plugin instead of a dozen small ones: hardening, install lockdown, change and vulnerability alerts, plugin health and everyday tweaks. Works alongside Wordfence, WooCommerce and the usual payment gateways."
+msgstr "Jedna wtyczka zamiast kilkunastu małych: zabezpieczenia, blokada instalacji, alerty o zmianach i lukach, kondycja wtyczek i codzienne usprawnienia. Działa obok Wordfence, WooCommerce i popularnych bramek płatności."
+
+#: src/Admin/Page.php:148
+msgid "Modules"
+msgstr "Moduły"
+
+#. translators: 1: number of modules running, 2: number of modules.
+#: src/Admin/Page.php:166
+#, php-format
+msgid "%1$d of %2$d running"
+msgstr "Działa %1$d z %2$d"
+
+#: src/Admin/Page.php:378
+msgid "WPHouse has no object cache of its own: on servers with Redis, this is the plugin we recommend. The status shows whether its drop-in is connected."
+msgstr "WPHouse nie ma własnej pamięci podręcznej obiektów: na serwerach z Redisem polecamy tę wtyczkę. Status pokazuje, czy jej drop-in jest połączony."
+
+#: src/Admin/Page.php:414
+msgid "Another persistent object cache is in use."
+msgstr "Działa inna trwała pamięć podręczna obiektów."
+
+#: src/Admin/Page.php:416
+msgid "Object cache connected to Redis."
+msgstr "Pamięć podręczna obiektów jest połączona z Redisem."
+
+#: src/Admin/Page.php:418
+msgid "Object cache drop-in installed, but Redis is not reachable."
+msgstr "Drop-in pamięci podręcznej obiektów jest zainstalowany, ale Redis jest nieosiągalny."
+
+#. translators: %s: time since the event, e.g. "5 mins".
+#: src/Admin/Page.php:462
+#, php-format
+msgid "%s ago"
+msgstr "%s temu"

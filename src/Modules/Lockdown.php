@@ -97,7 +97,7 @@ final class Lockdown extends AbstractModule {
 			return $response;
 		}
 		Log::add( 'install_blocked', sprintf( 'Blocked a %s install while locked', $type ), [], 'warning' );
-		return new WP_Error( 'wphouse_locked', __( 'Installing plugins and themes is locked by WPHouse. Unlock it first (Settings → WPHouse or `wp wphouse unlock`).', 'wphouse' ) );
+		return new WP_Error( 'wphouse_locked', __( 'Installing plugins and themes is locked by WPHouse. Unlock it first (WPHouse in the admin menu or `wp wphouse unlock`).', 'wphouse' ) );
 	}
 
 	public function unlock( int $minutes, string $via ): void {

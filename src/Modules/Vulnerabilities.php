@@ -25,6 +25,7 @@ use WPHouse\Core\Log;
 use WPHouse\Core\Notify;
 use WPHouse\Core\Signature;
 use WPHouse\Core\Updater;
+use WPHouse\Plugin;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -260,7 +261,7 @@ final class Vulnerabilities extends AbstractModule {
 			echo '<li>' . esc_html( $this->sentence( $finding ) ) . $this->details_link( $finding ) . '</li>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- details_link() escapes.
 		}
 		echo '</ul><p><a class="button button-primary" href="' . esc_url( admin_url( 'update-core.php' ) ) . '">' . esc_html__( 'Go to updates', 'wphouse' ) . '</a> ';
-		echo '<a href="' . esc_url( admin_url( 'options-general.php?page=wphouse#wphouse-vulnerabilities' ) ) . '">' . esc_html__( 'All findings', 'wphouse' ) . '</a></p></div>';
+		echo '<a href="' . esc_url( Plugin::settings_url( 'vulnerabilities' ) ) . '">' . esc_html__( 'All findings', 'wphouse' ) . '</a></p></div>';
 	}
 
 	/**
