@@ -5,7 +5,8 @@
  *
  * WordPress shows closed plugins as "up to date", which is how abandoned and bought-and-
  * backdoored plugins stay installed for years. One bulk request to api.wordpress.org per check
- * (weekly, or when the plugin list changes). Known-vulnerability alerts are left to Wordfence.
+ * (weekly, or when the plugin list changes). Known vulnerabilities are the vulnerability alerts
+ * module's job (or Wordfence's, when it is active).
  *
  * @package WPHouse
  */
