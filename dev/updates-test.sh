@@ -49,6 +49,8 @@ etag=$(header etag "$U/shouse/manifest.json")
 check "If-None-Match answers 304"        304 "$(code -H "If-None-Match: $etag" "$U/shouse/manifest.json")"
 check "range request"                    206 "$(code -H 'Range: bytes=0-99' "$U/shouse/shouse-9.9.9.zip")"
 check "range header"                     'bytes 0-99/4096' "$(header content-range -H 'Range: bytes=0-99' "$U/shouse/shouse-9.9.9.zip")"
+check "range from the end"               'bytes 3996-4095/4096' "$(header content-range -H 'Range: bytes=-100' "$U/shouse/shouse-9.9.9.zip")"
+check "range past the end: no 5xx"       yes "$([ "$(code -H 'Range: bytes=9000-9999' "$U/shouse/shouse-9.9.9.zip")" -lt 500 ] && echo yes)" # on R2 the Worker answers 416; the local emulator serves the whole file
 check "nosniff"                          nosniff "$(header x-content-type-options "$U/shouse/manifest.json")"
 
 echo "== refused"

@@ -36,9 +36,14 @@ export default {
 			return plain(404, 'Not found');
 		}
 
-		const object = request.method === 'HEAD'
-			? await env.UPDATES.head(key)
-			: await env.UPDATES.get(key, { onlyIf: request.headers, range: request.headers });
+		let object;
+		try {
+			object = request.method === 'HEAD'
+				? await env.UPDATES.head(key)
+				: await env.UPDATES.get(key, { onlyIf: request.headers, range: request.headers });
+		} catch {
+			return plain(416, 'Range not satisfiable'); // R2 throws on a range outside the object.
+		}
 		if (object === null) {
 			return plain(404, 'Not found');
 		}
@@ -56,7 +61,12 @@ export default {
 			return new Response(null, { status: 304, headers }); // If-None-Match / If-Modified-Since matched.
 		}
 		if (object.range && request.headers.has('range')) {
-			const { offset = 0, length = object.size - offset } = object.range;
+			const { offset: start, length: count, suffix } = object.range;
+			const offset = typeof suffix === 'number' ? Math.max(0, object.size - suffix) : (start ?? 0);
+			const length = Math.min(typeof suffix === 'number' ? object.size - offset : (count ?? object.size - offset), object.size - offset);
+			if (offset >= object.size || length <= 0) {
+				return plain(416, 'Range not satisfiable', { 'content-range': `bytes */${object.size}` });
+			}
 			headers.set('content-range', `bytes ${offset}-${offset + length - 1}/${object.size}`);
 			return new Response(object.body, { status: 206, headers });
 		}
