@@ -17,3 +17,4 @@ CLAUDE.local.md
 PLAN.md
 AGENTS.md
 /.claude/
+/design/*/out/

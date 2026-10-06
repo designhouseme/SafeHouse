@@ -1,0 +1,566 @@
+<!doctype html>
+<!--
+  SafeHouse README hero: a perfect loop. Every frame is a pure function of time: window.__render(t).
+  Built from the motion-design template (Design House). Render and export: see README.md in this folder.
+
+  Opened in a browser, it plays live: space = pause, ←/→ = ±1 s, click on the bar = seek.
+  Parameters: ?t=2.5 (still), ?speed=0.75 (pace), ?name=Name.
+
+  The story: the end card (mark + wordmark) opens into a WordPress plugin list of single-purpose
+  plugins; each group of plugins folds into the one SafeHouse module that replaces it; the finished
+  module card folds back into the mark. The slugs and the slug → module map are copied from
+  PluginHealth::REPLACEABLE (plugin/src/Modules/PluginHealth.php); the module names are their label()s.
+  When that list changes, update GROUPS and render again.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SafeHouse hero</title>
+    <style>
+      /* Geist and Geist Mono: the landing page's fonts (site/public/styles.css), OFL, see fonts/OFL.txt. */
+      @font-face {
+        font-family: "Geist";
+        src: url(fonts/geist-latin.woff2) format("woff2");
+        font-weight: 100 900;
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+      }
+      @font-face {
+        font-family: "Geist";
+        src: url(fonts/geist-latin-ext.woff2) format("woff2");
+        font-weight: 100 900;
+        unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+      }
+      @font-face {
+        font-family: "Geist Mono";
+        src: url(fonts/geist-mono-latin.woff2) format("woff2");
+        font-weight: 100 900;
+      }
+
+      /* Brand tokens from site/public/styles.css; the WordPress admin tokens from plugin/assets/admin.css
+         and WordPress core (plugin list rows, the menu count bubble). */
+      :root {
+        --bg: #07080b; /* landing --ink */
+        --wash: #0e0f13; /* landing --ink-2: a quiet lift behind the card */
+        --ink: #f4f5f7; /* landing --paper */
+        --ink-2: rgba(255, 255, 255, 0.62); /* landing --text-dim */
+        --line: rgba(255, 255, 255, 0.12);
+        --accent: #2f6bff; /* landing --signal: SafeHouse */
+        --mark: #fefefe; /* the Design House blocks, as in designhouse.svg */
+
+        --wp-ink: #1d2327;
+        --wp-ink-2: #50575e;
+        --wp-line: #f0f0f1;
+        --wp-check: #8c8f94;
+        --wp-blue: #2271b1;
+        --wp-off: #c3c4c7;
+        --wp-active-bg: #f0f6fc;
+        --wp-active-edge: #72aee6;
+        --wp-on-bg: #edfaef;
+        --wp-on-ink: #00611c;
+        --wp-count: #d63638;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; background: #0d0d0c; overflow: hidden; }
+      body { display: grid; place-items: center; }
+      #stage { position: relative; flex: none; overflow: hidden; background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; transform-origin: 50% 50%; }
+      .capture body { display: block; }
+      .capture #stage { transform: none !important; }
+      .scene { position: absolute; inset: 0; display: none; overflow: hidden; }
+      .abs { position: absolute; left: 0; top: 0; }
+      .fill { position: absolute; inset: 0; }
+      .mask { position: absolute; overflow: hidden; }
+      .word { position: absolute; left: 0; top: 0; white-space: pre; }
+      svg { overflow: visible; }
+      #hud { position: fixed; left: 0; right: 0; bottom: 0; height: 26px; cursor: pointer; background: rgb(255 255 255 / 0.06); }
+      #hud i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); }
+      #hud span { position: absolute; right: 10px; top: 4px; color: #bbb; font: 12px/1 ui-monospace, monospace; }
+      .capture #hud { display: none; }
+
+      /* the WordPress list rebuilt at about 2x */
+      .card { position: absolute; overflow: hidden; border-radius: 16px; background: #fff; perspective: 1800px; }
+      .row { position: absolute; left: 0; right: 0; height: 64px; transform-origin: 50% 0; background: var(--wp-active-bg); }
+      .row .edge { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--wp-active-edge); }
+      .row .sep { position: absolute; left: 0; right: 0; top: 0; height: 2px; background: #e4e6ea; }
+      .row .shade { position: absolute; inset: 0; background: var(--wp-ink); opacity: 0; }
+      .row .check { position: absolute; left: 36px; top: 18px; width: 28px; height: 28px; border: 2px solid var(--wp-check); border-radius: 5px; background: #fff; }
+      .row .track { position: absolute; left: 28px; top: 12px; width: 72px; height: 40px; border-radius: 20px; background: var(--wp-off); transform-origin: 0 50%; }
+      .row .knob { position: absolute; left: 34px; top: 18px; width: 28px; height: 28px; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25); }
+      .row .text { position: absolute; left: 124px; right: 180px; top: 0; height: 64px; overflow: hidden; }
+      .row .slug, .row .name { position: absolute; left: 0; top: 0; height: 64px; display: flex; align-items: center; white-space: pre; color: var(--wp-ink); }
+      .row .slug { font: 500 26px/1 "Geist Mono", monospace; letter-spacing: -0.01em; }
+      .row .name { font: 500 30px/1 "Geist", sans-serif; letter-spacing: -0.015em; }
+      .row .pill { position: absolute; right: 24px; top: 12px; height: 40px; padding: 0 16px; display: flex; align-items: center; border-radius: 8px; background: var(--wp-on-bg); color: var(--wp-on-ink); font: 500 24px/1 "Geist", sans-serif; transform-origin: 100% 50%; }
+
+      .bubble { position: absolute; overflow: hidden; border-radius: 999px; background: var(--wp-count); color: #fff; }
+      .bubble span { position: absolute; left: 0; right: 0; top: 0; text-align: center; white-space: pre; }
+    </style>
+  </head>
+  <body>
+    <div id="stage"></div>
+    <div id="hud"><i></i><span></span></div>
+
+    <script>
+      // ------------------------------------------------------------------
+      // Parameters
+      // ------------------------------------------------------------------
+      const Q = new URLSearchParams(location.search);
+      const CAPTURE = Q.has("capture");
+      const FAMILY = "Geist";
+      // The wordmark as the landing page sets it next to the blocks (lowercase, 600, -0.03em).
+      const NAME = Q.get("name") || "safehouse";
+      // The count on the plugin pile: a WordPress-style bubble ("lots"), not a count from the code.
+      const PILE = "99+";
+      const LINE = `One plugin instead of ${PILE}.`;
+      const W = 1600, H = 800;
+      const CX = W / 2, CY = H / 2;
+      const TIMELINE = 11.4;
+      const SUB = 10; // the list slides fast under thin mono text and the blocks stretch 50 px per frame: 5 subframes step
+      const SPEED = Number(Q.get("speed") || 1);
+      const DURATION = TIMELINE / SPEED;
+      if (CAPTURE) document.documentElement.classList.add("capture");
+      const stage = document.getElementById("stage");
+      stage.style.width = `${W}px`;
+      stage.style.height = `${H}px`;
+      stage.style.fontFamily = `"${FAMILY}", sans-serif`;
+      const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+      // ------------------------------------------------------------------
+      // Engine: interpolation, easings, spring (from the template)
+      // ------------------------------------------------------------------
+      const clamp = (x, a = 0, b = 1) => (x < a ? a : x > b ? b : x);
+      const lerp = (a, b, p) => a + (b - a) * p;
+      const prog = (t, a, b) => clamp((t - a) / (b - a));
+      const E = {
+        lin: (x) => x,
+        in2: (x) => x * x,
+        io2: (x) => (x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2),
+        out2: (x) => 1 - (1 - x) ** 2,
+        in3: (x) => x ** 3,
+        out3: (x) => 1 - (1 - x) ** 3,
+        io3: (x) => (x < 0.5 ? 4 * x ** 3 : 1 - (-2 * x + 2) ** 3 / 2),
+        io4: (x) => (x < 0.5 ? 8 * x ** 4 : 1 - (-2 * x + 2) ** 4 / 2),
+        outExpo: (x) => (x >= 1 ? 1 : 1 - 2 ** (-10 * x)),
+      };
+      const spring = (s, f = 2, z = 0.42) => {
+        if (s <= 0) return 0;
+        const w = 2 * Math.PI * f;
+        if (z >= 1) return 1 - Math.exp(-w * s) * (1 + w * s);
+        const wd = w * Math.sqrt(1 - z * z);
+        return 1 - Math.exp(-z * w * s) * (Math.cos(wd * s) + ((z * w) / wd) * Math.sin(wd * s));
+      };
+      const pop = (t, at, f = 2.6, z = 0.45) => (t < at ? 0 : spring(t - at, f, z));
+      const vel = (f, t) => f(t + 1 / 120) - f(t - 1 / 120);
+
+      // colours as rgb triplets, mixed in JS so every frame is exact
+      const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+      const mix = (a, b, p) => `rgb(${a.map((v, i) => Math.round(lerp(v, b[i], clamp(p)))).join(",")})`;
+
+      // ------------------------------------------------------------------
+      // DOM and type
+      // ------------------------------------------------------------------
+      const el = (tag, cls, parent, html) => {
+        const e = document.createElement(tag);
+        if (cls) e.className = cls;
+        if (html != null) e.innerHTML = html;
+        if (parent) parent.appendChild(e);
+        return e;
+      };
+      const T = (e, o) => {
+        let tr = o.z != null || o.rx || o.ry ? `translate3d(${o.x || 0}px,${o.y || 0}px,${o.z || 0}px)` : `translate(${o.x || 0}px,${o.y || 0}px)`;
+        if (o.rx) tr += ` rotateX(${o.rx}deg)`;
+        if (o.ry) tr += ` rotateY(${o.ry}deg)`;
+        if (o.r) tr += ` rotate(${o.r}deg)`;
+        const sx = (o.sx ?? 1) * (o.s ?? 1), sy = (o.sy ?? 1) * (o.s ?? 1);
+        if (sx !== 1 || sy !== 1) tr += ` scale(${sx},${sy})`;
+        e.style.transform = tr;
+        if (o.o !== undefined) e.style.opacity = clamp(o.o);
+      };
+      const WT = { text: 400, label: 500, display: 600 };
+      const requested = new Set();
+      const FONT = (weight, px, style = "") => (requested.add(`${weight} ${style || "normal"}`), `${style ? style + " " : ""}${weight} ${px}px "${FAMILY}"`);
+
+      function measure(text, font, ls = "0px") {
+        const s = el("span", null, document.body);
+        s.style.cssText = `position:absolute;left:0;top:0;white-space:pre;font:${font};letter-spacing:${ls};line-height:1.24;visibility:hidden`;
+        s.textContent = text;
+        const base = s.getBoundingClientRect();
+        const r = document.createRange();
+        const xs = [];
+        for (let i = 0; i < text.length; i++) {
+          r.setStart(s.firstChild, i);
+          r.setEnd(s.firstChild, i + 1);
+          const b = r.getBoundingClientRect();
+          xs.push({ x: b.left - base.left, w: b.width });
+        }
+        const probe = el("span", null, s);
+        probe.style.cssText = "display:inline-block;width:0;height:0";
+        const baseline = probe.getBoundingClientRect().top - base.top;
+        s.remove();
+        return { xs, w: base.width, h: base.height, baseline };
+      }
+      function letters(parent, text, font, ls = "0px", color = "") {
+        const m = measure(text, font, ls);
+        return [...text].map((ch, i) => {
+          const s = el("span", "word", parent);
+          s.textContent = ch;
+          s.style.font = font;
+          s.style.letterSpacing = ls;
+          s.style.lineHeight = "1.24";
+          if (color) s.style.color = color;
+          s.style.transformOrigin = "50% 70%";
+          return { e: s, ch, x: m.xs[i].x, w: m.xs[i].w };
+        });
+      }
+      // A row of words, each in its own mask (from the template). y is the top of the line box; `base` is the baseline.
+      function wordRow(parent, words, { x, y, size, weight = 400, ls = "-0.03em", align = "left", color = "", maskEm = 1.24, padEm = 0.12 }) {
+        const items = words.map((w) => {
+          const f = FONT(w.w || weight, size);
+          return { ...w, f, mw: measure(w.text, f, ls).w, sp: measure("a a", f, ls).w - measure("aa", f, ls).w };
+        });
+        const total = items.reduce((a, it, i) => a + it.mw + (i < items.length - 1 ? it.sp : 0), 0);
+        let cx = align === "center" ? x - total / 2 : x;
+        const pad = size * padEm;
+        const base = y + measure("x", items[0].f, ls).baseline;
+        return {
+          size,
+          total,
+          base,
+          items: items.map((it) => {
+            const mask = el("div", "mask", parent);
+            mask.style.cssText += `left:${cx - pad}px;top:${y - pad}px;width:${it.mw + pad * 2}px;height:${size * maskEm + pad}px`;
+            const s = el("span", "word", mask);
+            s.textContent = it.text;
+            s.style.cssText += `font:${it.f};letter-spacing:${ls};line-height:1.24;left:${pad}px;top:${pad}px;color:${it.color || color}`;
+            const o = { mask, s, x: cx, w: it.mw };
+            cx += it.mw + it.sp;
+            return o;
+          }),
+        };
+      }
+      // Entry from below (outExpo), exit upwards (in3), 1.5 heights so no sliver stays in the mask.
+      // `tin` null means "already in" (the loop's first frames).
+      function animRow(row, t, tin, tout, { st = 0.05, dur = 0.8, od = 0.36, rot = 5 } = {}) {
+        row.items.forEach((w, i) => {
+          const p = tin == null ? 1 : E.outExpo(prog(t, tin + i * st, tin + i * st + dur));
+          const q = tout == null ? 0 : E.in3(prog(t, tout + i * st * 0.5, tout + i * st * 0.5 + od));
+          T(w.s, { y: ((1 - p) * 1.1 - q * 1.5) * row.size * 1.24, r: (1 - p) * rot - q * rot * 0.6 });
+        });
+      }
+      const words = (s) => s.split(" ").map((text) => ({ text }));
+
+      // ------------------------------------------------------------------
+      // Content: PluginHealth::REPLACEABLE, grouped by the module that replaces each plugin.
+      // Order: the groups people recognise first sit at the top of the list.
+      // ------------------------------------------------------------------
+      const GROUPS = [
+        { module: "SMTP mail", slugs: ["wp-mail-smtp", "post-smtp", "fluent-smtp", "easy-wp-smtp", "smtp-mailer", "wp-smtp"] },
+        { module: "Login limits", slugs: ["limit-login-attempts-reloaded", "loginizer", "login-lockdown", "limit-login-attempts", "wp-limit-login-attempts"] },
+        { module: "Bot protection", slugs: ["simple-cloudflare-turnstile", "recaptcha-woo", "advanced-nocaptcha-recaptcha", "google-captcha", "honeypot"] },
+        { module: "Duplicate posts and pages", slugs: ["duplicate-page", "duplicate-post", "post-duplicator"] },
+        { module: "Maintenance mode", slugs: ["wp-maintenance-mode", "coming-soon", "maintenance", "under-construction-page"] },
+        { module: "Header and footer scripts", slugs: ["insert-headers-and-footers", "header-and-footer-scripts", "header-footer-code-manager", "head-footer-code", "wp-headers-and-footers", "tracking-code-manager", "hotjar", "microsoft-clarity"] },
+        { module: "Hardening", slugs: ["disable-xml-rpc", "disable-xml-rpc-api", "stop-user-enumeration"] },
+        { module: "Tweaks", slugs: ["disable-comments", "disable-search", "disable-emojis", "disable-embeds", "heartbeat-control"] },
+        { module: "Omnibus price history", slugs: ["omnibus", "wc-price-history", "omnibus-by-ilabs", "omnibus-for-woocommerce", "product-price-history"] },
+        { module: "Cloudflare cache", slugs: ["cloudflare"] },
+      ];
+
+      // ------------------------------------------------------------------
+      // Timing (seconds). The loop starts and ends on the end card.
+      // ------------------------------------------------------------------
+      const TM = {
+        cardOut: 1.5, // the wordmark and the line leave
+        toRows: [1.6, 2.4], // the blocks stretch into the first three rows
+        card: 2.36, // the list takes over from the blocks
+        unfold: 2.36, // the rest of the pile unfolds below
+        lockIn: 2.6, // "Plugins" rises
+        bubble: 3.05, // the count pops
+        subIn: 3.25,
+        fold: 4.7, // the first plugin row folds under its module
+        // One row folds every rowStep seconds, top to bottom, so the list rises at a steady 64 px / 0.075 s
+        // (about 14 px per frame) instead of in surges that step under motion blur.
+        rowStep: 0.075,
+        rowFold: 0.36,
+        subSwap: 6.1, // "one small job each" → "one switch each"
+        count: 7.75, // 99+ → 1
+        out: 9.25, // the lockup leaves, the card content fades
+        toMark: [9.45, 10.25], // the card's three bands fold back into the blocks
+        nameIn: 9.95,
+        lineIn: 10.2,
+      };
+
+      // ------------------------------------------------------------------
+      // Geometry
+      // ------------------------------------------------------------------
+      const RH = 64; // row height
+      const LX = 112; // the left lockup
+      const CARD = { x: 736, y: 80, w: 768 };
+      // Design House blocks (viewBox 0 0 151 106 of the landing mark), top to bottom
+      const BLOCKS = { small: [73.18, 0, 31.73], big: [0, 31.82, 73.39], medium: [104.8, 31.81, 45.5] };
+      const BLOCK_RX = 5.88;
+
+      const scenes = [];
+      const defs = [];
+      const scene = (name, t0, t1, build) => defs.push({ name, t0, t1, build });
+
+      scene("hero", 0, TIMELINE + 1, (root) => {
+        // a quiet lift in the background's own hue behind the card, so the dark isn't dead flat
+        const wash = el("div", "fill", root);
+        wash.style.background = `radial-gradient(55% 75% at 70% 50%, ${css("--wash")} 0%, transparent 70%)`;
+
+        // ---------- end card: mark + wordmark, the line under it ----------
+        const FS = 140;
+        const wfont = FONT(WT.display, FS);
+        const wls = "-0.03em";
+        const wm = measure(NAME, wfont, wls);
+        const k = (0.955 * FS) / 105.2; // mark height to type size, as in the landing nav (21 px mark for 22 px text)
+        const markW = 150.3 * k, markH = 105.2 * k;
+        const gap = 0.41 * FS;
+        const lockW = markW + gap + wm.w;
+        const left = CX - lockW / 2;
+        const baseY = 410; // the wordmark's baseline; the big block sits on it
+        const markX = left, markY = baseY - markH;
+        const block = (key) => {
+          const [x, y, s] = BLOCKS[key];
+          return { x: markX + x * k, y: markY + y * k, w: s * k, h: s * k, r: BLOCK_RX * k };
+        };
+        const BL = { small: block("small"), big: block("big"), medium: block("medium") };
+
+        const wordBox = el("div", "abs", root);
+        const wordTop = baseY - wm.baseline;
+        wordBox.style.cssText += `left:${left + markW + gap}px;top:${wordTop}px;width:${wm.w + FS}px;height:${FS * 1.3}px;overflow:hidden`;
+        const nameLetters = letters(wordBox, NAME, wfont, wls, css("--ink"));
+        const line = wordRow(root, words(LINE), { x: CX, y: baseY + 52, size: 44, weight: WT.text, ls: "-0.01em", align: "center", color: css("--ink-2") });
+
+        // three rects that are the blocks at both ends of the loop and the rows / card bands in between
+        const morphs = ["small", "big", "medium"].map(() => el("div", "abs", root));
+        const rect = (e, r, color) => {
+          e.style.cssText = `position:absolute;left:0;top:0;transform:translate(${r.x}px,${r.y}px);width:${r.w}px;height:${r.h}px;` +
+            `border-radius:${r.tl}px ${r.tr}px ${r.br}px ${r.bl}px;background:${color};display:block`;
+        };
+        const lerpRect = (a, b, p) => {
+          const o = {};
+          for (const key of ["x", "y", "w", "h", "tl", "tr", "br", "bl"]) o[key] = lerp(a[key], b[key], p);
+          return o;
+        };
+        const rr = (r, tl, tr = tl, br = tl, bl = tl) => ({ ...r, tl, tr, br, bl });
+
+        // ---------- the plugin list ----------
+        const card = el("div", "card", root);
+        card.style.cssText += `left:${CARD.x}px;top:${CARD.y}px;width:${CARD.w}px`;
+        const rows = [];
+        GROUPS.forEach((g, gi) => {
+          g.slugs.forEach((slug, si) => {
+            const r = el("div", "row", card);
+            const edge = el("div", "edge", r);
+            const sep = el("div", "sep", r);
+            const check = el("div", "check", r);
+            const track = el("div", "track", r);
+            const knob = el("div", "knob", r);
+            const text = el("div", "text", r);
+            const s = el("div", "slug", text);
+            s.textContent = slug;
+            const head = si === 0;
+            let name = null, pill = null;
+            if (head) {
+              name = el("div", "name", text);
+              name.textContent = g.module;
+              pill = el("div", "pill", r);
+              pill.textContent = "Running"; // the settings page's status for a module that is on and running
+            }
+            const shade = el("div", "shade", r);
+            rows.push({ e: r, edge, sep, check, track, knob, slug: s, name, pill, shade, gi, si, n: g.slugs.length, head, i: rows.length });
+          });
+        });
+        // each folding row gets its slot; a group's head turns into the module just before its first row folds
+        const headAt = [];
+        let slot = 0;
+        for (const r of rows) {
+          if (r.head) headAt[r.gi] = TM.fold + slot * TM.rowStep - 0.1;
+          else r.foldAt = TM.fold + slot++ * TM.rowStep;
+        }
+
+        // ---------- the left lockup: Plugins + the count bubble, the line under it ----------
+        const PS = 108;
+        const plugins = wordRow(root, [{ text: "Plugins", w: WT.label }], { x: LX, y: 300, size: PS, ls: "-0.045em", color: css("--ink") });
+        const bubbleFont = FONT(WT.display, 48);
+        const BH = 72;
+        const bubbleW = (s) => Math.max(BH, measure(s, bubbleFont, "-0.02em").w + 44);
+        const bubble = el("div", "bubble", root);
+        const bx = LX + plugins.total + 18;
+        const by = plugins.base - PS * 0.36 - BH / 2; // centred on the lowercase letters, as in the WordPress menu
+        const many = el("span", null, bubble), one = el("span", null, bubble);
+        // each count has its own colour layer, so the colour rolls over with the digits instead of blending through purple
+        for (const [e, s, c] of [[many, PILE, "--wp-count"], [one, "1", "--accent"]]) {
+          e.textContent = s;
+          e.style.cssText += `height:${BH}px;font:${bubbleFont};letter-spacing:-0.02em;line-height:${BH}px;background:var(${c})`;
+        }
+        const subA = wordRow(root, words("one small job each"), { x: LX, y: plugins.base + 40, size: 40, weight: WT.text, ls: "-0.01em", color: css("--ink-2") });
+        const subB = wordRow(root, words("one switch each"), { x: LX, y: plugins.base + 40, size: 40, weight: WT.text, ls: "-0.01em", color: css("--ink-2") });
+
+        const BLUE = hex(css("--wp-blue")), OFF = hex(css("--wp-off"));
+        const ACTIVE = hex(css("--wp-active-bg")), WHITE = [255, 255, 255];
+                const MARK = css("--mark");
+
+        // row rects in stage coordinates, for the hand-over between blocks and list
+        const rowRect = (i) => ({ x: CARD.x, y: CARD.y + i * RH, w: CARD.w, h: RH });
+        const band = (a, b) => ({ x: CARD.x, y: CARD.y + a * RH, w: CARD.w, h: (b - a) * RH });
+        const order = ["small", "big", "medium"];
+
+        return (t) => {
+          // ---------- end card ----------
+          const early = t < 5;
+          nameLetters.forEach((L, i) => {
+            const pin = early ? 1 : E.outExpo(prog(t, TM.nameIn + i * 0.035, TM.nameIn + i * 0.035 + 0.75));
+            const pout = early ? E.in3(prog(t, TM.cardOut + i * 0.018, TM.cardOut + i * 0.018 + 0.34)) : 0;
+            T(L.e, { x: L.x, y: ((1 - pin) * 1.1 - pout * 1.5) * FS * 1.24, r: (1 - pin) * 6 - pout * 3 });
+          });
+          animRow(line, t, early ? null : TM.lineIn, early ? TM.cardOut : null, { st: 0.05, rot: 0 });
+
+          // ---------- blocks ↔ rows / bands ----------
+          const listOn = t >= TM.card && t < TM.toMark[0];
+          morphs.forEach((m, j) => {
+            const key = order[j];
+            const b = rr(BL[key], BL[key].r);
+            if (t < TM.card) {
+              const p = E.io3(prog(t, TM.toRows[0] + j * 0.05, TM.toRows[1] - (2 - j) * 0.05));
+              const target = rr(rowRect(j), j === 0 ? 16 : 0, j === 0 ? 16 : 0, 0, 0);
+              rect(m, lerpRect(b, target, p), mix(hex(MARK), ACTIVE, p));
+            } else if (t >= TM.toMark[0]) {
+              const p = E.io3(prog(t, TM.toMark[0] + j * 0.06, TM.toMark[1] - (2 - j) * 0.06));
+              const src = [rr(band(0, 3), 16, 16, 0, 0), rr(band(3, 7), 0), rr(band(7, 10), 0, 0, 16, 16)][j];
+              rect(m, lerpRect(src, b, p), mix(WHITE, hex(MARK), p));
+            } else m.style.display = "none";
+          });
+
+          // ---------- the list ----------
+          card.style.display = listOn ? "block" : "none";
+          if (listOn) {
+            const fade = 1 - E.in2(prog(t, TM.out, TM.out + 0.2)); // content fades before the card splits
+            let y = 0;
+            for (const r of rows) {
+              // unfold at the start (rows from the blocks are already open), fold into the group head later
+              const ua = TM.unfold + Math.min(r.i - 3, 12) * 0.06;
+              const u = r.i < 3 ? 1 : E.io2(prog(t, ua, ua + 0.36));
+              const f = r.head ? 0 : E.io2(prog(t, r.foldAt, r.foldAt + TM.rowFold));
+              const th = (1 - u + f) * (Math.PI / 2);
+              const h = RH * Math.cos(Math.min(th, Math.PI / 2));
+              r.e.style.display = h < 0.5 ? "none" : "block";
+              T(r.e, { y, rx: (th * 180) / Math.PI });
+              r.shade.style.opacity = 0.32 * Math.sin(th);
+              r.sep.style.display = r.i === 0 ? "none" : "block";
+              y += h;
+
+              // the head of a group turns into the module: checkbox → switch, slug → module name, a status pill
+              const a = headAt[r.gi];
+              const contentIn = r.i < 3 ? E.out2(prog(t, TM.card, TM.card + 0.3)) : 1;
+              if (r.head) {
+                const bgP = prog(t, a, a + 0.3);
+                r.e.style.background = mix(ACTIVE, WHITE, bgP);
+                r.sep.style.background = mix(hex("#e4e6ea"), hex(css("--wp-line")), bgP);
+                r.edge.style.opacity = contentIn * (1 - bgP);
+                r.check.style.opacity = contentIn * (1 - prog(t, a, a + 0.15)) * fade;
+                const sw = E.out3(prog(t, a + 0.05, a + 0.35));
+                T(r.track, { sx: lerp(28 / 72, 1, sw), sy: lerp(28 / 40, 1, sw), o: prog(t, a + 0.05, a + 0.15) * fade });
+                const on = clamp(pop(t, a + 0.42, 2.4, 0.55), 0, 1.15);
+                T(r.knob, { x: on * 32, o: prog(t, a + 0.2, a + 0.32) * fade });
+                r.track.style.background = mix(OFF, BLUE, clamp(on));
+                T(r.slug, { y: -E.in3(prog(t, a, a + 0.3)) * RH, o: contentIn * fade });
+                T(r.name, { y: (1 - E.outExpo(prog(t, a + 0.12, a + 0.82))) * RH, o: fade });
+                const pp = clamp(pop(t, a + 0.55, 2.8, 0.5), 0, 1.2);
+                T(r.pill, { s: pp, o: clamp(pp * 3) * fade });
+              } else {
+                r.edge.style.opacity = contentIn;
+                r.track.style.opacity = 0;
+                r.knob.style.opacity = 0;
+                T(r.slug, { o: contentIn * fade });
+                r.check.style.opacity = contentIn * fade;
+              }
+            }
+            card.style.height = `${y}px`;
+          }
+
+          // ---------- the left lockup ----------
+          const lockOn = t > TM.lockIn - 0.1 && t < TM.out + 0.8;
+          for (const row of [plugins, subA, subB]) for (const it of row.items) it.mask.style.display = lockOn ? "block" : "none";
+          animRow(plugins, t, TM.lockIn, TM.out, { rot: 4 });
+          animRow(subA, t, TM.subIn, TM.subSwap, { st: 0.06, rot: 0 });
+          animRow(subB, t, TM.subSwap + 0.42, TM.out, { st: 0.06, rot: 0 });
+
+          const bp = clamp(pop(t, TM.bubble, 2.6, 0.45), 0, 1.2) * (1 - E.in3(prog(t, TM.out, TM.out + 0.3)));
+          const cp = E.io3(prog(t, TM.count, TM.count + 0.5));
+          const bw = lerp(bubbleW(PILE), bubbleW("1"), cp);
+          bubble.style.cssText = `display:${bp > 0.001 && lockOn ? "block" : "none"};left:${bx}px;top:${by}px;width:${bw}px;height:${BH}px;` +
+            `background:transparent;transform:scale(${bp});transform-origin:0 50%`;
+          T(many, { y: -cp * BH });
+          T(one, { y: (1 - cp) * BH });
+        };
+      });
+
+      // ------------------------------------------------------------------
+      // Render and readiness (from the template; no grain: flat interface, small WebP)
+      // ------------------------------------------------------------------
+      function render(time) {
+        const t = time * SPEED;
+        for (const s of scenes) {
+          const on = t >= s.t0 && t < s.t1;
+          s.root.style.display = on ? "block" : "none";
+          if (on) s.update(t);
+        }
+      }
+
+      window.__DURATION = DURATION;
+      window.__SUB = SUB;
+      window.__SIZE = { w: W, h: H };
+      window.__render = render;
+      window.__ready = (async () => {
+        const declared = [...document.fonts];
+        await Promise.all(declared.map((f) => f.load().catch(() => {})));
+        await document.fonts.ready;
+        for (const f of declared.filter((f) => f.status !== "loaded"))
+          console.error(`Font "${f.family}" ${f.weight} ${f.style} did not load: text in it will render in a fallback font. Check @font-face and the files in fonts/.`);
+        for (const d of defs) {
+          const root = el("div", "scene", stage);
+          root.id = d.name;
+          root.style.display = "block";
+          root.style.visibility = "hidden";
+          const update = d.build(root);
+          root.style.display = "none";
+          root.style.visibility = "";
+          scenes.push({ ...d, root, update });
+        }
+        window.__CUES = [];
+        if (!CAPTURE) live();
+      })();
+
+      function live() {
+        const hud = document.getElementById("hud");
+        const bar = hud.querySelector("i");
+        const label = hud.querySelector("span");
+        const fit = () => (stage.style.transform = `scale(${Math.min(innerWidth / W, (innerHeight - 26) / H)})`);
+        fit();
+        addEventListener("resize", fit);
+        let t = Q.has("t") ? Number(Q.get("t")) : 0;
+        let playing = !Q.has("t");
+        let last = performance.now();
+        addEventListener("keydown", (e) => {
+          if (e.code === "Space") playing = !playing;
+          if (e.code === "ArrowRight") t = Math.min(DURATION, t + 1);
+          if (e.code === "ArrowLeft") t = Math.max(0, t - 1);
+        });
+        hud.addEventListener("click", (e) => (t = (e.clientX / innerWidth) * DURATION));
+        const loop = (now) => {
+          if (playing) t = (t + (now - last) / 1000) % DURATION;
+          last = now;
+          render(t);
+          bar.style.width = `${(t / DURATION) * 100}%`;
+          label.textContent = `${t.toFixed(2)} s`;
+          requestAnimationFrame(loop);
+        };
+        requestAnimationFrame(loop);
+      }
+    </script>
+  </body>
+</html>
