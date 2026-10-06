@@ -1,0 +1,50 @@
+name: wphouse-ols
+
+# OpenLiteSpeed + WordPress + WooCommerce for the LiteSpeed page cache module, with the repo mounted
+# as the plugin like on the main dev site. OLS caches only what PHP marks with X-LiteSpeed-Cache-Control
+# (checkPublicCache 1, enableCache 0), which is how the module works on LiteSpeed hosts.
+# Setup: ./dev/ols/setup.sh    Site: http://localhost:8896 (admin/admin)
+# OLS listens on 8896 inside the container too, so WordPress can reach itself (loopback, Site Health).
+
+x-db-env: &db-env
+  MARIADB_DATABASE: wordpress
+  MARIADB_USER: wordpress
+  MARIADB_PASSWORD: wordpress
+  MARIADB_ROOT_PASSWORD: wordpress
+
+services:
+  db:
+    image: mariadb:11.4
+    environment: *db-env
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  ols:
+    image: litespeedtech/openlitespeed:1.9.2-lsphp83
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${OLS_PORT:-8896}:8896"
+    command: ["sh", "-c", "sed -i 's/^\\( *address *\\)\\*:80$/\\1*:8896/' /usr/local/lsws/conf/httpd_config.conf && /usr/local/lsws/bin/lswsctrl restart"]
+    volumes:
+      - wp:/var/www/vhosts/localhost/html
+      - ../..:/var/www/vhosts/localhost/html/wp-content/plugins/wphouse
+
+  wpcli:
+    image: wordpress:cli-php8.3
+    profiles: ["cli"]
+    user: "0:0"
+    working_dir: /var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - wp:/var/www/html
+      - ../..:/var/www/html/wp-content/plugins/wphouse
+
+volumes:
+  wp:
