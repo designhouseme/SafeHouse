@@ -7,7 +7,7 @@
 .DS_Store
 /.playwright-mcp/
 /docs/research/
-/site/assets/src/
+/site/public/assets/src/
 /site/.vercel/
 /site/.env*
 .wrangler/

@@ -1,0 +1,13 @@
+// The SafeHouse landing page: static files from public/, served by Cloudflare Workers on its own domain.
+// Deploy from this folder with `npx wrangler deploy` (needs `npx wrangler login` on the Design House account).
+{
+	"name": "shouse-site",
+	"compatibility_date": "2026-10-01",
+	"assets": {
+		"directory": "./public"
+	},
+	"workers_dev": false,
+	"routes": [
+		{ "pattern": "safehouse.designhouse.me", "custom_domain": true }
+	]
+}

@@ -215,7 +215,7 @@ a { color: inherit; }
 	50% { opacity: 0.65; scale: 0.94; }
 }
 
-/* the beam lands on a WordPress dashboard open at the WPHouse settings page */
+/* the beam lands on a WordPress dashboard open at the SafeHouse settings page */
 
 .panel {
 	--impact: 50%;
@@ -388,7 +388,7 @@ a { color: inherit; }
 .log-warning .ev { color: #6b4e00; background: #fcf9e8; }
 .log-critical .ev { color: #8a2424; background: #fcf0f1; }
 
-/* the plugins WPHouse replaces, scrolling under the panel */
+/* the plugins SafeHouse replaces, scrolling under the panel */
 
 .mq { position: relative; z-index: 3; margin-top: 72px; }
 .mq-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: min(1216px, calc(100% - 48px)); margin: 0 auto 18px; }
@@ -842,7 +842,7 @@ main section { position: relative; padding: 168px 0; }
 /* Scrolling in, the modules are running; then the file lands, the notice appears and each one stops. */
 @supports (animation-timeline: view()) {
 	.st-on { display: inline-block !important; position: absolute; right: 0; top: 0; color: #00611c; background: #edfaef; animation: st-out linear both; animation-timeline: --room; animation-range: cover 35% cover 45%; }
-	.screen-count .st-on { inset: 0; padding: 3px 10px; border-radius: 999px; text-align: center; }
+	.screen-count .st-on { inset: 0; padding: 3px 10px; border-radius: 999px; text-align: center; white-space: nowrap; }
 	.st-off,
 	.screen-notice { animation: st-in linear both; animation-timeline: --room; animation-range: cover 35% cover 45%; }
 }

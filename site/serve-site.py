@@ -1,4 +1,4 @@
-"""Serve the landing page without browser caching: python3 dev/serve-site.py [port]"""
+"""Serve the landing page (site/public) without browser caching: python3 site/serve-site.py [port]"""
 import functools
 import http.server
 import pathlib
@@ -15,6 +15,6 @@ class NoCache(http.server.SimpleHTTPRequestHandler):
 
 
 port = int(sys.argv[1]) if len(sys.argv) > 1 else 8899
-site = pathlib.Path(__file__).resolve().parent.parent / "site"
+site = pathlib.Path(__file__).resolve().parent / "public"
 print(f"http://127.0.0.1:{port}/")
 http.server.ThreadingHTTPServer(("127.0.0.1", port), functools.partial(NoCache, directory=str(site))).serve_forever()

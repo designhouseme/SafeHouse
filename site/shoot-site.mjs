@@ -1,5 +1,5 @@
 // Screenshots of the landing page in headless Chromium (never throttled like a background window).
-// Usage: node dev/shoot-site.mjs [outdir]   (needs the page served on :8899, see dev/serve-site.py)
+// Usage: node site/shoot-site.mjs [outdir]   (needs the page served on :8899, see site/serve-site.py)
 // Playwright is resolved from PLAYWRIGHT_PATH or any node_modules on the way up.
 import { createRequire } from 'node:module';
 import { mkdirSync } from 'node:fs';
