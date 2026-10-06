@@ -115,6 +115,7 @@ Other test environments:
 - `dev/update-test.sh`: signed updates end to end, on an isolated site with a throwaway key.
 - `dev/package-test.sh`: install and uninstall from a release ZIP.
 - `dev/updates-test.sh` and `dev/ingest-test.sh`: both Workers against a local R2 bucket.
+- `dev/cve-watch-test.sh`: the CVE watch issue logic against a mock GitHub API.
 
 ### Rules for changes
 
