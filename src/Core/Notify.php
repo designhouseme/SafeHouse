@@ -23,7 +23,7 @@ final class Notify {
 			return false;
 		}
 		$site = wp_specialchars_decode( (string) get_option( 'blogname' ), ENT_QUOTES );
-		$body = implode( "\n", $lines ) . "\n\n" . home_url( '/' ) . "\n" . admin_url( 'options-general.php?page=wphouse' ) . "\n";
+		$body = implode( "\n", $lines ) . "\n\n" . home_url( '/' ) . "\n" . admin_url( 'options-general.php?page=wphouse' ) . "\n\n-- \nWPHouse, Design House\nhttps://designhouse.me/\n";
 		return wp_mail( $recipients, sprintf( '[WPHouse] %s: %s', $site, $subject ), $body );
 	}
 }

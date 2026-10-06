@@ -1,6 +1,12 @@
 .wphouse { max-width: 1040px; }
-.wphouse h1 { display: flex; align-items: baseline; gap: 8px; }
-.wphouse-version { font-size: 13px; font-weight: 400; color: #646970; }
+.wphouse-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.wphouse-head h1 { display: flex; align-items: center; gap: 10px; }
+.wphouse-head__icon { display: block; width: 32px; height: 32px; }
+.wphouse-version { align-self: flex-end; margin-bottom: 3px; font-size: 13px; font-weight: 400; color: #646970; }
+.wphouse-maker { display: block; padding: 6px 0; opacity: 0.8; transition: opacity 0.15s; }
+.wphouse-maker:hover,
+.wphouse-maker:focus { opacity: 1; }
+.wphouse-maker img { display: block; width: auto; height: 16px; }
 .wphouse-intro { max-width: 70ch; color: #3c434a; }
 
 .wphouse-card {

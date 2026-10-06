@@ -85,6 +85,7 @@ final class Updater {
 			'requires'     => $manifest['requires'],
 			'requires_php' => $manifest['requires_php'],
 			'tested'       => $manifest['tested'],
+			'icons'        => [ 'svg' => plugins_url( 'assets/icon.svg', WPHOUSE_FILE ) ],
 		];
 	}
 

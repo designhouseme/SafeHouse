@@ -26,6 +26,7 @@ final class Page {
 		add_action( 'admin_post_wphouse_task', [ $this, 'handle_task' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'assets' ] );
 		add_action( 'admin_notices', [ $this, 'notices' ] );
+		add_filter( 'admin_footer_text', [ $this, 'footer_text' ] );
 		add_filter( 'plugin_action_links_' . plugin_basename( WPHOUSE_FILE ), [ $this, 'action_links' ] );
 	}
 
@@ -46,6 +47,20 @@ final class Page {
 	public function action_links( array $links ): array {
 		array_unshift( $links, '<a href="' . esc_url( admin_url( 'options-general.php?page=' . self::SLUG ) ) . '">' . esc_html__( 'Settings', 'wphouse' ) . '</a>' );
 		return $links;
+	}
+
+	/**
+	 * Replaces "Thank you for creating with WordPress" on our page only.
+	 *
+	 * @param mixed $text Footer text so far.
+	 * @return mixed
+	 */
+	public function footer_text( mixed $text ): mixed {
+		$screen = get_current_screen();
+		if ( null === $screen || 'settings_page_' . self::SLUG !== $screen->id ) {
+			return $text;
+		}
+		return 'WPHouse &middot; <a href="https://designhouse.me/" target="_blank" rel="noopener">Design House</a>';
 	}
 
 	public function notices(): void {
@@ -91,7 +106,11 @@ final class Page {
 		$locked = Settings::locked();
 		?>
 		<div class="wrap wphouse">
-			<h1>WPHouse <span class="wphouse-version"><?php echo esc_html( WPHOUSE_VERSION ); ?></span></h1>
+			<div class="wphouse-head">
+				<h1><img class="wphouse-head__icon" src="<?php echo esc_url( plugins_url( 'assets/icon.svg', WPHOUSE_FILE ) ); ?>" width="32" height="32" alt="">WPHouse <span class="wphouse-version"><?php echo esc_html( WPHOUSE_VERSION ); ?></span></h1>
+				<a class="wphouse-maker" href="https://designhouse.me/" target="_blank" rel="noopener"><img src="<?php echo esc_url( plugins_url( 'assets/designhouse.svg', WPHOUSE_FILE ) ); ?>" width="128" height="16" alt="Design House"></a>
+			</div>
+			<hr class="wp-header-end">
 			<p class="wphouse-intro"><?php esc_html_e( 'Small, audited replacements for single-purpose plugins. Every module is a switch. Features that Wordfence or wp-config already handle are skipped automatically.', 'wphouse' ); ?></p>
 
 			<?php if ( $locked ) : ?>
