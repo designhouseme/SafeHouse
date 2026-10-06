@@ -264,20 +264,22 @@ final class Bots extends AbstractModule {
 
 	/** The block checkout prints no PHP form hook, so its widget is placed by assets/bots.js. */
 	public function enqueue_checkout(): void {
-		if ( function_exists( 'is_checkout' ) && is_checkout() && has_block( 'woocommerce/checkout' ) ) {
+		// Not has_block(): a block theme can put the checkout block in a template instead of the page,
+		// and a checkout without the script would turn every order away. bots.js looks at the DOM.
+		if ( function_exists( 'is_checkout' ) && is_checkout() ) {
 			$this->enqueue( true );
 		}
 	}
 
-	private function enqueue( bool $block_checkout = false ): void {
+	private function enqueue( bool $checkout = false ): void {
 		if ( wp_script_is( 'wphouse-bots' ) ) {
 			return;
 		}
-		wp_enqueue_script( 'wphouse-bots', plugins_url( 'assets/bots.js', WPHOUSE_FILE ), $block_checkout ? [ 'wp-api-fetch' ] : [], WPHOUSE_VERSION, [ 'in_footer' => true ] );
+		wp_enqueue_script( 'wphouse-bots', plugins_url( 'assets/bots.js', WPHOUSE_FILE ), $checkout ? [ 'wp-api-fetch' ] : [], WPHOUSE_VERSION, [ 'in_footer' => true ] );
 		$config = [
-			'sitekey'       => $this->turnstile ? Turnstile::site_key() : '',
-			'blockCheckout' => $block_checkout,
-			'header'        => Turnstile::HEADER,
+			'sitekey'  => $this->turnstile ? Turnstile::site_key() : '',
+			'checkout' => $checkout,
+			'header'   => Turnstile::HEADER,
 		];
 		wp_add_inline_script( 'wphouse-bots', 'window.wphouseBots = ' . wp_json_encode( $config ) . ';', 'before' );
 		if ( $this->turnstile ) {

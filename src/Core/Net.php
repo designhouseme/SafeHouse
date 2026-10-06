@@ -15,6 +15,25 @@ defined( 'ABSPATH' ) || exit;
 
 final class Net {
 
+	private const FORWARD_HEADERS = [ 'HTTP_X_FORWARDED_FOR', 'HTTP_CF_CONNECTING_IP', 'HTTP_X_REAL_IP', 'HTTP_FORWARDED', 'HTTP_TRUE_CLIENT_IP' ];
+
+	/**
+	 * Whether client_ip() is the visitor and not a proxy in front of the site: proxies are
+	 * configured, or the request carries no forwarding header at all. A forged header only makes
+	 * this false, which callers must treat as "unknown", never as a reason to trust anything.
+	 */
+	public static function knows_visitor_ip(): bool {
+		if ( defined( 'WPHOUSE_TRUSTED_PROXIES' ) && is_array( WPHOUSE_TRUSTED_PROXIES ) && WPHOUSE_TRUSTED_PROXIES ) {
+			return true;
+		}
+		foreach ( self::FORWARD_HEADERS as $header ) {
+			if ( ! empty( $_SERVER[ $header ] ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	public static function client_ip(): string {
 		$remote = isset( $_SERVER['REMOTE_ADDR'] ) ? self::valid_ip( sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) ) : '';
 		if ( '' === $remote || ! self::is_trusted_proxy( $remote ) ) {

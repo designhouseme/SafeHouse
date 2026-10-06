@@ -140,12 +140,13 @@
 		} );
 	}
 
-	/* Block checkout: no PHP form hook, so the widget goes above the Place order button, and the
-	   token travels in a header on the Store API checkout request. */
+	/* Block checkout (found in the DOM, wherever the theme put the block): no PHP form hook, so the
+	   widget goes above the Place order button, and the token travels in a header on the Store API
+	   checkout request. */
 	var blockWidget = null;
 
 	function placeBlockCheckoutWidget() {
-		if ( ! config.blockCheckout || ! config.sitekey || ( blockWidget && document.body.contains( blockWidget ) ) ) {
+		if ( ! config.checkout || ! config.sitekey || ( blockWidget && document.body.contains( blockWidget ) ) ) {
 			return;
 		}
 		var actions = document.querySelector( '.wc-block-checkout__actions' );
@@ -183,7 +184,7 @@
 		} );
 	}
 
-	if ( config.blockCheckout && config.sitekey && window.wp && window.wp.apiFetch ) {
+	if ( config.checkout && config.sitekey && window.wp && window.wp.apiFetch ) {
 		window.wp.apiFetch.use( function ( options, next ) {
 			if ( ! isCheckoutPost( options ) ) {
 				return next( options );

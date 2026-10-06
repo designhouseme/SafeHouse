@@ -84,15 +84,20 @@ final class Turnstile {
 	}
 
 	private static function ask_cloudflare( string $token, string $action ): string {
+		$body = [
+			'secret'   => self::secret_key(),
+			'response' => $token,
+		];
+		// remoteip is optional. Behind Cloudflare or another proxy without WPHOUSE_TRUSTED_PROXIES,
+		// client_ip() is the proxy, and a wrong address is worse than none.
+		if ( Net::knows_visitor_ip() ) {
+			$body['remoteip'] = Net::client_ip();
+		}
 		$response = wp_remote_post(
 			self::VERIFY_URL,
 			[
 				'timeout' => 5,
-				'body'    => [
-					'secret'   => self::secret_key(),
-					'response' => $token,
-					'remoteip' => Net::client_ip(),
-				],
+				'body'    => $body,
 			]
 		);
 		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
