@@ -16,10 +16,10 @@ cd design/hero
 node render.mjs --src index.html --still 0,3.8,8.6          # stills in out/stills/
 node render.mjs --src index.html --out film.mp4              # the 60 fps master, out/film.mp4
 ./export.sh webp out/film.mp4 hero.webp 1200 20 70           # the README animation
-./export.sh poster out/film.mp4 8.6 out/poster.png && cwebp -quiet -q 82 out/poster.png -o hero-still.webp
+./export.sh poster out/film.mp4 8.6 out/poster.png && cwebp -quiet -q 82 -resize 1200 0 out/poster.png -o hero-still.webp
 python3 check_film.py --composition index.html --film out/film.mp4 --webp hero.webp
 ```
 
-`out/` is ignored by git. Commit `hero.webp` and `hero-still.webp` (the frame shown to visitors who ask for reduced motion).
+`out/` is ignored by git. Commit `hero.webp` and `hero-still.webp`. The README offers the still through a `prefers-reduced-motion` source; browsers and GitHub views that ignore it show the animation.
 
 `render.mjs`, `export.sh` and `check_film.py` come from the Design House motion-design toolkit (CC BY 4.0).
