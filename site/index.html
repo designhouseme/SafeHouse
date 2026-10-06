@@ -48,9 +48,6 @@
 			<span>wphouse</span>
 		</a>
 		<ul class="nav-links">
-			<li><a href="#dlaczego">Dlaczego</a></li>
-			<li><a href="#moduly">Moduły</a></li>
-			<li><a href="#wordfence">Z Wordfence</a></li>
 			<li><a href="#aktualizacje">Aktualizacje</a></li>
 		</ul>
 		<div class="nav-end">
@@ -114,7 +111,7 @@
 							<li><i class="tog is-on"></i><b>Blokada instalacji</b><em class="chip chip--warm">odblokuj na 30 min</em></li>
 							<li><i class="tog is-on"></i><b>Alerty o&nbsp;zmianach</b><em class="chip">3 odbiorców</em></li>
 							<li><i class="tog is-on"></i><b>Kondycja wtyczek</b><em class="chip chip--warm">1 zamknięta</em></li>
-							<li><i class="tog"></i><b>Alerty o&nbsp;lukach</b><em class="chip chip--mute">robi to Wordfence</em></li>
+							<li><i class="tog is-on"></i><b>Alerty o&nbsp;lukach</b><em class="chip chip--mute">robi to Wordfence</em></li>
 							<li><i class="tog"></i><b>Usprawnienia</b><em class="chip chip--mute">emoji, Heartbeat</em></li>
 							<li><i class="tog"></i><b>Duplikowanie wpisów i&nbsp;stron</b></li>
 							<li><i class="tog"></i><b>Poczta SMTP</b><em class="chip chip--mute">wp-config.php</em></li>
@@ -149,149 +146,6 @@
 </header>
 
 <main id="tresc">
-	<section class="light modules" id="moduly" aria-labelledby="moduly-h">
-		<div class="wrap">
-			<h2 class="display" id="moduly-h">Jedenaście modułów.<br>Każdy osobno.</h2>
-			<p class="lede">Każdy moduł to jeden przełącznik w&nbsp;panelu i&nbsp;jedna rzecz, której pilnuje. Tak wygląda ich praca, słowo w&nbsp;słowo z&nbsp;wtyczki.</p>
-
-			<div class="bento">
-				<article class="card card--wide">
-					<div class="shot shot--wp" aria-hidden="true">
-						<p class="wp-title">Dodaj wtyczkę <span class="wp-btn wp-btn--ghost">Wyślij wtyczkę na serwer</span></p>
-						<div class="wp-notice wp-notice--error">Instalowanie wtyczek i&nbsp;motywów jest zablokowane przez WPHouse. Najpierw je odblokuj (WPHouse w&nbsp;menu kokpitu lub <code>wp&nbsp;wphouse&nbsp;unlock</code>).</div>
-						<div class="wp-plugin">
-							<span class="wp-plugin__icon"></span>
-							<span class="wp-plugin__text"><b>Formularz kontaktowy</b><i>Wersja 5.2</i><i>Zgodna z&nbsp;Twoją wersją WordPressa</i></span>
-							<span class="wp-btn wp-btn--disabled">Zainstaluj teraz</span>
-						</div>
-					</div>
-					<p class="card-text"><b>Blokada instalacji.</b> Nikt nie doinstaluje wtyczki ani motywu, nawet przez podatny kod, który pomija sprawdzanie uprawnień. Aktualizacje działają, a&nbsp;instalację odblokowujesz na 30&nbsp;minut.</p>
-				</article>
-
-				<article class="card">
-					<div class="shot shot--mail" aria-hidden="true">
-						<dl class="mail-head">
-							<dt>Temat</dt><dd>[WPHouse] Mój sklep: new administrator</dd>
-							<dt>Do</dt><dd>zespol@example.com</dd>
-						</dl>
-						<pre class="mail-body">New administrator account: mallory (mallory@example.net), by no logged-in user (code, CLI or cron)
-
-If you did not expect this, lock the account and check the site.</pre>
-					</div>
-					<p class="card-text"><b>Alerty o&nbsp;zmianach.</b> E-mail, gdy przybędzie administrator, pojawi się wtyczka albo drop-in lub zmieni się <code>wp-config.php</code>.</p>
-				</article>
-
-				<article class="card">
-					<div class="shot shot--wp" aria-hidden="true">
-						<div class="wp-notice wp-notice--warning">
-							<b>1 znana luka w&nbsp;zainstalowanym oprogramowaniu</b>
-							<span>Galeria Demo 2.1.0: Stored XSS. Zaktualizuj do wersji 2.1.1 lub nowszej.</span>
-							<span class="wp-links"><u>Przejdź do aktualizacji</u> <u>Wszystkie znaleziska</u></span>
-						</div>
-					</div>
-					<p class="card-text"><b>Alerty o&nbsp;lukach.</b> Na stronach bez Wordfence porównuje wersje z&nbsp;podpisaną bazą luk i&nbsp;podaje wersję z&nbsp;poprawką.</p>
-				</article>
-
-				<article class="card card--wide">
-					<div class="shot shot--wp" aria-hidden="true">
-						<div class="health">
-							<p class="health__title">Niektóre wtyczki wymagają uwagi <span class="health__tag">Bezpieczeństwo</span></p>
-							<p class="health__desc">Krytyczne: 1, ostrzeżenia: 1. Szczegóły na stronie ustawień WPHouse.</p>
-							<table class="health__table">
-								<tr><th>Quick Page/Post Redirect</th><td>Zamknięta na WordPress.org (powód: security-issue). Nie dostanie już aktualizacji; zastąp ją albo usuń.</td></tr>
-								<tr><th>All-in-One WP Migration</th><td>Jednorazowe narzędzie pozostawione jako aktywne. Usuń je po zakończeniu pracy.</td></tr>
-							</table>
-							<span class="wp-btn">Otwórz WPHouse</span>
-						</div>
-					</div>
-					<p class="card-text"><b>Kondycja wtyczek.</b> Raz w&nbsp;tygodniu: wtyczki zamknięte na WordPress.org, porzucone i&nbsp;zapomniane narzędzia do migracji. Także w&nbsp;Narzędzia → Stan witryny.</p>
-				</article>
-
-				<article class="card card--wide">
-					<div class="shot shot--code" aria-hidden="true">
-						<pre><span class="c-dim">// wp-config.php</span>
-define( <span class="c-str">'WPHOUSE_SMTP_HOST'</span>, <span class="c-str">'smtp.example.com'</span> );
-define( <span class="c-str">'WPHOUSE_SMTP_PORT'</span>, 587 );
-define( <span class="c-str">'WPHOUSE_SMTP_USER'</span>, <span class="c-str">'sklep'</span> );
-define( <span class="c-str">'WPHOUSE_SMTP_PASS'</span>, <span class="c-str">'…'</span> );</pre>
-					</div>
-					<p class="card-text"><b>Poczta SMTP.</b> Hasło zostaje w&nbsp;<code>wp-config.php</code>, nie w&nbsp;bazie. Bez dziennika wiadomości, więc linki do resetu hasła nigdzie się nie odkładają.</p>
-				</article>
-
-				<article class="card">
-					<div class="shot shot--site" aria-hidden="true">
-						<p class="site-bar">moj-sklep.pl <span class="tag">HTTP 503</span><span class="tag">Retry-After: 3600</span></p>
-						<div class="site-page">
-							<p class="site-page__title">Zaraz wracamy</p>
-							<p>Wprowadzamy zmiany w&nbsp;sklepie. Zajrzyj za godzinę.</p>
-						</div>
-					</div>
-					<p class="card-text"><b>Tryb serwisowy.</b> Odwiedzający widzą „Zaraz wracamy”, Ty widzisz normalną stronę, a&nbsp;powiadomienia z&nbsp;bramek płatności, REST API i&nbsp;cron działają dalej.</p>
-				</article>
-			</div>
-
-			<div class="also">
-				<p>Do tego:</p>
-				<ul>
-					<li>Podstawowe zabezpieczenia</li><li>Usprawnienia</li><li>Duplikowanie wpisów i&nbsp;stron</li><li>Skrypty w&nbsp;nagłówku i&nbsp;stopce</li><li>Cache stron LiteSpeed</li>
-				</ul>
-			</div>
-		</div>
-	</section>
-
-	<section class="dark why" id="dlaczego" aria-labelledby="dlaczego-h">
-		<div class="wrap why-grid">
-			<div class="why-copy">
-				<h2 class="display" id="dlaczego-h">Mniej wtyczek.<br>Mniej luk.</h2>
-				<p class="lede">Każda wtyczka to osobny autor, osobny serwer aktualizacji i&nbsp;osobna historia luk. WPHouse zbiera drobne funkcje w&nbsp;jednym, małym kodzie z&nbsp;testami bezpieczeństwa przy każdej zmianie.</p>
-				<dl class="facts">
-					<div><dt>11&nbsp;334</dt><dd>nowe luki w&nbsp;ekosystemie WordPressa w&nbsp;2025 roku</dd></div>
-					<div><dt>91%</dt><dd>z&nbsp;nich dotyczyło wtyczek, nie rdzenia WordPressa</dd></div>
-					<div><dt>≈&nbsp;5&nbsp;h</dt><dd>zwykle mija od publikacji luki do masowych ataków</dd></div>
-				</dl>
-				<p class="source">Dane: Patchstack, <cite>State of WordPress Security in&nbsp;2026</cite>.</p>
-			</div>
-			<figure class="why-figure" id="collapse-card">
-				<canvas id="plugins-grid" role="img" aria-label="99 kwadratów oznaczających wtyczki, które przy przewijaniu łączą się w jeden"></canvas>
-				<figcaption class="counter" aria-live="polite"><span id="plugin-count">99</span> <span id="plugin-word">wtyczek</span></figcaption>
-			</figure>
-		</div>
-	</section>
-
-	<section class="light beside" id="wordfence" aria-labelledby="wordfence-h">
-		<div class="wrap">
-			<h2 class="display" id="wordfence-h">Obok Wordfence.<br>Nie zamiast.</h2>
-			<p class="lede">Gdy Wordfence już coś robi, WPHouse to wykrywa i&nbsp;tę opcję pomija. Nie konkurujemy z&nbsp;nim, tylko sprzątamy to, czego nie robi.</p>
-			<div class="split">
-				<div class="split-col">
-					<h3>Zostaje w&nbsp;Wordfence</h3>
-					<ul>
-						<li>Zapora i&nbsp;reguły blokowania</li>
-						<li>Limity prób logowania</li>
-						<li>Logowanie dwuetapowe</li>
-						<li>Skaner złośliwego kodu</li>
-					</ul>
-				</div>
-				<div class="split-col split-col--ours">
-					<h3>Robi WPHouse</h3>
-					<ul>
-						<li>Blokada instalacji i&nbsp;alerty o&nbsp;zmianach</li>
-						<li>Kondycja wtyczek</li>
-						<li>Ogólne błędy logowania w&nbsp;„Moje konto” WooCommerce</li>
-						<li>Alerty o&nbsp;lukach, gdy Wordfence nie ma</li>
-					</ul>
-				</div>
-			</div>
-			<div class="shot shot--wp shot--form" aria-label="Fragment panelu WPHouse">
-				<table class="wp-form">
-					<tr><th>Blokuj wykrywanie nazw użytkowników</th><td><span class="wp-check is-on"></span> <em>Obsługuje to Wordfence, więc tutaj pominięte.</em></td></tr>
-					<tr><th>Ogólne komunikaty błędów logowania</th><td><span class="wp-check is-on"></span></td></tr>
-					<tr><th>Wyłącz XML-RPC</th><td><span class="wp-check is-on"></span></td></tr>
-				</table>
-			</div>
-		</div>
-	</section>
-
 	<section class="dark updates" id="aktualizacje" aria-labelledby="aktualizacje-h">
 		<div class="wrap docs">
 			<div class="docs-body">
@@ -355,7 +209,6 @@ maintenance      no       no       settings</code></pre>
 					<a class="pill pill--glow" href="https://updates.designhouse.me/wphouse/wphouse-latest.zip">Pobierz wphouse-0.1.0.zip</a>
 					<a class="pill pill--ghost" href="https://designhouse.me/">Napisz do Design House</a>
 				</div>
-				<p class="final-note">Na tarczy: około 5&nbsp;godzin, które zwykle mijają od publikacji luki do masowych ataków.</p>
 			</div>
 		</div>
 	</section>

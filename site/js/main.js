@@ -1,5 +1,3 @@
-import { mountCollapse } from './collapse.js';
-
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = (id) => document.getElementById(id);
 
@@ -19,13 +17,5 @@ import('./voxel.js')
 		img.className = 'voxel-fallback';
 		$('voxel').replaceWith(img);
 	});
-
-mountCollapse({
-	canvas: $('plugins-grid'),
-	section: $('collapse-card'),
-	count: $('plugin-count'),
-	word: $('plugin-word'),
-	reduced,
-});
 
 requestAnimationFrame(() => document.body.classList.add('is-ready'));
