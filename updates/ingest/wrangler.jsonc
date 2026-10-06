@@ -1,6 +1,6 @@
 // Upload endpoint for the CVE watch workflow: PUT /shouse/advisories/… into the R2 bucket shouse-updates.
 // Deploy: cd updates/ingest && npx wrangler deploy, then set the token once: npx wrangler secret put INGEST_TOKEN
-// (the same value goes into the SHOUSE_INGEST_TOKEN secret of designhouseme/SafeHouse-Internal).
+// (the same value goes into the SHOUSE_INGEST_TOKEN secret of designhouseme/SafeHouseCVE).
 {
 	"name": "shouse-ingest",
 	"main": "src/index.js",
