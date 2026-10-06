@@ -139,7 +139,9 @@ if [ "$has_woo" = 1 ]; then
 	check "Store API, method override"      403 "$(sapi -X GET "$SA/checkout?_method=POST")"
 	check "Store API, override header"      403 "$(sapi -X GET -H 'X-HTTP-Method-Override: POST' "$SA/checkout")"
 	check "Store API, order-pay route"      403 "$(sapi -X POST "$SA/checkout/1")"
-	check "Store API, inside a batch"       403 "$(curl -s -X POST -H 'Content-Type: application/json' -d "{\"requests\":[{\"path\":\"/wc/store/v1/checkout\",\"method\":\"POST\",\"body\":$B}]}" "$SA/batch" | grep -o '"status":[0-9]*' | head -1 | cut -d: -f2)"
+	# Built outside $( ): macOS bash 3.2 mangles escaped quotes inside a quoted command substitution.
+	BATCH="{\"requests\":[{\"path\":\"/wc/store/v1/checkout\",\"method\":\"POST\",\"body\":$B}]}"
+	check "Store API, inside a batch"       403 "$(curl -s -X POST -H 'Content-Type: application/json' -d "$BATCH" "$SA/batch" | grep -o '"status":[0-9]*' | head -1 | cut -d: -f2)"
 	# 401 is WooCommerce asking for its nonce: our check let the request through.
 	check "Store API checkout with token"   401 "$(sapi -X POST -H "X-WPHouse-Turnstile: $T" "$SA/checkout")"
 	check "Store API update (PUT) untouched" 401 "$(sapi -X PUT "$SA/checkout?__experimental_calc_totals=1")"
