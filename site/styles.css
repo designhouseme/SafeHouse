@@ -508,8 +508,17 @@ p { max-width: 62ch; color: var(--mist); text-wrap: pretty; }
 	border-top: 1px solid var(--line);
 	font-size: 14px;
 	color: var(--mist);
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 18px 40px;
 }
 .footer p { max-width: none; margin: 0; }
+.footer-maker { display: block; opacity: 0.85; transition: opacity 0.2s; }
+.footer-maker:hover,
+.footer-maker:focus-visible { opacity: 1; }
+.footer-maker img { display: block; width: auto; height: 19px; }
 
 /* ---------- small screens ---------- */
 
