@@ -237,7 +237,7 @@ final class Updater {
 		if ( is_wp_error( $sig ) ) {
 			return $sig;
 		}
-		if ( ! self::signature_valid( $body, $sig ) ) {
+		if ( ! Signature::verify( $body, $sig, self::public_keys() ) ) {
 			Log::add( 'update_rejected', 'WPHouse update manifest has an invalid signature', [ 'url' => $url ], 'critical' );
 			return new WP_Error( 'wphouse_bad_signature', 'Manifest signature is invalid.' );
 		}
@@ -279,27 +279,6 @@ final class Updater {
 			return new WP_Error( 'wphouse_update_http', sprintf( 'HTTP %d for %s', wp_remote_retrieve_response_code( $response ), $url ) );
 		}
 		return wp_remote_retrieve_body( $response );
-	}
-
-	private static function signature_valid( string $body, string $sig_b64 ): bool {
-		$signature = base64_decode( trim( $sig_b64 ), true ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode -- signature encoding.
-		if ( false === $signature || SODIUM_CRYPTO_SIGN_BYTES !== strlen( $signature ) ) {
-			return false;
-		}
-		foreach ( self::public_keys() as $key_b64 ) {
-			$key = base64_decode( $key_b64, true ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode -- public key encoding.
-			if ( false === $key || SODIUM_CRYPTO_SIGN_PUBLICKEYBYTES !== strlen( $key ) ) {
-				continue;
-			}
-			try {
-				if ( sodium_crypto_sign_verify_detached( $signature, $body, $key ) ) {
-					return true;
-				}
-			} catch ( \SodiumException ) {
-				continue;
-			}
-		}
-		return false;
 	}
 
 	/** @return string[] */
