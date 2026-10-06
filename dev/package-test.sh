@@ -60,7 +60,7 @@ check "cron cleared on deactivation" 0 "$(wp cron event list --fields=hook --for
 wp plugin uninstall shouse >/dev/null
 check "files removed" 0 "$(dc exec -T wordpress sh -c 'ls wp-content/plugins | grep -c shouse || true')"
 check "options removed" 0 "$(wp db query "SELECT COUNT(*) FROM wp_options WHERE option_name LIKE '%shouse%'" --skip-column-names)"
-check "log table dropped" 0 "$(wp db query "SHOW TABLES LIKE 'wp_shouse_log'" --skip-column-names | wc -l)"
+check "log table dropped" 0 "$(wp db query "SHOW TABLES LIKE 'wp_shouse_log'" --skip-column-names | wc -l | tr -d ' ')"
 check "safe-mode flag removed" 0 "$(dc exec -T wordpress sh -c 'ls wp-content | grep -c shouse-safe-mode || true')"
 
 [ "${KEEP:-0}" = 1 ] || dc down -v >/dev/null 2>&1

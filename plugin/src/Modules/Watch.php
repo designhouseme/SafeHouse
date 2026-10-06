@@ -308,9 +308,8 @@ final class Watch extends AbstractModule {
 	private static function raw_options(): array {
 		global $wpdb;
 		$placeholders = implode( ', ', array_fill( 0, count( self::OPTIONS ), '%s' ) );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- the uncached value is the point.
-		$rows    = (array) $wpdb->get_results( $wpdb->prepare( "SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name IN ($placeholders)", self::OPTIONS ) ); // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- placeholders built above.
-		$options = array_fill_keys( self::OPTIONS, '' );
+		$rows         = (array) $wpdb->get_results( $wpdb->prepare( "SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name IN ($placeholders)", self::OPTIONS ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- the uncached value is the point; placeholders built above.
+		$options      = array_fill_keys( self::OPTIONS, '' );
 		foreach ( $rows as $row ) {
 			$options[ (string) $row->option_name ] = self::scalar( $row->option_value );
 		}

@@ -337,8 +337,8 @@ final class Bots extends AbstractModule {
 	 */
 	private static function honeypot_passed(): bool {
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- compared only, never stored.
-		$trap  = $_POST[ self::TRAP ] ?? null; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		$proof = $_POST[ self::PROOF ] ?? ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		$trap  = isset( $_POST[ self::TRAP ] ) ? wp_unslash( $_POST[ self::TRAP ] ) : null; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		$proof = isset( $_POST[ self::PROOF ] ) ? wp_unslash( $_POST[ self::PROOF ] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		// phpcs:enable
 		return '' === $trap && is_string( $proof ) && hash_equals( self::proof(), $proof );
 	}

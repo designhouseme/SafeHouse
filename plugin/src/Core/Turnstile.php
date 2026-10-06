@@ -20,12 +20,12 @@ final class Turnstile {
 
 	public const FIELD       = 'cf-turnstile-response';
 	public const HEADER      = 'X-SHouse-Turnstile';
-	public const SCRIPT_URL  = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=shouseTurnstileReady';
+	public const SCRIPT_URL  = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=shouseTurnstileReady'; // phpcs:ignore PluginCheck.CodeAnalysis.Offloading.OffloadedContent -- Cloudflare serves Turnstile only from its own host.
 	public const PASSED      = 'passed';
 	public const FAILED      = 'failed';
 	public const UNAVAILABLE = 'unavailable';
 
-	private const VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
+	private const VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'; // phpcs:ignore PluginCheck.CodeAnalysis.Offloading.OffloadedContent -- Cloudflare's verification API, not a hosted asset.
 	// A broken secret is our configuration, not the visitor. Treated like an outage, so that a typo
 	// in wp-config follows the "when unavailable" setting instead of locking everyone out of wp-login.
 	private const CONFIG_ERRORS = [ 'missing-input-secret', 'invalid-input-secret', 'internal-error' ];

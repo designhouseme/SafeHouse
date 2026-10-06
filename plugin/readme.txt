@@ -8,7 +8,7 @@ Stable tag: 0.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-One plugin instead of a dozen small ones: hardening, bot protection, install lockdown, change and vulnerability alerts, everyday tweaks. Works on its own or next to Wordfence.
+One plugin instead of a dozen: hardening, bot protection, login limits, install lockdown, change and vulnerability alerts. With or without Wordfence.
 
 == Description ==
 

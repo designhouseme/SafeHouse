@@ -18,7 +18,7 @@ pass() { echo "PASS: $*"; }
 fail() { echo "FAIL: $*"; exit 1; }
 
 ./dev/release.sh snapshot 0.1.0 "$T/pkgs/base" >/dev/null
-rm -f "$T/www/shouse/"*
+find "$T/www/shouse" -maxdepth 1 -type f -delete   # files only: advisory-test.sh keeps its data in advisories/
 dc up -d --wait wordpress updates >/dev/null 2>&1 || dc up -d
 until curl -s -o /dev/null http://localhost:8895/wp-login.php; do sleep 2; done
 wp core is-installed | grep -q Error && true
