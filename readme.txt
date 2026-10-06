@@ -41,8 +41,19 @@ WPHouse is built to run alongside these plugins. The Integrations card on the se
 * **WooCommerce:** compatible with HPOS and the block checkout. Generic login errors also cover the My Account form, maintenance mode lets the Store API and payment callbacks through, and product reviews survive "disable comments".
 * **Payment gateways:** Autopay, Przelewy24, PayU, imoje, Paynow, Stripe, PayPal and WooPayments. Their callbacks (`?wc-api=` and the REST API) pass maintenance mode.
 * **Elementor** and Elementor Pro.
+* **Redis Object Cache:** its connection status is shown, but WPHouse has its own Redis object cache (below).
 
 Design House watches all of these, and every plugin a WPHouse module replaces, for newly published vulnerabilities.
+
+= Redis object cache =
+
+WPHouse has its own persistent object cache for servers with Redis and the PhpRedis extension. It keeps database results in Redis between requests, like the Redis Object Cache plugin, and reads the same `WP_REDIS_*` constants, so a site can switch by replacing the drop-in.
+
+* Installed and removed only with WP-CLI: `wp wphouse object-cache enable` and `disable`. There is no button in wp-admin, because WPHouse never writes files from a web request. Deactivating WPHouse removes it too.
+* Every cached value is signed with a key derived from the site's secret keys and checked before it is unserialized, so other sites on a shared Redis cannot plant objects.
+* Only this site's keys are ever deleted, never the whole Redis database.
+* When Redis is down, WordPress falls back to its own cache and the site keeps working. Whatever changed meanwhile is not served stale later: the first request that reaches Redis again clears this site's keys first. The same happens after WPHouse safe mode, and when WP-CLI runs on a PHP without PhpRedis.
+* Tested with WordPress's own object cache and option tests (wordpress-develop) and a WooCommerce cart and checkout run against Redis.
 
 = Updates =
 
@@ -71,11 +82,12 @@ Yes. `define( 'WPHOUSE_MODULES', [ 'lockdown' => true, 'scripts' => false ] );` 
 * `WPHOUSE_AUTO_UPDATE`: set to false to stop forcing background updates of WPHouse.
 * `WPHOUSE_IGNORE_OVERLAPS`: run WPHouse features even where Wordfence or another plugin already provides them.
 * `WPHOUSE_LOCKDOWN_UI_UNLOCK`: set to false to allow unlocking only from WP-CLI.
+* `WP_REDIS_HOST`, `WP_REDIS_PORT`, `WP_REDIS_PASSWORD`, `WP_REDIS_DATABASE`, `WP_REDIS_PREFIX` and the other `WP_REDIS_*` constants: the Redis connection for the object cache. `WPHOUSE_OBJECT_CACHE` set to false switches the cache off without removing it.
 * `WPHOUSE_TRUSTED_PROXIES` and `WPHOUSE_PROXY_HEADER`: for sites behind a proxy or CDN. Without them WPHouse takes the visitor IP from `REMOTE_ADDR` only, so it cannot be spoofed with request headers.
 
 = Which WP-CLI commands are there? =
 
-`wp wphouse status`, `wp wphouse module enable|disable <module>`, `wp wphouse log`, `wp wphouse safe-mode on|off` and `wp wphouse update-check`. Modules add `wp wphouse unlock` and `wp wphouse lock` (install lockdown), `wp wphouse watch accept` (change alerts; run it at the end of deploy scripts), `wp wphouse plugin-health`, `wp wphouse vulnerabilities` and `wp wphouse cache purge` (LiteSpeed page cache).
+`wp wphouse status`, `wp wphouse module enable|disable <module>`, `wp wphouse log`, `wp wphouse safe-mode on|off` and `wp wphouse update-check`. Modules add `wp wphouse unlock` and `wp wphouse lock` (install lockdown), `wp wphouse watch accept` (change alerts; run it at the end of deploy scripts), `wp wphouse plugin-health`, `wp wphouse vulnerabilities` and `wp wphouse cache purge` (LiteSpeed page cache). `wp wphouse object-cache enable|disable|status|flush` manages the Redis object cache.
 
 = Is it translated? =
 
@@ -83,7 +95,7 @@ English and Polish.
 
 == External services ==
 
-Apart from the SMTP server you configure for the SMTP module, WPHouse contacts two services. Requests use WordPress's HTTP API and its default user agent, which includes the site address.
+Apart from the SMTP and Redis servers you configure yourself, WPHouse contacts two services. Requests use WordPress's HTTP API and its default user agent, which includes the site address.
 
 * **WordPress.org plugin directory** (api.wordpress.org), for Plugin health: once a week, and when plugins are added, removed or updated, it sends the slugs of the installed plugins to read their status (closed, last update). [Terms and privacy](https://wordpress.org/about/privacy/).
 * **Design House update host** (updates.designhouse.me): WordPress checks it for WPHouse updates every few hours, and Vulnerability alerts download the signed vulnerability data from it at most every 6 hours. The site never sends its plugin list: it fetches an index and only the data files that cover its installed software, each file covering about 1/256 of all plugins and themes. The vulnerability data comes from Wordfence Intelligence. [Privacy policy](https://designhouse.me/polityka-prywatnosci).
@@ -99,6 +111,7 @@ WPHouse sends no telemetry. The activity log stays in the site's database, store
 * Vulnerability alerts for sites without Wordfence, from signed Wordfence Intelligence data.
 * Integrations card for Wordfence, WooCommerce, payment gateways and Elementor.
 * LiteSpeed page cache without the LiteSpeed Cache plugin: cache headers only, safe for WooCommerce.
+* Redis object cache with signed values, installed with WP-CLI.
 * Tweaks, duplicate posts, SMTP from wp-config, header and footer scripts, maintenance mode.
 * Signed self-hosted updates.
 * Design House branding on the settings page, the Updates screen and alert e-mails.

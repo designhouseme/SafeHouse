@@ -51,7 +51,20 @@ final class Cache {
 
 	private string $last_error = '';
 
-	public function __construct( private ?Redis $redis, private string $prefix, private string $secret ) {
+	private ?Redis $redis;
+
+	private string $prefix;
+
+	private string $secret;
+
+	/**
+	 * Without arguments (as WordPress's own tests create a second cache) it uses the connection and
+	 * settings of the running cache.
+	 */
+	public function __construct( ?Redis $redis = null, ?string $prefix = null, ?string $secret = null ) {
+		$this->redis  = $redis ?? ( $GLOBALS['wphouse_object_cache_redis'] ?? null );
+		$this->prefix = $prefix ?? ( function_exists( 'wphouse_object_cache_prefix' ) ? wphouse_object_cache_prefix() : 'wph:' );
+		$this->secret = $secret ?? ( function_exists( 'wphouse_object_cache_secret' ) ? wphouse_object_cache_secret() : '' );
 		if ( function_exists( 'is_multisite' ) && is_multisite() && function_exists( 'get_current_blog_id' ) ) {
 			$this->blog_prefix = (string) get_current_blog_id();
 		}

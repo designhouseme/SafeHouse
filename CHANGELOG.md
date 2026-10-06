@@ -12,6 +12,7 @@ Each release needs a `## x.y.z` section; its body is shown in the WordPress "Vie
 - Vulnerability alerts for sites without Wordfence, from signed Wordfence Intelligence data.
 - Integrations card for Wordfence, WooCommerce, payment gateways and Elementor.
 - LiteSpeed page cache without the LiteSpeed Cache plugin: cache headers only, safe for WooCommerce.
+- Redis object cache with signed values, installed with WP-CLI (`wp wphouse object-cache enable`).
 - Tweaks, duplicate posts, SMTP from wp-config, header/footer scripts, maintenance mode.
 - Signed self-hosted updates.
 - Design House branding on the settings page, the Updates screen and alert e-mails.

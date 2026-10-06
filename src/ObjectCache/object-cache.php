@@ -33,6 +33,9 @@ if ( null === $wphouse_redis ) {
 }
 
 require_once __DIR__ . '/Cache.php';
+if ( ! class_exists( 'WP_Object_Cache', false ) ) {
+	class_alias( WPHouse\ObjectCache\Cache::class, 'WP_Object_Cache' ); // Code that checks `instanceof WP_Object_Cache` keeps working.
+}
 
 if ( is_object( $wphouse_db ) ) {
 	$wphouse_suppress = $wphouse_db->suppress_errors( true );

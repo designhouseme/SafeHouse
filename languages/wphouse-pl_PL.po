@@ -30,82 +30,82 @@ msgstr "https://designhouse.me/"
 msgid "Design House"
 msgstr "Design House"
 
-#: src/Admin/Page.php:82
+#: src/Admin/Page.php:81
 msgid "Settings"
 msgstr "Ustawienia"
 
-#: src/Admin/Page.php:107
+#: src/Admin/Page.php:106
 msgid "WPHouse safe mode is on: every module is stopped. Remove wp-content/wphouse-safe-mode or the WPHOUSE_SAFE_MODE constant to resume."
 msgstr "Tryb awaryjny WPHouse jest włączony: wszystkie moduły są zatrzymane. Usuń plik wp-content/wphouse-safe-mode lub stałą WPHOUSE_SAFE_MODE, aby je wznowić."
 
-#: src/Admin/Page.php:120
+#: src/Admin/Page.php:119
 msgid "You are not allowed to do this."
 msgstr "Nie masz uprawnień do tej operacji."
 
-#: src/Admin/Page.php:128
+#: src/Admin/Page.php:127
 msgid "Unknown task."
 msgstr "Nieznane zadanie."
 
-#: src/Admin/Page.php:187
+#: src/Admin/Page.php:186
 msgid "Small, audited replacements for single-purpose plugins. Every module is a switch. Features that Wordfence or wp-config already handle are skipped automatically."
 msgstr "Małe, sprawdzone zamienniki jednozadaniowych wtyczek. Każdy moduł włączasz osobno. Funkcje, które obsługuje już Wordfence lub wp-config.php, są automatycznie pomijane."
 
-#: src/Admin/Page.php:175
+#: src/Admin/Page.php:174
 msgid "Settings are locked by WPHOUSE_LOCK_SETTINGS in wp-config.php. Change them in code."
 msgstr "Ustawienia są zablokowane stałą WPHOUSE_LOCK_SETTINGS w wp-config.php. Zmieniaj je w kodzie."
 
-#: src/Admin/Page.php:178
+#: src/Admin/Page.php:177
 msgid "WPHOUSE_IGNORE_OVERLAPS is on: features run even where another plugin already provides them."
 msgstr "Stała WPHOUSE_IGNORE_OVERLAPS jest włączona: funkcje działają nawet tam, gdzie zapewnia je już inna wtyczka."
 
-#: src/Admin/Page.php:151
-#: src/Admin/Page.php:203
+#: src/Admin/Page.php:150
+#: src/Admin/Page.php:202
 msgid "General"
 msgstr "Ogólne"
 
-#: src/Admin/Page.php:206
+#: src/Admin/Page.php:205
 msgid "Alert recipients"
 msgstr "Odbiorcy alertów"
 
-#: src/Admin/Page.php:209
+#: src/Admin/Page.php:208
 msgid "Comma-separated. Empty means the site admin address."
 msgstr "Adresy oddzielone przecinkami. Puste pole oznacza adres administratora witryny."
 
-#: src/Admin/Page.php:243
+#: src/Admin/Page.php:242
 msgid "Unavailable"
 msgstr "Niedostępny"
 
-#: src/Admin/Page.php:245
+#: src/Admin/Page.php:244
 msgid "Running"
 msgstr "Działa"
 
-#: src/Admin/Page.php:247
+#: src/Admin/Page.php:246
 msgid "Enabled, not running"
 msgstr "Włączony, nie działa"
 
-#: src/Admin/Page.php:249
+#: src/Admin/Page.php:248
 msgid "Off"
 msgstr "Wyłączony"
 
-#: src/Admin/Page.php:266
+#: src/Admin/Page.php:265
 msgid "Pinned by WPHOUSE_MODULES in wp-config.php."
 msgstr "Ustawione na stałe przez WPHOUSE_MODULES w wp-config.php."
 
 #. translators: %s: plugin or setting name, e.g. Wordfence.
-#: src/Admin/Page.php:361
+#: src/Admin/Page.php:360
 #, php-format
 msgid "Handled by %s, skipped here."
 msgstr "Obsługuje to %s, więc tutaj pominięte."
 
-#: src/Admin/Page.php:439
+#: src/Admin/Page.php:467
 msgid "Activity log"
 msgstr "Dziennik zdarzeń"
 
-#: src/Admin/Page.php:445
+#: src/Admin/Page.php:473
 msgid "No events yet."
 msgstr "Brak zdarzeń."
 
-#: src/Admin/Page.php:261
+#: src/Admin/Page.php:260
 #: src/Modules/Vulnerabilities.php:422
 msgid "Details"
 msgstr "Szczegóły"
@@ -416,7 +416,7 @@ msgstr "Wtyczka"
 msgid "Findings"
 msgstr "Wyniki"
 
-#: src/Admin/Page.php:411
+#: src/Admin/Page.php:430
 #: src/Modules/PluginHealth.php:382
 msgid "inactive"
 msgstr "nieaktywna"
@@ -636,7 +636,7 @@ msgstr "Brak punktu odniesienia. Zostanie zapisany przy pierwszym cogodzinnym sp
 msgid "Watching %1$d administrators, %2$d plugins, %3$d must-use plugins, %4$d drop-ins and wp-config.php."
 msgstr "Obserwowane: administratorzy (%1$d), wtyczki (%2$d), wtyczki obowiązkowe (%3$d), drop-iny (%4$d) i wp-config.php."
 
-#: src/Plugin.php:122
+#: src/Plugin.php:124
 msgid "WPHouse 0.x supports single sites only. Activate it per site instead of network-wide."
 msgstr "WPHouse 0.x obsługuje tylko pojedyncze witryny. Włącz wtyczkę na poszczególnych witrynach, a nie w całej sieci."
 
@@ -746,48 +746,49 @@ msgstr "%1$s %2$s%3$s: %4$s. Zaktualizuj do wersji %5$s lub nowszej."
 msgid "%1$s %2$s%3$s: %4$s. No fixed version yet: deactivate it if you can do without it."
 msgstr "%1$s %2$s%3$s: %4$s. Nie ma jeszcze poprawionej wersji: wyłącz to oprogramowanie, jeśli możesz się bez niego obejść."
 
-#: src/Admin/Page.php:376
+#: src/Admin/Page.php:375
 msgid "WPHouse skips what Wordfence already does (for example username discovery and login error masking) and leaves the firewall, two-factor login and malware scans to it. Vulnerability alerts stand down, because Wordfence warns about vulnerable plugins itself."
 msgstr "WPHouse pomija to, co Wordfence już robi (na przykład blokadę wyliczania użytkowników i ogólne błędy logowania), a zaporę, logowanie dwuetapowe i skaner złośliwego kodu zostawia jemu. Ostrzeżenia o lukach się wyłączają, bo Wordfence sam ostrzega o podatnych wtyczkach."
 
-#: src/Admin/Page.php:377
+#: src/Admin/Page.php:376
 msgid "Compatible with HPOS and the block checkout. Generic login errors also cover the My Account form, maintenance mode lets the Store API and payment callbacks through, and product reviews survive \"disable comments\"."
 msgstr "Zgodny z HPOS i blokowym checkoutem. Ogólne błędy logowania obejmują też formularz „Moje konto”, tryb serwisowy przepuszcza Store API i powiadomienia z płatności, a recenzje produktów zostają mimo wyłączenia komentarzy."
 
-#: src/Admin/Page.php:378
+#: src/Admin/Page.php:377
 msgid "Payment gateways"
 msgstr "Bramki płatności"
 
-#: src/Admin/Page.php:378
+#: src/Admin/Page.php:377
 msgid "Autopay, Przelewy24, PayU, imoje, Paynow, Stripe, PayPal and WooPayments. Their callbacks (?wc-api= and the REST API) pass maintenance mode, and XML-RPC stays on for WooPayments."
 msgstr "Autopay, Przelewy24, PayU, imoje, Paynow, Stripe, PayPal i WooPayments. Ich powiadomienia (?wc-api= i REST API) przechodzą przez tryb serwisowy, a dla WooPayments XML-RPC zostaje włączone."
 
-#: src/Admin/Page.php:380
+#: src/Admin/Page.php:379
 msgid "Elementor and Elementor Pro. Watched for new vulnerabilities like everything on this list."
 msgstr "Elementor i Elementor Pro. Pilnujemy ich nowych luk, jak wszystkiego na tej liście."
 
-#: src/Admin/Page.php:150
-#: src/Admin/Page.php:385
+#: src/Admin/Page.php:149
+#: src/Admin/Page.php:383
 msgid "Integrations"
 msgstr "Integracje"
 
-#: src/Admin/Page.php:386
+#: src/Admin/Page.php:384
 msgid "WPHouse is built to run alongside these plugins. Design House watches all of them for new vulnerabilities (CVE) and tells you when an update cannot wait."
 msgstr "WPHouse działa razem z tymi wtyczkami. Design House pilnuje nowych luk (CVE) we wszystkich z nich i daje znać, gdy aktualizacja nie może czekać."
 
-#: src/Admin/Page.php:389
+#: src/Admin/Page.php:387
 msgid "Integration"
 msgstr "Integracja"
 
-#: src/Admin/Page.php:390
+#: src/Admin/Page.php:388
 msgid "On this site"
 msgstr "Na tej stronie"
 
-#: src/Admin/Page.php:391
+#: src/Admin/Page.php:389
 msgid "What WPHouse does"
 msgstr "Co robi WPHouse"
 
 #: src/Admin/Page.php:401
+#: src/Admin/Page.php:454
 msgid "not installed"
 msgstr "nie zainstalowano"
 
@@ -799,7 +800,7 @@ msgstr "Tę stronę chronią ostrzeżenia WPHouse o lukach. Zaporę i logowanie 
 msgid "Nothing warns about vulnerable plugins on this site: switch on WPHouse vulnerability alerts below, or install Wordfence."
 msgstr "Nic nie ostrzega na tej stronie o podatnych wtyczkach: włącz niżej ostrzeżenia WPHouse o lukach albo zainstaluj Wordfence."
 
-#: src/Admin/Page.php:411
+#: src/Admin/Page.php:430
 msgid "active"
 msgstr "aktywna"
 
@@ -808,34 +809,30 @@ msgstr "aktywna"
 msgid "One plugin instead of a dozen small ones: hardening, install lockdown, change and vulnerability alerts, plugin health and everyday tweaks. Works alongside Wordfence, WooCommerce and the usual payment gateways."
 msgstr "Jedna wtyczka zamiast kilkunastu małych: zabezpieczenia, blokada instalacji, alerty o zmianach i lukach, kondycja wtyczek i codzienne usprawnienia. Działa obok Wordfence, WooCommerce i popularnych bramek płatności."
 
-#: src/Admin/Page.php:149
+#: src/Admin/Page.php:148
 msgid "Modules"
 msgstr "Moduły"
 
 #. translators: 1: number of modules running, 2: number of modules.
-#: src/Admin/Page.php:167
+#: src/Admin/Page.php:166
 #, php-format
 msgid "%1$d of %2$d running"
 msgstr "Działa %1$d z %2$d"
 
-#: src/Admin/Page.php:379
-msgid "WPHouse has no object cache of its own: on servers with Redis, this is the plugin we recommend. The status shows whether its drop-in is connected."
-msgstr "WPHouse nie ma własnej pamięci podręcznej obiektów: na serwerach z Redisem polecamy tę wtyczkę. Status pokazuje, czy jej drop-in jest połączony."
-
-#: src/Admin/Page.php:415
+#: src/Admin/Page.php:452
 msgid "Another persistent object cache is in use."
 msgstr "Działa inna trwała pamięć podręczna obiektów."
 
-#: src/Admin/Page.php:417
+#: src/Admin/Page.php:450
 msgid "Object cache connected to Redis."
 msgstr "Pamięć podręczna obiektów jest połączona z Redisem."
 
-#: src/Admin/Page.php:419
+#: src/Admin/Page.php:450
 msgid "Object cache drop-in installed, but Redis is not reachable."
 msgstr "Drop-in pamięci podręcznej obiektów jest zainstalowany, ale Redis jest nieosiągalny."
 
 #. translators: %s: time since the event, e.g. "5 mins".
-#: src/Admin/Page.php:463
+#: src/Admin/Page.php:491
 #, php-format
 msgid "%s ago"
 msgstr "%s temu"
@@ -916,6 +913,46 @@ msgstr "Moduł cache stron LiteSpeed nic nie daje na tym serwerze. Wyłącz go a
 msgid "WooCommerce geolocates customers without page caching support, so cached pages may show one country's prices and taxes to everyone. In WooCommerce → Settings → General choose \"Geolocate (with page caching support)\"."
 msgstr "WooCommerce geolokalizuje klientów bez obsługi cache stron, więc strony z cache mogą pokazywać wszystkim ceny i podatki jednego kraju. W WooCommerce → Ustawienia → Ogólne wybierz geolokalizację z obsługą cache stron (Geolocate with page caching support)."
 
+#: src/Core/ObjectCache.php:146
 #: src/Modules/LiteSpeed.php:284
 msgid "Performance"
 msgstr "Wydajność"
+
+#: src/Admin/Page.php:378
+msgid "Redis object cache"
+msgstr "Cache obiektów Redis"
+
+#: src/Admin/Page.php:378
+msgid "WPHouse has its own Redis object cache: install it with \"wp wphouse object-cache enable\". Every cached value is signed, so other sites on a shared Redis cannot plant data. A site that uses the Redis Object Cache plugin instead shows its status here."
+msgstr "WPHouse ma własny cache obiektów w Redisie: instaluje go komenda „wp wphouse object-cache enable”. Każda wartość w cache jest podpisana, więc inne strony na współdzielonym Redisie nie podrzucą danych. Jeśli strona używa zamiast tego wtyczki Redis Object Cache, tu widać jej stan."
+
+#: src/Admin/Page.php:442
+msgid "connected"
+msgstr "połączony"
+
+#: src/Admin/Page.php:442
+msgid "Redis not reachable"
+msgstr "Redis nieosiągalny"
+
+#: src/Admin/Page.php:442
+#: src/Core/ObjectCache.php:122
+msgid "WPHouse object cache"
+msgstr "Cache obiektów WPHouse"
+
+#: src/Core/ObjectCache.php:134
+msgid "The WPHouse object cache is connected to Redis"
+msgstr "Cache obiektów WPHouse jest połączony z Redisem"
+
+#: src/Core/ObjectCache.php:135
+msgid "Database results are kept in Redis between requests. Every cached value is signed, so other sites on a shared Redis cannot plant data."
+msgstr "Wyniki zapytań do bazy są trzymane w Redisie między żądaniami. Każda wartość jest podpisana, więc inne strony na współdzielonym Redisie nie podrzucą danych."
+
+#: src/Core/ObjectCache.php:138
+msgid "The WPHouse object cache cannot reach Redis"
+msgstr "Cache obiektów WPHouse nie może połączyć się z Redisem"
+
+#. translators: %s: error message.
+#: src/Core/ObjectCache.php:140
+#, php-format
+msgid "WordPress is using its own cache for now, so the site works but is slower. Reason: %s"
+msgstr "WordPress używa na razie własnego cache, więc strona działa, ale wolniej. Powód: %s"

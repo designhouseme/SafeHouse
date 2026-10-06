@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-06T12:19:54+00:00\n"
+"POT-Creation-Date: 2026-10-06T12:58:29+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: wphouse\n"
@@ -35,134 +35,139 @@ msgstr ""
 msgid "Design House"
 msgstr ""
 
-#: src/Admin/Page.php:82
+#: src/Admin/Page.php:81
 msgid "Settings"
 msgstr ""
 
-#: src/Admin/Page.php:107
+#: src/Admin/Page.php:106
 msgid "WPHouse safe mode is on: every module is stopped. Remove wp-content/wphouse-safe-mode or the WPHOUSE_SAFE_MODE constant to resume."
 msgstr ""
 
-#: src/Admin/Page.php:120
+#: src/Admin/Page.php:119
 msgid "You are not allowed to do this."
 msgstr ""
 
-#: src/Admin/Page.php:128
+#: src/Admin/Page.php:127
 msgid "Unknown task."
 msgstr ""
 
-#: src/Admin/Page.php:149
+#: src/Admin/Page.php:148
 msgid "Modules"
 msgstr ""
 
-#: src/Admin/Page.php:150
-#: src/Admin/Page.php:385
+#: src/Admin/Page.php:149
+#: src/Admin/Page.php:383
 msgid "Integrations"
 msgstr ""
 
-#: src/Admin/Page.php:151
-#: src/Admin/Page.php:203
+#: src/Admin/Page.php:150
+#: src/Admin/Page.php:202
 msgid "General"
 msgstr ""
 
 #. translators: 1: number of modules running, 2: number of modules.
-#: src/Admin/Page.php:167
+#: src/Admin/Page.php:166
 #, php-format
 msgid "%1$d of %2$d running"
 msgstr ""
 
-#: src/Admin/Page.php:175
+#: src/Admin/Page.php:174
 msgid "Settings are locked by WPHOUSE_LOCK_SETTINGS in wp-config.php. Change them in code."
 msgstr ""
 
-#: src/Admin/Page.php:178
+#: src/Admin/Page.php:177
 msgid "WPHOUSE_IGNORE_OVERLAPS is on: features run even where another plugin already provides them."
 msgstr ""
 
-#: src/Admin/Page.php:187
+#: src/Admin/Page.php:186
 msgid "Small, audited replacements for single-purpose plugins. Every module is a switch. Features that Wordfence or wp-config already handle are skipped automatically."
 msgstr ""
 
-#: src/Admin/Page.php:206
+#: src/Admin/Page.php:205
 msgid "Alert recipients"
 msgstr ""
 
-#: src/Admin/Page.php:209
+#: src/Admin/Page.php:208
 msgid "Comma-separated. Empty means the site admin address."
 msgstr ""
 
-#: src/Admin/Page.php:243
+#: src/Admin/Page.php:242
 msgid "Unavailable"
 msgstr ""
 
-#: src/Admin/Page.php:245
+#: src/Admin/Page.php:244
 msgid "Running"
 msgstr ""
 
-#: src/Admin/Page.php:247
+#: src/Admin/Page.php:246
 msgid "Enabled, not running"
 msgstr ""
 
-#: src/Admin/Page.php:249
+#: src/Admin/Page.php:248
 msgid "Off"
 msgstr ""
 
-#: src/Admin/Page.php:261
+#: src/Admin/Page.php:260
 #: src/Modules/Vulnerabilities.php:422
 msgid "Details"
 msgstr ""
 
-#: src/Admin/Page.php:266
+#: src/Admin/Page.php:265
 msgid "Pinned by WPHOUSE_MODULES in wp-config.php."
 msgstr ""
 
 #. translators: %s: plugin or setting name, e.g. Wordfence.
-#: src/Admin/Page.php:361
+#: src/Admin/Page.php:360
 #, php-format
 msgid "Handled by %s, skipped here."
 msgstr ""
 
-#: src/Admin/Page.php:376
+#: src/Admin/Page.php:375
 msgid "WPHouse skips what Wordfence already does (for example username discovery and login error masking) and leaves the firewall, two-factor login and malware scans to it. Vulnerability alerts stand down, because Wordfence warns about vulnerable plugins itself."
 msgstr ""
 
-#: src/Admin/Page.php:377
+#: src/Admin/Page.php:376
 msgid "Compatible with HPOS and the block checkout. Generic login errors also cover the My Account form, maintenance mode lets the Store API and payment callbacks through, and product reviews survive \"disable comments\"."
 msgstr ""
 
-#: src/Admin/Page.php:378
+#: src/Admin/Page.php:377
 msgid "Payment gateways"
 msgstr ""
 
-#: src/Admin/Page.php:378
+#: src/Admin/Page.php:377
 msgid "Autopay, Przelewy24, PayU, imoje, Paynow, Stripe, PayPal and WooPayments. Their callbacks (?wc-api= and the REST API) pass maintenance mode, and XML-RPC stays on for WooPayments."
 msgstr ""
 
-#: src/Admin/Page.php:379
-msgid "WPHouse has no object cache of its own: on servers with Redis, this is the plugin we recommend. The status shows whether its drop-in is connected."
+#: src/Admin/Page.php:378
+msgid "Redis object cache"
 msgstr ""
 
-#: src/Admin/Page.php:380
+#: src/Admin/Page.php:378
+msgid "WPHouse has its own Redis object cache: install it with \"wp wphouse object-cache enable\". Every cached value is signed, so other sites on a shared Redis cannot plant data. A site that uses the Redis Object Cache plugin instead shows its status here."
+msgstr ""
+
+#: src/Admin/Page.php:379
 msgid "Elementor and Elementor Pro. Watched for new vulnerabilities like everything on this list."
 msgstr ""
 
-#: src/Admin/Page.php:386
+#: src/Admin/Page.php:384
 msgid "WPHouse is built to run alongside these plugins. Design House watches all of them for new vulnerabilities (CVE) and tells you when an update cannot wait."
 msgstr ""
 
-#: src/Admin/Page.php:389
+#: src/Admin/Page.php:387
 msgid "Integration"
 msgstr ""
 
-#: src/Admin/Page.php:390
+#: src/Admin/Page.php:388
 msgid "On this site"
 msgstr ""
 
-#: src/Admin/Page.php:391
+#: src/Admin/Page.php:389
 msgid "What WPHouse does"
 msgstr ""
 
 #: src/Admin/Page.php:401
+#: src/Admin/Page.php:454
 msgid "not installed"
 msgstr ""
 
@@ -174,39 +179,75 @@ msgstr ""
 msgid "Nothing warns about vulnerable plugins on this site: switch on WPHouse vulnerability alerts below, or install Wordfence."
 msgstr ""
 
-#: src/Admin/Page.php:411
+#: src/Admin/Page.php:430
 msgid "active"
 msgstr ""
 
-#: src/Admin/Page.php:411
+#: src/Admin/Page.php:430
 #: src/Modules/PluginHealth.php:382
 msgid "inactive"
 msgstr ""
 
-#: src/Admin/Page.php:415
-msgid "Another persistent object cache is in use."
+#: src/Admin/Page.php:442
+msgid "connected"
 msgstr ""
 
-#: src/Admin/Page.php:417
+#: src/Admin/Page.php:442
+msgid "Redis not reachable"
+msgstr ""
+
+#: src/Admin/Page.php:442
+#: src/Core/ObjectCache.php:122
+msgid "WPHouse object cache"
+msgstr ""
+
+#: src/Admin/Page.php:450
 msgid "Object cache connected to Redis."
 msgstr ""
 
-#: src/Admin/Page.php:419
+#: src/Admin/Page.php:450
 msgid "Object cache drop-in installed, but Redis is not reachable."
 msgstr ""
 
-#: src/Admin/Page.php:439
+#: src/Admin/Page.php:452
+msgid "Another persistent object cache is in use."
+msgstr ""
+
+#: src/Admin/Page.php:467
 msgid "Activity log"
 msgstr ""
 
-#: src/Admin/Page.php:445
+#: src/Admin/Page.php:473
 msgid "No events yet."
 msgstr ""
 
 #. translators: %s: time since the event, e.g. "5 mins".
-#: src/Admin/Page.php:463
+#: src/Admin/Page.php:491
 #, php-format
 msgid "%s ago"
+msgstr ""
+
+#: src/Core/ObjectCache.php:134
+msgid "The WPHouse object cache is connected to Redis"
+msgstr ""
+
+#: src/Core/ObjectCache.php:135
+msgid "Database results are kept in Redis between requests. Every cached value is signed, so other sites on a shared Redis cannot plant data."
+msgstr ""
+
+#: src/Core/ObjectCache.php:138
+msgid "The WPHouse object cache cannot reach Redis"
+msgstr ""
+
+#. translators: %s: error message.
+#: src/Core/ObjectCache.php:140
+#, php-format
+msgid "WordPress is using its own cache for now, so the site works but is slower. Reason: %s"
+msgstr ""
+
+#: src/Core/ObjectCache.php:146
+#: src/Modules/LiteSpeed.php:284
+msgid "Performance"
 msgstr ""
 
 #: src/Core/Updater.php:156
@@ -377,10 +418,6 @@ msgstr ""
 
 #: src/Modules/LiteSpeed.php:278
 msgid "WooCommerce geolocates customers without page caching support, so cached pages may show one country's prices and taxes to everyone. In WooCommerce → Settings → General choose \"Geolocate (with page caching support)\"."
-msgstr ""
-
-#: src/Modules/LiteSpeed.php:284
-msgid "Performance"
 msgstr ""
 
 #: src/Modules/Lockdown.php:40
@@ -910,7 +947,7 @@ msgstr ""
 msgid "Watching %1$d administrators, %2$d plugins, %3$d must-use plugins, %4$d drop-ins and wp-config.php."
 msgstr ""
 
-#: src/Plugin.php:122
+#: src/Plugin.php:124
 msgid "WPHouse 0.x supports single sites only. Activate it per site instead of network-wide."
 msgstr ""
 

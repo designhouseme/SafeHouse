@@ -37,6 +37,11 @@ rc COPY "${prefix}1:default:wphouse-a" "${prefix}1:default:wphouse-b" >/dev/null
 check "a signed value copied to another key is a miss" "bool(false)" "$(wp eval 'var_dump( wp_cache_get( "wphouse-b" ) );' | tr -d '\n')"
 check "the original key still reads"         hello "$(wp eval 'echo wp_cache_get( "wphouse-a" );')"
 
+echo "== groups (WordPress's own tests skip this for external caches)"
+check "flushing a group clears it in Redis and keeps the others" "miss|v" "$(wp eval 'wp_cache_set( "k", "v", "grp-a" ); wp_cache_set( "k", "v", "grp-b" ); wp_cache_flush_group( "grp-a" ); wp_cache_flush_runtime(); echo false === wp_cache_get( "k", "grp-a" ) ? "miss" : "hit", "|", wp_cache_get( "k", "grp-b" );')"
+check "non-persistent groups never reach Redis" 0 "$(wp eval 'wp_cache_add_non_persistent_groups( "np-test" ); wp_cache_set( "k", "v", "np-test" );' >/dev/null; keys "${prefix}1:np-test:")"
+check "code checking for WP_Object_Cache still works" yes "$(wp eval 'global $wp_object_cache; echo $wp_object_cache instanceof WP_Object_Cache ? "yes" : "no";')"
+
 echo "== WooCommerce order through the Store API"
 wp option update woocommerce_cod_settings '{"enabled":"yes","title":"Cash on delivery","enable_for_virtual":"yes"}' --format=json >/dev/null
 product=$(wp wc product create --user=admin --name="Object cache test" --regular_price=10 --virtual=true --manage_stock=true --stock_quantity=5 --porcelain)
