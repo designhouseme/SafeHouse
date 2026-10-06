@@ -116,7 +116,7 @@
 						<span>WPHouse <i>0.1.0</i></span>
 					</span>
 					<span class="panel-tabs"><b class="is-active">Moduły</b><b>Integracje</b><b>Ogólne</b></span>
-					<span class="panel-status"><i class="dot dot--ok"></i>4 z&nbsp;10 włączonych</span>
+					<span class="panel-status">Działa 4 z&nbsp;10</span>
 				</div>
 				<div class="plugin">
 					<div class="panel-main">
@@ -137,13 +137,13 @@
 					<div class="panel-log">
 						<div class="panel-log-head">Dziennik zdarzeń <span>7</span></div>
 						<ul>
-							<li><i class="dot dot--warm"></i><b>Nowy administrator: mallory</b><span>e-mail do zespołu · 2 min temu</span></li>
-							<li><i class="dot"></i><b>Instalacja wtyczki zablokowana</b><span>wp plugin install · 14 min temu</span></li>
-							<li><i class="dot dot--warm"></i><b>Quick Page/Post Redirect zamknięta na WordPress.org</b><span>security-issue · 1 godz. temu</span></li>
-							<li><i class="dot"></i><b>Zmieniono wp-config.php</b><span>alert wysłany · 3 godz. temu</span></li>
-							<li><i class="dot dot--ok"></i><b>Aktualizacja 0.1.1: podpis poprawny</b><span>Ed25519 · wczoraj</span></li>
-							<li><i class="dot"></i><b>Instalacja odblokowana na 30 minut</b><span>admin · 2 dni temu</span></li>
-							<li><i class="dot dot--ok"></i><b>Tryb serwisowy wyłączony</b><span>admin · 3 dni temu</span></li>
+							<li class="log-critical"><b>Nowy administrator: mallory</b><span><em class="ev">admin_added</em>2 min temu</span></li>
+							<li class="log-warning"><b>Instalacja wtyczki zablokowana</b><span><em class="ev">install_blocked</em>14 min temu</span></li>
+							<li class="log-warning"><b>Zmieniono wp-config.php</b><span><em class="ev">inventory_changed</em>3 godz. temu</span></li>
+							<li class="log-info"><b>Aktualizacja 0.1.1: podpis poprawny</b><span><em class="ev">update_verified</em>wczoraj</span></li>
+							<li class="log-info"><b>Instalacja odblokowana na 30 minut</b><span><em class="ev">lockdown_unlocked</em>2 dni temu</span></li>
+							<li class="log-info"><b>Tryb serwisowy wyłączony</b><span><em class="ev">maintenance</em>3 dni temu</span></li>
+							<li class="log-info"><b>Zmieniono ustawienia: tryb serwisowy</b><span><em class="ev">settings_changed</em>3 dni temu</span></li>
 						</ul>
 					</div>
 				</div>
