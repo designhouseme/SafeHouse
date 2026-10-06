@@ -88,8 +88,8 @@ case "${1:-}" in
 		git tag -a "v$version" -m "SafeHouse $version"
 		build "v$version" "$version" "build/$version"
 		echo
-		echo "Next: upload build/$version/* to $RELEASE_URL/ (manifest.json and manifest.json.sig last),"
-		echo "then push the commit and tag."
+		echo "Next: git push origin main v$version, then ./dev/publish.sh $version"
+		echo "(uploads to $RELEASE_URL/ and creates the GitHub release with the same files)."
 		;;
 	*)
 		sed -n '2,14p' "$0"; exit 1

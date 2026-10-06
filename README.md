@@ -30,10 +30,10 @@ A Redis object cache (signed values, its own keys only) is installed with `wp sh
 
 Requirements: WordPress 6.6+ and PHP 8.1+. WooCommerce is optional.
 
-1. Upload the release ZIP in Plugins → Add New → Upload Plugin.
+1. Download `shouse-x.y.z.zip` from [Releases](https://github.com/designhouseme/SafeHouse/releases) and upload it in Plugins → Add New → Upload Plugin.
 2. Activate it and open **SafeHouse** in the admin menu.
 
-Updates come from the Design House update host, not WordPress.org. Every release is signed with Ed25519, and WordPress installs a package only when the manifest signature and the package checksum both match.
+Updates come from the Design House update host, not WordPress.org. Every release is signed with Ed25519, and WordPress installs a package only when the manifest signature and the package checksum both match. Each GitHub release carries the same three files (`shouse-x.y.z.zip`, `manifest.json`, `manifest.json.sig`), so anyone can check a download against the signed checksum. Releases are built and signed on a maintainer's machine, never in CI, because the signing key never leaves it.
 
 Do not run the plugin from a clone of this repository on a live site. A copy inside a git working copy never updates itself.
 
