@@ -16,9 +16,13 @@ final class Notify {
 	/**
 	 * @param string   $subject Subject without the site prefix.
 	 * @param string[] $lines   Body lines.
+	 * @param string   $also    Extra recipient, e.g. the previous admin e-mail after it was changed.
 	 */
-	public static function send( string $subject, array $lines ): bool {
+	public static function send( string $subject, array $lines, string $also = '' ): bool {
 		$recipients = Plugin::instance()->settings->alert_recipients();
+		if ( is_email( $also ) ) {
+			$recipients = AbstractModule::clean_email_list( $recipients . ', ' . $also );
+		}
 		if ( '' === $recipients ) {
 			return false;
 		}

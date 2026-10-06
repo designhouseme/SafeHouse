@@ -1,9 +1,11 @@
 <?php
 /**
  * Change alerts for the things attackers leave behind: new administrators, new or activated
- * plugins, mu-plugins, drop-ins and edits to wp-config.php.
+ * plugins, mu-plugins, drop-ins, edits to wp-config.php and changes to the options a takeover
+ * flips (open registration, default role, admin e-mail, site address).
  *
- * Role changes are alerted immediately. Everything else is an hourly inventory diff, which
+ * Role and option changes made through WordPress are alerted immediately. Everything else is an
+ * hourly inventory diff, which
  * also catches changes made straight in the database or over FTP. The first run (and
  * `wp wphouse watch accept`, meant for the end of deploy scripts) records a baseline silently.
  *
@@ -22,6 +24,7 @@ defined( 'ABSPATH' ) || exit;
 final class Watch extends AbstractModule {
 
 	private const STATE_OPTION = 'wphouse_watch_state';
+	private const OPTIONS      = [ 'users_can_register', 'default_role', 'admin_email', 'siteurl', 'home' ];
 	private const DROPINS      = [ 'advanced-cache.php', 'object-cache.php', 'db.php', 'db-error.php', 'maintenance.php', 'install.php', 'sunrise.php', 'fatal-error-handler.php', 'php-error.php' ];
 
 	public function id(): string {
@@ -41,7 +44,7 @@ final class Watch extends AbstractModule {
 	}
 
 	public function description(): string {
-		return __( 'E-mails the alert recipients when an administrator is added, a plugin or theme appears or is activated, a mu-plugin or drop-in shows up, or wp-config.php changes. Changes are also written to the activity log.', 'wphouse' );
+		return __( 'E-mails the alert recipients when an administrator is added, a plugin or theme appears or is activated, a mu-plugin or drop-in shows up, wp-config.php changes, or someone opens registration or changes the default role, admin e-mail or site address. Changes are also written to the activity log.', 'wphouse' );
 	}
 
 	public function fields(): array {
@@ -52,6 +55,9 @@ final class Watch extends AbstractModule {
 		add_action( 'user_register', [ $this, 'on_user_register' ] );
 		add_action( 'set_user_role', [ $this, 'on_role_change' ], 10, 3 );
 		add_action( 'add_user_role', [ $this, 'on_role_added' ], 10, 2 );
+		foreach ( self::OPTIONS as $option ) {
+			add_action( 'update_option_' . $option, [ $this, 'on_option_update' ], 10, 3 );
+		}
 		add_action( 'wphouse_hourly', [ $this, 'cron_check' ] );
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			WP_CLI::add_command( 'wphouse watch', [ $this, 'cli' ] );
@@ -107,8 +113,34 @@ final class Watch extends AbstractModule {
 		}
 	}
 
+	public function on_option_update( mixed $old_value, mixed $value, string $option ): void {
+		$change = self::option_change( $option, $old_value, $value );
+		$actor  = wp_get_current_user();
+		$line   = sprintf( '%s, by %s', $change, $actor->exists() ? $actor->user_login : 'no logged-in user (code, CLI or cron)' );
+		Log::add( 'option_changed', $line, [ 'option' => $option ], 'critical' );
+		Notify::send(
+			'site setting changed',
+			[ $line, '', 'Attackers change these settings to register their own administrator or take over password resets. If you did not expect this, change it back and check the site.' ],
+			'admin_email' === $option ? (string) $old_value : ''
+		);
+		$state = $this->stored_state();
+		if ( $state && isset( $state['options'] ) ) {
+			$state['options'][ $option ] = self::scalar( $value );
+			update_option( self::STATE_OPTION, $state, false );
+		}
+	}
+
+	private static function option_change( string $option, mixed $old_value, mixed $value ): string {
+		return sprintf( 'Setting %s changed from "%s" to "%s"', $option, self::scalar( $old_value ), self::scalar( $value ) );
+	}
+
+	/** Option value as a short string for alerts; these options are all scalar in core. */
+	private static function scalar( mixed $value ): string {
+		return is_scalar( $value ) ? mb_substr( (string) $value, 0, 200 ) : '(' . gettype( $value ) . ')';
+	}
+
 	/**
-	 * Current inventory. Cheap: directory listings, two options, one user query and one file hash.
+	 * Current inventory. Cheap: directory listings, a few options, one user query and one file hash.
 	 *
 	 * @return array<string, mixed>
 	 */
@@ -132,6 +164,7 @@ final class Watch extends AbstractModule {
 			'mu_plugins'     => self::entries( WPMU_PLUGIN_DIR ),
 			'dropins'        => array_values( array_filter( self::DROPINS, static fn( $file ) => file_exists( WP_CONTENT_DIR . '/' . $file ) ) ),
 			'config_hash'    => $config ? (string) hash_file( 'sha256', $config ) : '',
+			'options'        => self::raw_options(),
 		];
 	}
 
@@ -174,18 +207,30 @@ final class Watch extends AbstractModule {
 		if ( ( $before['config_hash'] ?? '' ) !== $now['config_hash'] ) {
 			$changes[] = 'wp-config.php changed';
 		}
+		// A baseline from before options were watched has no 'options' key: record it silently.
+		$old_admin_email = '';
+		if ( is_array( $before['options'] ?? null ) ) {
+			foreach ( $now['options'] as $option => $value ) {
+				if ( array_key_exists( $option, $before['options'] ) && (string) $before['options'][ $option ] !== $value ) {
+					$changes[] = self::option_change( $option, $before['options'][ $option ], $value );
+					if ( 'admin_email' === $option ) {
+						$old_admin_email = (string) $before['options'][ $option ];
+					}
+				}
+			}
+		}
 
 		if ( $changes ) {
-			$critical = (bool) preg_grep( '/^(Administrator added|Must-use plugin added|Drop-in added|wp-config)/', $changes );
+			$critical = (bool) preg_grep( '/^(Administrator added|Must-use plugin added|Drop-in added|wp-config|Setting )/', $changes );
 			Log::add( 'inventory_changed', implode( '; ', $changes ), [], $critical ? 'critical' : 'warning' );
-			Notify::send( 'changes detected', array_merge( [ 'WPHouse noticed these changes since the last check (up to an hour ago):', '' ], array_map( static fn( $c ) => '- ' . $c, $changes ) ) );
+			Notify::send( 'changes detected', array_merge( [ 'WPHouse noticed these changes since the last check (up to an hour ago):', '' ], array_map( static fn( $c ) => '- ' . $c, $changes ) ), $old_admin_email );
 		}
 		return $changes;
 	}
 
 	public function accept(): void {
 		update_option( self::STATE_OPTION, $this->snapshot(), false );
-		Log::add( 'inventory_accepted', 'Current plugins, admins and files accepted as the baseline' );
+		Log::add( 'inventory_accepted', 'Current plugins, admins, files and site settings accepted as the baseline' );
 	}
 
 	public function tasks(): array {
@@ -213,12 +258,13 @@ final class Watch extends AbstractModule {
 		} else {
 			echo esc_html(
 				sprintf(
-					/* translators: 1: number of administrators, 2: number of plugins, 3: number of mu-plugins, 4: number of drop-ins. */
-					__( 'Watching %1$d administrators, %2$d plugins, %3$d must-use plugins, %4$d drop-ins and wp-config.php.', 'wphouse' ),
+					/* translators: 1: number of administrators, 2: number of plugins, 3: number of mu-plugins, 4: number of drop-ins, 5: number of site settings. */
+					__( 'Watching %1$d administrators, %2$d plugins, %3$d must-use plugins, %4$d drop-ins, wp-config.php and %5$d site settings.', 'wphouse' ),
 					count( (array) $state['admins'] ),
 					count( (array) $state['plugins'] ),
 					count( (array) $state['mu_plugins'] ),
-					count( (array) $state['dropins'] )
+					count( (array) $state['dropins'] ),
+					count( (array) ( $state['options'] ?? [] ) )
 				)
 			);
 		}
@@ -251,6 +297,24 @@ final class Watch extends AbstractModule {
 			WP_CLI::log( $change );
 		}
 		WP_CLI::success( $changes ? count( $changes ) . ' change(s) reported.' : 'No changes.' );
+	}
+
+	/**
+	 * Watched options as stored in the database, past any filter (Hardening filters default_role
+	 * on read, which would hide a value planted straight in the table) and past the object cache.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function raw_options(): array {
+		global $wpdb;
+		$placeholders = implode( ', ', array_fill( 0, count( self::OPTIONS ), '%s' ) );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- the uncached value is the point.
+		$rows    = (array) $wpdb->get_results( $wpdb->prepare( "SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name IN ($placeholders)", self::OPTIONS ) ); // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- placeholders built above.
+		$options = array_fill_keys( self::OPTIONS, '' );
+		foreach ( $rows as $row ) {
+			$options[ (string) $row->option_name ] = self::scalar( $row->option_value );
+		}
+		return $options;
 	}
 
 	/** @return array<string, mixed> */
