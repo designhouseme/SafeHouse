@@ -7,9 +7,6 @@
 <meta name="description" content="WPHouse zastępuje kilkanaście małych wtyczek WordPressa jedną: zabezpieczenia, blokadę instalacji, alerty o zmianach i codzienne drobiazgi. Działa obok Wordfence i WooCommerce, aktualizacje są podpisane.">
 <meta name="theme-color" content="#050814">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='6' y='1' width='4' height='4' fill='%239CC7FF'/%3E%3Crect x='1' y='6' width='4' height='4' fill='%232F6BFF'/%3E%3Crect x='11' y='6' width='4' height='4' fill='%23F2B45C'/%3E%3Crect x='6' y='11' width='4' height='4' fill='%239CC7FF'/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <script type="importmap">
 { "imports": {
@@ -19,172 +16,15 @@
 </script>
 </head>
 <body>
-<a class="skip" href="#dlaczego">Przejdź do treści</a>
+<header class="hero" id="top">
+	<div class="hero-bg" aria-hidden="true"></div>
+	<div class="beam" id="beam" aria-hidden="true"></div>
+	<canvas class="hero-dots" id="hero-dots" aria-hidden="true"></canvas>
 
-<div class="frame">
-	<header class="hero" id="top">
-		<div class="hero-bg" aria-hidden="true"></div>
-		<div class="beam" id="beam" aria-hidden="true"></div>
-		<canvas class="hero-dots" id="hero-dots" aria-hidden="true"></canvas>
-
-		<nav class="nav" aria-label="Główna nawigacja">
-			<a class="brand" href="#top" aria-label="WPHouse, strona główna">
-				<svg class="brand-mark" viewBox="0 0 16 16" aria-hidden="true"><rect x="6" y="1" width="4" height="4"/><rect x="1" y="6" width="4" height="4"/><rect x="11" y="6" width="4" height="4"/><rect x="6" y="11" width="4" height="4"/></svg>
-				<span>WPHouse</span>
-			</a>
-			<ul class="tabs">
-				<li><a class="tab" href="#dlaczego">Dlaczego</a></li>
-				<li><a class="tab" href="#moduly">Moduły</a></li>
-				<li><a class="tab" href="#wordfence">Z Wordfence</a></li>
-				<li><a class="tab" href="#aktualizacje">Aktualizacje</a></li>
-			</ul>
-			<a class="slant slant--blue nav-cta" href="#pobierz"><span>Pobierz 0.1</span></a>
-		</nav>
-
-		<div class="target" id="target" aria-hidden="true">
-			<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
-			<canvas id="voxel"></canvas>
-		</div>
-
-		<div class="hero-copy">
-			<h1 class="headline" id="headline">
-				<span class="line">Jedna wtyczka.</span>
-				<span class="line">Zero balastu.</span>
-				<span class="line">Pełen spokój.</span>
-			</h1>
-		</div>
-
-		<div class="hero-side">
-			<p>WPHouse zastępuje kilkanaście małych wtyczek jedną: zabezpieczenia, blokadę instalacji, alerty o&nbsp;zmianach i&nbsp;codzienne drobiazgi. Działa obok Wordfence i&nbsp;WooCommerce, a&nbsp;każda aktualizacja jest podpisana.</p>
-			<div class="actions">
-				<a class="slant slant--blue" href="#pobierz"><span>Pobierz WPHouse</span></a>
-				<a class="slant slant--light" href="#moduly"><span>Zobacz moduły</span></a>
-			</div>
-		</div>
-	</header>
-</div>
-
-<main>
-	<section class="collapse" id="dlaczego" aria-labelledby="dlaczego-h">
-		<div class="collapse-copy">
-			<h2 id="dlaczego-h">Każda wtyczka to osobny autor, osobny serwer aktualizacji i&nbsp;osobna historia luk.</h2>
-			<p>W&nbsp;2025 roku w&nbsp;ekosystemie WordPressa ujawniono 11&nbsp;334 nowe luki, 91% z&nbsp;nich we wtyczkach. Prawie połowa nie miała poprawki w&nbsp;dniu ujawnienia, a&nbsp;od publikacji do masowych ataków mijało zwykle około pięciu godzin.</p>
-			<p>WPHouse zbiera drobne funkcje w&nbsp;jednym, małym kodzie: bez <code>eval</code>, bez zdalnej konfiguracji, z&nbsp;testami bezpieczeństwa przy każdej zmianie.</p>
-			<p class="source">Dane: Patchstack, <cite>State of WordPress Security in 2026</cite>.</p>
-		</div>
-		<figure class="collapse-figure">
-			<canvas id="plugins-grid" role="img" aria-label="99 kwadratów oznaczających wtyczki, które przy przewijaniu łączą się w jeden"></canvas>
-			<figcaption class="counter" aria-live="polite"><span id="plugin-count">99</span> <span id="plugin-word">wtyczek</span></figcaption>
-		</figure>
-	</section>
-
-	<section class="modules" id="moduly" aria-labelledby="moduly-h">
-		<div class="modules-head">
-			<h2 id="moduly-h">Dziewięć modułów. Każdy włączasz osobno.</h2>
-			<p>Przełączniki działają tu tak jak w&nbsp;panelu wtyczki. Domyślnie włączone są tylko te, które niczego nie zmieniają dla odwiedzających.</p>
-		</div>
-		<ul class="switchboard" id="switchboard">
-			<li class="switch-row">
-				<button class="switch" role="switch" aria-checked="true" data-out="xmlrpc.php → 403; ?author=1 → strona główna; edytor plików: wyłączony"><span class="knob"></span><span class="sr">Podstawowe zabezpieczenia</span></button>
-				<div class="switch-text"><h3>Podstawowe zabezpieczenia</h3><p>Bez edytora kodu w&nbsp;kokpicie, bez wykrywania nazw użytkowników, jeden komunikat przy złym loginie i&nbsp;haśle, wyłączone XML-RPC.</p></div>
-				<output class="switch-out"></output>
-			</li>
-			<li class="switch-row">
-				<button class="switch" role="switch" aria-checked="false" data-out="wp plugin install … → zablokowane. Aktualizacje: działają."><span class="knob"></span><span class="sr">Blokada instalacji</span></button>
-				<div class="switch-text"><h3>Blokada instalacji</h3><p>Nikt nie zainstaluje nowej wtyczki ani motywu, nawet przez podatny kod, który pomija sprawdzanie uprawnień. Odblokowujesz na 30&nbsp;minut.</p></div>
-				<output class="switch-out"></output>
-			</li>
-			<li class="switch-row">
-				<button class="switch" role="switch" aria-checked="true" data-out="Nowy administrator: mallory → e-mail do zespołu"><span class="knob"></span><span class="sr">Alerty o zmianach</span></button>
-				<div class="switch-text"><h3>Alerty o&nbsp;zmianach</h3><p>E-mail, gdy przybędzie administrator, pojawi się wtyczka, drop-in albo ktoś zmieni <code>wp-config.php</code>.</p></div>
-				<output class="switch-out"></output>
-			</li>
-			<li class="switch-row">
-				<button class="switch" role="switch" aria-checked="true" data-out="Quick Page/Post Redirect: zamknięta na WordPress.org (security-issue)"><span class="knob"></span><span class="sr">Kondycja wtyczek</span></button>
-				<div class="switch-text"><h3>Kondycja wtyczek</h3><p>Wtyczki zamknięte na WordPress.org, porzucone i&nbsp;zapomniane narzędzia do migracji. WordPress pokazuje je jako aktualne, my nie.</p></div>
-				<output class="switch-out"></output>
-			</li>
-			<li class="switch-row">
-				<button class="switch" role="switch" aria-checked="false" data-out="?s=spam → 301; komentarze: zamknięte; opinie o produktach: działają"><span class="knob"></span><span class="sr">Usprawnienia</span></button>
-				<div class="switch-text"><h3>Usprawnienia</h3><p>Komentarze, wyszukiwarka, emoji, Heartbeat, limit wersji. Drobiazgi, z&nbsp;których każdy bywa osobną wtyczką.</p></div>
-				<output class="switch-out"></output>
-			</li>
-			<li class="switch-row">
-				<button class="switch" role="switch" aria-checked="false" data-out="„Hello world!” → „Hello world! (kopia)”, szkic"><span class="knob"></span><span class="sr">Duplikowanie wpisów i stron</span></button>
-				<div class="switch-text"><h3>Duplikowanie wpisów i&nbsp;stron</h3><p>Kopia jako szkic, z&nbsp;taksonomiami i&nbsp;polami własnymi. Tylko dla osób, które mogą edytować oryginał.</p></div>
-				<output class="switch-out"></output>
-			</li>
-			<li class="switch-row">
-				<button class="switch" role="switch" aria-checked="false" data-out="WPHOUSE_SMTP_HOST w wp-config.php; dziennik maili: brak"><span class="knob"></span><span class="sr">Poczta SMTP</span></button>
-				<div class="switch-text"><h3>Poczta SMTP</h3><p>Hasło zostaje w&nbsp;<code>wp-config.php</code>, nie w&nbsp;bazie. Bez dziennika wiadomości, więc linki do resetu hasła nigdzie się nie odkładają.</p></div>
-				<output class="switch-out"></output>
-			</li>
-			<li class="switch-row">
-				<button class="switch" role="switch" aria-checked="false" data-out="<head>: Google Tag Manager; PHP: nigdy"><span class="knob"></span><span class="sr">Skrypty w nagłówku i stopce</span></button>
-				<div class="switch-text"><h3>Skrypty w&nbsp;nagłówku i&nbsp;stopce</h3><p>Kody analityki i&nbsp;pikseli. Tylko HTML i&nbsp;JavaScript, nigdy PHP, i&nbsp;tylko dla administratorów.</p></div>
-				<output class="switch-out"></output>
-			</li>
-			<li class="switch-row">
-				<button class="switch" role="switch" aria-checked="false" data-out="Odwiedzający: 503, Retry-After: 1800; płatności i REST: działają"><span class="knob"></span><span class="sr">Tryb serwisowy</span></button>
-				<div class="switch-text"><h3>Tryb serwisowy</h3><p>Odwiedzający widzą „Zaraz wracamy”, Ty widzisz normalną stronę, a&nbsp;powiadomienia z&nbsp;bramek płatności dalej dochodzą.</p></div>
-				<output class="switch-out"></output>
-			</li>
-		</ul>
-	</section>
-
-	<section class="beside" id="wordfence" aria-labelledby="wordfence-h">
-		<h2 id="wordfence-h">Nie zastępujemy Wordfence. Sprzątamy wszystko obok niego.</h2>
-		<div class="beside-grid">
-			<div class="beside-col">
-				<h3>Zostaje w&nbsp;Wordfence</h3>
-				<ul><li>Zapora i&nbsp;reguły blokowania</li><li>Limity prób logowania</li><li>Logowanie dwuetapowe</li><li>Skaner złośliwego kodu</li></ul>
-			</div>
-			<div class="beside-col beside-col--ours">
-				<h3>Robi WPHouse</h3>
-				<ul><li>Blokada instalacji i&nbsp;alerty o&nbsp;zmianach</li><li>Kondycja wtyczek</li><li>SMTP, skrypty, tryb serwisowy</li><li>Duplikowanie i&nbsp;drobne usprawnienia</li></ul>
-			</div>
-		</div>
-		<div class="beside-ui" aria-label="Fragment panelu WPHouse">
-			<span class="fake-check" aria-hidden="true"></span>
-			<span><strong>Blokuj wykrywanie nazw użytkowników</strong> <em>Obsługuje to Wordfence, więc tutaj pominięte.</em></span>
-		</div>
-		<p class="beside-note">Gdy Wordfence już coś robi, WPHouse to wykrywa i&nbsp;nie dubluje. Jedno sprawdziliśmy szczególnie: maskowanie błędów logowania w&nbsp;Wordfence obejmuje tylko <code>wp-login.php</code>, więc przy WooCommerce formularza „Moje konto” pilnujemy sami.</p>
-	</section>
-
-	<section class="updates" id="aktualizacje" aria-labelledby="aktualizacje-h">
-		<div class="updates-copy">
-			<h2 id="aktualizacje-h">Nawet przejęty serwer aktualizacji nie podsunie Ci cudzego kodu.</h2>
-			<p>W&nbsp;2026 roku napastnicy przejmowali serwery aktualizacji popularnych wtyczek premium i&nbsp;rozsyłali z&nbsp;nich złośliwe wersje. Paczki WPHouse podpisujemy kluczem, którego nie ma na żadnym serwerze.</p>
-			<ol class="steps">
-				<li><strong>Manifest.</strong> Wtyczka pobiera opis nowej wersji.</li>
-				<li><strong>Podpis.</strong> Sprawdza podpis Ed25519 kluczem wbudowanym w&nbsp;siebie.</li>
-				<li><strong>Suma kontrolna.</strong> Porównuje SHA-256 pobranej paczki z&nbsp;podpisanym manifestem.</li>
-				<li><strong>Instalacja.</strong> Dopiero wtedy WordPress podmienia pliki.</li>
-			</ol>
-		</div>
-		<pre class="terminal" aria-label="Wynik testu aktualizacji"><code><span class="t-dim">$ ./dev/update-test.sh</span>
-<span class="t-ok">PASS</span> 0.1.0 installed from zip
-<span class="t-ok">PASS</span> tampered manifest rejected
-<span class="t-ok">PASS</span> swapped zip rejected
-<span class="t-ok">PASS</span> details modal shows 0.1.1 and its changelog
-<span class="t-ok">PASS</span> auto-update forced on for WPHouse
-<span class="t-ok">PASS</span> signed 0.1.1 installed with lockdown on</code></pre>
-	</section>
-
-	<section class="download" id="pobierz" aria-labelledby="pobierz-h">
-		<h2 id="pobierz-h">Wersja 0.1 jest gotowa do testów.</h2>
-		<p>Polski i&nbsp;angielski, WordPress 6.6 lub nowszy, PHP 8.1 lub nowszy. Na początek trafia na strony klientów Design House.</p>
-		<div class="actions actions--center">
-			<a class="slant slant--blue" href="https://updates.designhouse.me/wphouse/wphouse-latest.zip"><span>Pobierz wphouse-0.1.0.zip</span></a>
-			<a class="slant slant--light" href="https://designhouse.me/"><span>Napisz do Design House</span></a>
-		</div>
-	</section>
-</main>
-
-<footer class="footer">
-	<a class="footer-maker" href="https://designhouse.me/"><img src="assets/designhouse.svg" width="152" height="19" alt="Design House"></a>
-	<p>© 2026 Design House. WordPress® jest znakiem towarowym WordPress Foundation; WPHouse nie jest z&nbsp;nią powiązany.</p>
-</footer>
+	<div class="target" id="target" aria-hidden="true">
+		<canvas id="voxel"></canvas>
+	</div>
+</header>
 
 <script type="module" src="js/main.js"></script>
 </body>

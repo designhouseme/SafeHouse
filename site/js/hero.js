@@ -123,7 +123,7 @@ const STREAK_FRAGMENT = /* glsl */ `
 	}
 `;
 
-export async function mountHero({ canvas, target, headline, beam, reduced }) {
+export async function mountHero({ canvas, target, beam, reduced }) {
 	const [robot, human] = await Promise.all(HANDS.map((h) => loadImage(h.src)));
 	const sources = [
 		{ ...HANDS[0], px: pixels(robot), colour: robotColour },
@@ -179,11 +179,9 @@ export async function mountHero({ canvas, target, headline, beam, reduced }) {
 		streaks.frustumCulled = false;
 		scene.add(streaks, dots);
 
-		// The CSS beam core sits on the same x; the headline letters it crosses catch the light.
+		// The CSS beam core sits on the same x.
 		beam.style.left = `${emitter.x}px`;
 		beam.style.top = `${emitter.y + emitter.size * 0.34}px`;
-		const h = headline.getBoundingClientRect();
-		headline.style.setProperty('--beam', `${(rect.left + emitter.x - h.left).toFixed(1)}px`);
 	}
 
 	// Sample each photo on a dot grid, then slide the hand so its fingertip waits beside the logo.

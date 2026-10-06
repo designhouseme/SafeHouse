@@ -22,18 +22,6 @@ for (const s of shots) {
 	await page.goto('http://127.0.0.1:8899/', { waitUntil: 'networkidle' });
 	await page.waitForTimeout(3500);
 	await page.screenshot({ path: `${out}/${s.name}-hero.png` });
-	for (const id of ['dlaczego', 'moduly', 'wordfence', 'aktualizacje', 'pobierz']) {
-		await page.evaluate((id) => {
-			const el = document.getElementById(id);
-			window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 40);
-		}, id);
-		await page.waitForTimeout(700);
-		await page.screenshot({ path: `${out}/${s.name}-${id}.png` });
-	}
-	if (s.name === 'desktop') {
-		await page.evaluate(() => window.scrollTo(0, 0));
-		await page.screenshot({ path: `${out}/${s.name}-full.png`, fullPage: true });
-	}
 	console.log(s.name, errors.length ? `errors: ${errors.join(' | ')}` : 'no errors');
 	await page.close();
 }
