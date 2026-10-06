@@ -132,9 +132,8 @@ a { color: inherit; }
 	letter-spacing: -0.03em;
 	text-decoration: none;
 }
-.brand-mark { width: 24px; height: 24px; }
+.brand-mark { width: 30px; height: 21px; }
 .brand-mark rect { fill: #fff; }
-.brand-mark rect:nth-child(3) { fill: var(--ember); }
 
 .nav-links {
 	display: flex;
@@ -642,9 +641,8 @@ main section { position: relative; padding: 168px 0; }
 	background: radial-gradient(circle, #1d2240, #0b0c10 70%);
 	box-shadow: 0 0 0 2px rgba(156, 199, 255, 0.6), 0 0 40px rgba(110, 140, 255, 0.8), 0 0 120px rgba(110, 100, 255, 0.5);
 }
-.mb-mark { width: 34px; height: 34px; }
+.mb-mark { width: 40px; height: 28px; }
 .mb-mark rect { fill: #fff; }
-.mb-mark rect:nth-child(3) { fill: var(--ember); }
 .mb-bot {
 	position: absolute;
 	top: var(--y);
@@ -921,8 +919,8 @@ main section { position: relative; padding: 168px 0; }
 	mask-composite: intersect;
 	-webkit-mask-composite: source-in;
 }
-.dial-mark { position: absolute; inset: 28%; width: 44%; height: 44%; filter: drop-shadow(-6px 0 14px rgba(255, 110, 40, 0.35)) drop-shadow(6px 0 14px rgba(70, 105, 255, 0.4)); }
-.dial-mark rect { fill: #101116; stroke: rgba(255, 255, 255, 0.07); stroke-width: 0.12; }
+.dial-mark { position: absolute; top: 34%; left: 26%; width: 48%; height: 32%; filter: drop-shadow(-6px 0 14px rgba(255, 110, 40, 0.35)) drop-shadow(6px 0 14px rgba(70, 105, 255, 0.4)); }
+.dial-mark rect { fill: #101116; stroke: rgba(255, 255, 255, 0.08); stroke-width: 1.2; }
 .dial-face { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .dial-ticks line { stroke: rgba(255, 255, 255, 0.28); stroke-width: 2; stroke-linecap: round; }
 .dial-nums text { font: 500 13px var(--sans); text-anchor: middle; fill: rgba(255, 255, 255, 0.3); }
@@ -945,7 +943,7 @@ main section { position: relative; padding: 168px 0; }
 .footer { background: var(--ink); border-top: 1px solid rgba(255, 255, 255, 0.08); }
 .footer-inner { display: flex; flex-wrap: wrap; align-items: center; gap: 20px 40px; padding: 36px 0 48px; font-size: 13.5px; color: rgba(255, 255, 255, 0.5); }
 .footer .brand { font-size: 18px; }
-.footer .brand-mark { width: 20px; height: 20px; }
+.footer .brand-mark { width: 26px; height: 18px; }
 .footer-maker { display: block; opacity: 0.8; transition: opacity 0.2s; }
 .footer-maker:hover { opacity: 1; }
 .footer-maker img { display: block; width: auto; height: 17px; }
