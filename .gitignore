@@ -11,3 +11,9 @@
 /site/.vercel/
 /site/.env*
 .wrangler/
+# Agent instructions and internal notes live in the private shouse-internal repo, never here.
+CLAUDE.md
+CLAUDE.local.md
+PLAN.md
+AGENTS.md
+/.claude/
