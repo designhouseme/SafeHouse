@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SafeHouse release flow. Signed manifest + checksummed zip; see src/Core/Updater.php.
+# SafeHouse release flow. Signed manifest + checksummed zip; see plugin/src/Core/Updater.php.
 #
 #   ./dev/release.sh keygen                         create the signing key once, print the public key
 #   ./dev/release.sh <x.y.z>                        bump version, lint, commit "Release x.y.z", tag vx.y.z,
@@ -41,7 +41,7 @@ build() { # <git-ref> <version> <outdir>
 	out=$(cd "$out" && pwd)
 	work=$(mktemp -d)
 	mkdir "$work/src"
-	git archive --format=tar "$ref" | tar -x -C "$work/src"   # honours export-ignore in .gitattributes
+	git archive --format=tar "$ref:plugin" | tar -x -C "$work/src"   # the plugin/ tree only: everything in it ships
 	set_version "$work/src" "$version"
 	grep -q "__SHOUSE_PUBLIC_KEY__" "$work/src/src/Core/Updater.php" && die "Updater.php still has the placeholder public key"
 
@@ -65,7 +65,7 @@ case "${1:-}" in
 		pub=$(tool "$(dirname "$KEY")" -- keygen "$KEY")
 		echo "Private key: $KEY (back it up in the password manager; without it no update can be shipped)"
 		echo "Public key:  $pub"
-		echo "Put the public key in PUBLIC_KEYS in src/Core/Updater.php."
+		echo "Put the public key in PUBLIC_KEYS in plugin/src/Core/Updater.php."
 		;;
 	pubkey)
 		tool "$(dirname "$KEY")" -- pubkey "$KEY"
@@ -82,7 +82,7 @@ case "${1:-}" in
 		[ "$(git branch --show-current)" = main ] || die "release from main"
 		git rev-parse -q --verify "refs/tags/v$version" >/dev/null && die "tag v$version exists"
 		grep -q "^## $version\b" CHANGELOG.md || die "CHANGELOG.md has no '## $version' section"
-		set_version . "$version"
+		set_version plugin "$version"
 		./dev/lint.sh
 		git commit -q -am "Release $version"
 		git tag -a "v$version" -m "SafeHouse $version"

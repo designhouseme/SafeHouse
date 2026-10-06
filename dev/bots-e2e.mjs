@@ -1,4 +1,4 @@
-// Browser checks for assets/bots.js, run by dev/bots-e2e.sh (which prepares the site).
+// Browser checks for plugin/assets/bots.js, run by dev/bots-e2e.sh (which prepares the site).
 // Env: U (site URL), PRODUCT_ID, CLASSIC_PATH (page with [woocommerce_checkout]), OUT (screenshots).
 // Playwright is resolved from PLAYWRIGHT_PATH or any node_modules on the way up.
 import { createRequire } from 'node:module';

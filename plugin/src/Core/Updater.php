@@ -54,9 +54,13 @@ final class Updater {
 		}
 	}
 
-	/** A git working copy must never be overwritten by an update. Release zips contain no .git. */
+	/**
+	 * A git working copy must never be overwritten by an update: the plugin folder itself, or the repository
+	 * it sits in (plugin/ of the SafeHouse repo, or a plugins folder deployed from git). Release zips contain no .git.
+	 */
 	public static function is_dev_checkout(): bool {
-		return file_exists( dirname( SHOUSE_FILE ) . '/.git' );
+		$dir = dirname( SHOUSE_FILE );
+		return file_exists( $dir . '/.git' ) || file_exists( dirname( $dir ) . '/.git' );
 	}
 
 	public static function basename(): string {

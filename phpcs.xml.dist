@@ -2,9 +2,9 @@
 <ruleset name="SafeHouse">
 	<description>WordPress coding standards with the security sniffs kept strict.</description>
 
-	<file>shouse.php</file>
-	<file>uninstall.php</file>
-	<file>src</file>
+	<file>plugin/shouse.php</file>
+	<file>plugin/uninstall.php</file>
+	<file>plugin/src</file>
 
 	<arg name="extensions" value="php"/>
 	<arg name="colors"/>
@@ -14,7 +14,7 @@
 	<config name="testVersion" value="8.1-"/>
 
 	<rule ref="WordPress-Extra">
-		<!-- PSR-4 file names (src/Core/Settings.php) instead of class-settings.php. -->
+		<!-- PSR-4 file names (plugin/src/Core/Settings.php) instead of class-settings.php. -->
 		<exclude name="WordPress.Files.FileName"/>
 		<!-- Short array syntax and non-Yoda comparisons: we target PHP 8.1+. -->
 		<exclude name="Universal.Arrays.DisallowShortArraySyntax"/>

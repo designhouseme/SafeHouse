@@ -110,11 +110,11 @@ msgstr "Brak zdarzeń."
 msgid "Details"
 msgstr "Szczegóły"
 
-#: src/Core/Updater.php:156
+#: src/Core/Updater.php:160
 msgid "This SafeHouse package is not listed in the signed release manifest. Update cancelled."
 msgstr "Tej paczki SafeHouse nie ma w podpisanym manifeście wydania. Aktualizacja anulowana."
 
-#: src/Core/Updater.php:169
+#: src/Core/Updater.php:173
 msgid "The downloaded SafeHouse package does not match the signed checksum. Update cancelled."
 msgstr "Pobrana paczka SafeHouse nie zgadza się z podpisaną sumą kontrolną. Aktualizacja anulowana."
 

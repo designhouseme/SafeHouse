@@ -16,6 +16,7 @@ x-wp-env: &wp-env
     define( 'SHOUSE_SMTP_PORT', 1025 );
     define( 'SHOUSE_SMTP_SECURE', '' );
     define( 'WP_REDIS_HOST', 'redis' );
+    define( 'SHOUSE_DISABLE_UPDATES', true ); // the plugin folder is the git checkout, mounted without its .git
 
 services:
   redis:
@@ -51,7 +52,7 @@ services:
     environment: *wp-env
     volumes:
       - wp_core:/var/www/html
-      - ..:/var/www/html/wp-content/plugins/shouse
+      - ../plugin:/var/www/html/wp-content/plugins/shouse
 
   wpcli:
     image: ${CLI_IMAGE:-wordpress:cli-php8.3}
@@ -63,7 +64,7 @@ services:
     environment: *wp-env
     volumes:
       - wp_core:/var/www/html
-      - ..:/var/www/html/wp-content/plugins/shouse
+      - ../plugin:/var/www/html/wp-content/plugins/shouse
 
 volumes:
   db_data:

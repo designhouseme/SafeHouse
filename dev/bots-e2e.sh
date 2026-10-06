@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Browser checks for bot protection (assets/bots.js): wp-login, registration, a comment, and the
+# Browser checks for bot protection (plugin/assets/bots.js): wp-login, registration, a comment, and the
 # block and classic checkout with Cloudflare's always-pass test keys. Needs WooCommerce and Playwright:
 #   PLAYWRIGHT_PATH=/path/to/node_modules/playwright ./dev/bots-e2e.sh
 # Sets up a product, cash on delivery and a classic checkout page, and puts everything back after.

@@ -14,7 +14,7 @@ U=http://localhost:8895
 fails=0
 check() { if [ "$2" = "$3" ]; then echo "ok    $1"; else echo "FAIL  $1 (expected '$2', got '$3')"; fails=$((fails + 1)); fi; }
 
-./dev/release.sh snapshot "$(sed -n "s/^const SHOUSE_VERSION = '\(.*\)';/\1/p" shouse.php)" "$T/pkgs/pkg" >/dev/null
+./dev/release.sh snapshot "$(sed -n "s/^const SHOUSE_VERSION = '\(.*\)';/\1/p" plugin/shouse.php)" "$T/pkgs/pkg" >/dev/null
 ZIP=$(ls "$T"/pkgs/pkg/shouse-[0-9]*.zip)
 dc down -v >/dev/null 2>&1
 dc up -d >/dev/null 2>&1

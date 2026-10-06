@@ -26,12 +26,12 @@ cat >> "$WD/wp-tests-config.php" <<'PHP'
 define( 'WP_REDIS_HOST', 'redis' );
 define( 'WP_CACHE_KEY_SALT', 'wptests:' );
 PHP
-sed 's/__SHOUSE_FOLDER__/shouse/' "$ROOT/src/ObjectCache/loader.php" > "$WD/src/wp-content/object-cache.php"
+sed 's/__SHOUSE_FOLDER__/shouse/' "$ROOT/plugin/src/ObjectCache/loader.php" > "$WD/src/wp-content/object-cache.php"
 
 commands() { docker compose exec -T redis redis-cli INFO stats | tr -d '\r' | awk -F: '$1 == "total_commands_processed" { print $2 }'; }
 before=$(commands)
 docker run --rm --network shouse-ols_default --entrypoint /usr/local/lsws/lsphp83/bin/php \
-	-v "$WD":/wp -v "$ROOT":/wp/src/wp-content/plugins/shouse:ro -v "$ROOT":/wp/tests/phpunit/data/plugins/shouse:ro -w /wp \
+	-v "$WD":/wp -v "$ROOT/plugin":/wp/src/wp-content/plugins/shouse:ro -v "$ROOT/plugin":/wp/tests/phpunit/data/plugins/shouse:ro -w /wp \
 	litespeedtech/openlitespeed:1.9.2-lsphp83 -d memory_limit=1G vendor/bin/phpunit --group cache,option "$@" | tee "$ROOT/build/core-cache-tests.txt" || true
 
 # One known difference: Tests_Cache::test_wp_cache_flush_group expects an external cache NOT to support

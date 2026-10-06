@@ -3,7 +3,7 @@
 # review the diff: a range Cloudflare dropped must not stay trusted.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-F=src/Core/Net.php
+F=plugin/src/Core/Net.php
 list=$( { curl -fsS https://www.cloudflare.com/ips-v4; echo; curl -fsS https://www.cloudflare.com/ips-v6; } | grep -E '^[0-9a-fA-F:.]+/[0-9]+$' )
 [ "$(echo "$list" | wc -l | tr -d ' ')" -ge 10 ] || { echo "cloudflare-ips: unexpected answer from cloudflare.com" >&2; exit 1; }
 RANGES=$(echo "$list" | while read -r range; do printf "\t\t'%s',\n" "$range"; done)

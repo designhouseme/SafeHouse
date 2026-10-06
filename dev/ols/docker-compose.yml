@@ -37,7 +37,7 @@ services:
     command: ["sh", "-c", "sed -i 's/^\\( *address *\\)\\*:80$/\\1*:8896/' /usr/local/lsws/conf/httpd_config.conf && /usr/local/lsws/bin/lswsctrl restart"]
     volumes:
       - wp:/var/www/vhosts/localhost/html
-      - ../..:/var/www/vhosts/localhost/html/wp-content/plugins/shouse
+      - ../../plugin:/var/www/vhosts/localhost/html/wp-content/plugins/shouse
       - ../../build/wp-cli.phar:/usr/local/bin/wp-cli.phar:ro
 
 volumes:
