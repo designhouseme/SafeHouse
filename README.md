@@ -42,7 +42,8 @@ Do not run the plugin from a clone of this repository on a live site. A copy ins
 ```
 plugin/     the plugin as it ships: shouse.php, src/, assets/, languages/, readme.txt, uninstall.php
 site/       the landing page (static files on Cloudflare Workers)
-updates/    the update host: a Cloudflare Worker serving release files and vulnerability data from R2
+updates/    the update host: a read-only Cloudflare Worker serving release files and vulnerability data from R2,
+            and updates/ingest/, the token-protected Worker that accepts only new vulnerability data
 dev/        Docker environments, test scripts and release tooling
 CHANGELOG.md, composer.json, phpcs.xml.dist, phpstan.neon.dist
 ```
@@ -67,7 +68,7 @@ Other test environments:
 - `dev/ols/`: OpenLiteSpeed with Redis, for the page cache, object cache, login limits and Cloudflare tests.
 - `dev/update-test.sh`: signed updates end to end, on an isolated site with a throwaway key.
 - `dev/package-test.sh`: install and uninstall from a release ZIP.
-- `dev/updates-test.sh`: the update host Worker against a local R2 bucket.
+- `dev/updates-test.sh` and `dev/ingest-test.sh`: both Workers against a local R2 bucket.
 
 ### Rules for changes
 
