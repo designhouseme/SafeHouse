@@ -18,4 +18,12 @@ import('./voxel.js')
 		$('voxel').replaceWith(img);
 	});
 
+// The plugin strip moves on its own, so it gets a button to stop it.
+const strip = $('zastepuje');
+strip.querySelector('.mq-toggle').addEventListener('click', (e) => {
+	const paused = strip.classList.toggle('is-paused');
+	e.currentTarget.setAttribute('aria-pressed', String(paused));
+	e.currentTarget.textContent = paused ? 'Wznów' : 'Zatrzymaj';
+});
+
 requestAnimationFrame(() => document.body.classList.add('is-ready'));

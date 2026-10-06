@@ -387,16 +387,51 @@ a { color: inherit; }
 .log-warning .ev { color: #6b4e00; background: #fcf9e8; }
 .log-critical .ev { color: #8a2424; background: #fcf0f1; }
 
+/* the plugins WPHouse replaces, scrolling under the panel */
+
+.mq { position: relative; z-index: 3; margin-top: 72px; }
+.mq-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: min(1216px, calc(100% - 48px)); margin: 0 auto 18px; }
+.mq-head p { margin: 0; font-size: 16px; color: rgba(255, 255, 255, 0.62); }
+.mq-toggle { padding: 6px 14px; border: 1px solid rgba(255, 255, 255, 0.22); border-radius: 999px; font: 500 12.5px var(--sans); color: rgba(255, 255, 255, 0.8); background: transparent; cursor: pointer; transition: background 0.2s, border-color 0.2s; }
+.mq-toggle:hover { border-color: rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.06); }
+.mq-row { display: flex; overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.mq-row + .mq-row { margin-top: 12px; }
+.mq-track { display: flex; flex: none; gap: 12px; margin: 0; padding: 0 12px 0 0; list-style: none; animation: mq 70s linear infinite; }
+.mq-row--rev .mq-track { animation-direction: reverse; animation-duration: 80s; }
+.mq:hover .mq-track,
+.mq:focus-within .mq-track,
+.mq.is-paused .mq-track { animation-play-state: paused; }
+@keyframes mq { to { translate: -100% 0; } }
+
+.mq-item {
+	position: relative;
+	flex: none;
+	padding: 12px 18px;
+	overflow: hidden;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 14px;
+	background: rgba(255, 255, 255, 0.03);
+	white-space: nowrap;
+	transition: border-color 0.25s, background 0.25s;
+	isolation: isolate;
+}
+.mq-item b { display: block; font-size: 16px; font-weight: 500; color: #fff; }
+.mq-item span { display: block; margin-top: 2px; font-size: 12.5px; color: rgba(255, 255, 255, 0.45); transition: color 0.25s; }
+.mq-item:hover { border-color: rgba(156, 199, 255, 0.45); background: rgba(47, 107, 255, 0.1); }
+.mq-item:hover span { color: var(--ice); }
+
 /* page-load sequence */
 
 .nav,
 .hero-copy > *,
-.panel { opacity: 0; translate: 0 14px; }
+.panel,
+.mq { opacity: 0; translate: 0 14px; }
 .is-ready .nav { opacity: 1; translate: 0; transition: opacity 0.8s, translate 0.8s; }
 .is-ready .hero-copy > * { opacity: 1; translate: 0; transition: opacity 0.9s 0.25s, translate 0.9s 0.25s; }
 .is-ready .hero-copy > :nth-child(2) { transition-delay: 0.4s; }
 .is-ready .hero-copy > :nth-child(3) { transition-delay: 0.55s; }
 .is-ready .panel { opacity: 1; translate: 0; transition: opacity 1.2s 1.1s, translate 1.2s 1.1s; }
+.is-ready .mq { opacity: 1; translate: 0; transition: opacity 1.2s 1.5s, translate 1.2s 1.5s; }
 
 .skip {
 	position: absolute;
@@ -1030,5 +1065,6 @@ main section { position: relative; padding: 168px 0; }
 	*::after { animation: none !important; transition: none !important; }
 	.nav,
 	.hero-copy > *,
-	.panel { opacity: 1; translate: 0; }
+	.panel,
+	.mq { opacity: 1; translate: 0; }
 }
