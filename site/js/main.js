@@ -28,20 +28,4 @@ mountCollapse({
 	reduced,
 });
 
-// Module switches behave like the ones in the plugin's settings page.
-for (const row of document.querySelectorAll('.switch-row')) {
-	const button = row.querySelector('.switch');
-	const out = row.querySelector('.switch-out');
-	const render = () => {
-		const on = button.getAttribute('aria-checked') === 'true';
-		row.classList.toggle('is-on', on);
-		out.textContent = on ? button.dataset.out : 'wyłączony';
-	};
-	button.addEventListener('click', () => {
-		button.setAttribute('aria-checked', String(button.getAttribute('aria-checked') !== 'true'));
-		render();
-	});
-	render();
-}
-
 requestAnimationFrame(() => document.body.classList.add('is-ready'));
