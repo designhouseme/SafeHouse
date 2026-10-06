@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-06T13:03:23+00:00\n"
+"POT-Creation-Date: 2026-10-06T13:36:06+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: wphouse\n"
@@ -35,217 +35,268 @@ msgstr ""
 msgid "Design House"
 msgstr ""
 
-#: src/Admin/Page.php:81
+#: src/Admin/Page.php:82
 msgid "Settings"
 msgstr ""
 
-#: src/Admin/Page.php:106
+#: src/Admin/Page.php:107
 msgid "WPHouse safe mode is on: every module is stopped. Remove wp-content/wphouse-safe-mode or the WPHOUSE_SAFE_MODE constant to resume."
 msgstr ""
 
-#: src/Admin/Page.php:119
+#: src/Admin/Page.php:120
 msgid "You are not allowed to do this."
 msgstr ""
 
-#: src/Admin/Page.php:127
+#: src/Admin/Page.php:128
 msgid "Unknown task."
 msgstr ""
 
-#: src/Admin/Page.php:148
+#: src/Admin/Page.php:149
 msgid "Modules"
 msgstr ""
 
-#: src/Admin/Page.php:149
-#: src/Admin/Page.php:383
+#: src/Admin/Page.php:150
+#: src/Admin/Page.php:403
 msgid "Integrations"
 msgstr ""
 
-#: src/Admin/Page.php:150
-#: src/Admin/Page.php:202
+#: src/Admin/Page.php:151
+#: src/Admin/Page.php:203
 msgid "General"
 msgstr ""
 
 #. translators: 1: number of modules running, 2: number of modules.
-#: src/Admin/Page.php:166
+#: src/Admin/Page.php:167
 #, php-format
 msgid "%1$d of %2$d running"
 msgstr ""
 
-#: src/Admin/Page.php:174
+#: src/Admin/Page.php:175
 msgid "Settings are locked by WPHOUSE_LOCK_SETTINGS in wp-config.php. Change them in code."
 msgstr ""
 
-#: src/Admin/Page.php:177
+#: src/Admin/Page.php:178
 msgid "WPHOUSE_IGNORE_OVERLAPS is on: features run even where another plugin already provides them."
 msgstr ""
 
-#: src/Admin/Page.php:186
+#: src/Admin/Page.php:187
 msgid "Small, audited replacements for single-purpose plugins. Every module is a switch. Features that Wordfence or wp-config already handle are skipped automatically."
 msgstr ""
 
-#: src/Admin/Page.php:205
+#: src/Admin/Page.php:206
 msgid "Alert recipients"
 msgstr ""
 
-#: src/Admin/Page.php:208
+#: src/Admin/Page.php:209
 msgid "Comma-separated. Empty means the site admin address."
 msgstr ""
 
-#: src/Admin/Page.php:242
+#: src/Admin/Page.php:213
+msgid "Proxy in front of the site"
+msgstr ""
+
+#: src/Admin/Page.php:217
+msgid "None: visitors connect directly"
+msgstr ""
+
+#: src/Admin/Page.php:224
+msgid "Set in wp-config.php with WPHOUSE_TRUSTED_PROXIES."
+msgstr ""
+
+#: src/Admin/Page.php:225
+msgid "With Cloudflare, WPHouse takes the visitor address from Cloudflare's header, but only on connections that really come from Cloudflare. Login limits and the activity log depend on it."
+msgstr ""
+
+#: src/Admin/Page.php:262
 msgid "Unavailable"
 msgstr ""
 
-#: src/Admin/Page.php:244
+#: src/Admin/Page.php:264
 msgid "Running"
 msgstr ""
 
-#: src/Admin/Page.php:246
+#: src/Admin/Page.php:266
 msgid "Enabled, not running"
 msgstr ""
 
-#: src/Admin/Page.php:248
+#: src/Admin/Page.php:268
 msgid "Off"
 msgstr ""
 
-#: src/Admin/Page.php:260
+#: src/Admin/Page.php:280
 #: src/Modules/Vulnerabilities.php:422
 msgid "Details"
 msgstr ""
 
-#: src/Admin/Page.php:265
+#: src/Admin/Page.php:285
 msgid "Pinned by WPHOUSE_MODULES in wp-config.php."
 msgstr ""
 
 #. translators: %s: plugin or setting name, e.g. Wordfence.
-#: src/Admin/Page.php:360
+#: src/Admin/Page.php:380
 #, php-format
 msgid "Handled by %s, skipped here."
 msgstr ""
 
-#: src/Admin/Page.php:375
+#: src/Admin/Page.php:395
 msgid "WPHouse skips what Wordfence already does (for example username discovery and login error masking) and leaves the firewall, two-factor login and malware scans to it. Vulnerability alerts stand down, because Wordfence warns about vulnerable plugins itself."
 msgstr ""
 
-#: src/Admin/Page.php:376
+#: src/Admin/Page.php:396
 msgid "Compatible with HPOS and the block checkout. Generic login errors also cover the My Account form, maintenance mode lets the Store API and payment callbacks through, and product reviews survive \"disable comments\"."
 msgstr ""
 
-#: src/Admin/Page.php:377
+#: src/Admin/Page.php:397
 msgid "Payment gateways"
 msgstr ""
 
-#: src/Admin/Page.php:377
+#: src/Admin/Page.php:397
 msgid "Autopay, Przelewy24, PayU, imoje, Paynow, Stripe, PayPal and WooPayments. Their callbacks (?wc-api= and the REST API) pass maintenance mode, and XML-RPC stays on for WooPayments."
 msgstr ""
 
-#: src/Admin/Page.php:378
+#: src/Admin/Page.php:398
 msgid "Redis object cache"
 msgstr ""
 
-#: src/Admin/Page.php:378
+#: src/Admin/Page.php:398
 msgid "WPHouse has its own Redis object cache: install it with \"wp wphouse object-cache enable\". Every cached value is signed, so other sites on a shared Redis cannot plant data. A site that uses the Redis Object Cache plugin instead shows its status here."
 msgstr ""
 
-#: src/Admin/Page.php:379
+#: src/Admin/Page.php:399
 msgid "Elementor and Elementor Pro. Watched for new vulnerabilities like everything on this list."
 msgstr ""
 
-#: src/Admin/Page.php:384
+#: src/Admin/Page.php:404
 msgid "WPHouse is built to run alongside these plugins. Design House watches all of them for new vulnerabilities (CVE) and tells you when an update cannot wait."
 msgstr ""
 
-#: src/Admin/Page.php:387
+#: src/Admin/Page.php:407
 msgid "Integration"
 msgstr ""
 
-#: src/Admin/Page.php:388
+#: src/Admin/Page.php:408
 msgid "On this site"
 msgstr ""
 
-#: src/Admin/Page.php:389
+#: src/Admin/Page.php:409
 msgid "What WPHouse does"
 msgstr ""
 
-#: src/Admin/Page.php:401
-#: src/Admin/Page.php:454
+#: src/Admin/Page.php:421
+#: src/Admin/Page.php:474
 msgid "not installed"
 msgstr ""
 
-#: src/Admin/Page.php:405
+#: src/Admin/Page.php:425
 msgid "WPHouse vulnerability alerts cover this site. For a firewall and two-factor login, install Wordfence."
 msgstr ""
 
-#: src/Admin/Page.php:406
+#: src/Admin/Page.php:426
 msgid "Nothing warns about vulnerable plugins on this site: switch on WPHouse vulnerability alerts below, or install Wordfence."
 msgstr ""
 
-#: src/Admin/Page.php:430
+#: src/Admin/Page.php:450
 msgid "active"
 msgstr ""
 
-#: src/Admin/Page.php:430
+#: src/Admin/Page.php:450
 #: src/Modules/PluginHealth.php:387
 msgid "inactive"
 msgstr ""
 
-#: src/Admin/Page.php:442
+#: src/Admin/Page.php:462
 msgid "connected"
 msgstr ""
 
-#: src/Admin/Page.php:442
+#: src/Admin/Page.php:462
 msgid "Redis not reachable"
 msgstr ""
 
-#: src/Admin/Page.php:442
-#: src/Core/ObjectCache.php:122
+#: src/Admin/Page.php:462
+#: src/Core/ObjectCache.php:140
 msgid "WPHouse object cache"
 msgstr ""
 
-#: src/Admin/Page.php:450
+#: src/Admin/Page.php:470
 msgid "Object cache connected to Redis."
 msgstr ""
 
-#: src/Admin/Page.php:450
+#: src/Admin/Page.php:470
 msgid "Object cache drop-in installed, but Redis is not reachable."
 msgstr ""
 
-#: src/Admin/Page.php:452
+#: src/Admin/Page.php:472
 msgid "Another persistent object cache is in use."
 msgstr ""
 
-#: src/Admin/Page.php:467
+#: src/Admin/Page.php:487
 msgid "Activity log"
 msgstr ""
 
-#: src/Admin/Page.php:473
+#: src/Admin/Page.php:493
 msgid "No events yet."
 msgstr ""
 
 #. translators: %s: time since the event, e.g. "5 mins".
-#: src/Admin/Page.php:491
+#: src/Admin/Page.php:511
 #, php-format
 msgid "%s ago"
 msgstr ""
 
-#: src/Core/ObjectCache.php:134
+#: src/Core/Net.php:129
+msgid "WPHouse and Cloudflare"
+msgstr ""
+
+#: src/Core/Net.php:140
+msgid "Requests come through Cloudflare, but WPHouse is not set up for it"
+msgstr ""
+
+#: src/Core/Net.php:141
+msgid "Every visitor looks like a Cloudflare server: the activity log shows Cloudflare addresses and login limits cannot block by address. In WPHouse → General, set \"Proxy in front of the site\" to Cloudflare."
+msgstr ""
+
+#: src/Core/Net.php:144
+msgid "WPHouse sees visitors' real addresses behind Cloudflare"
+msgstr ""
+
+#: src/Core/Net.php:145
+msgid "The visitor address comes from Cloudflare's CF-Connecting-IP header, which is trusted only on connections from Cloudflare's own servers."
+msgstr ""
+
+#: src/Core/Net.php:148
+msgid "WPHouse is set up for Cloudflare, but this request did not come through it"
+msgstr ""
+
+#: src/Core/Net.php:149
+msgid "That is fine when you reach the server directly. If the site no longer uses Cloudflare, set \"Proxy in front of the site\" back to none."
+msgstr ""
+
+#: src/Core/Net.php:155
+#: src/Modules/Hardening.php:270
+#: src/Modules/PluginHealth.php:339
+#: src/Modules/Vulnerabilities.php:301
+msgid "Security"
+msgstr ""
+
+#: src/Core/ObjectCache.php:152
 msgid "The WPHouse object cache is connected to Redis"
 msgstr ""
 
-#: src/Core/ObjectCache.php:135
+#: src/Core/ObjectCache.php:153
 msgid "Database results are kept in Redis between requests. Every cached value is signed, so other sites on a shared Redis cannot plant data."
 msgstr ""
 
-#: src/Core/ObjectCache.php:138
+#: src/Core/ObjectCache.php:156
 msgid "The WPHouse object cache cannot reach Redis"
 msgstr ""
 
 #. translators: %s: error message.
-#: src/Core/ObjectCache.php:140
+#: src/Core/ObjectCache.php:158
 #, php-format
 msgid "WordPress is using its own cache for now, so the site works but is slower. Reason: %s"
 msgstr ""
 
-#: src/Core/ObjectCache.php:146
+#: src/Core/ObjectCache.php:164
 #: src/Modules/LiteSpeed.php:284
 msgid "Performance"
 msgstr ""
@@ -478,12 +529,6 @@ msgstr ""
 
 #: src/Modules/Hardening.php:264
 msgid "Only administrators can create WordPress accounts."
-msgstr ""
-
-#: src/Modules/Hardening.php:270
-#: src/Modules/PluginHealth.php:339
-#: src/Modules/Vulnerabilities.php:301
-msgid "Security"
 msgstr ""
 
 #: src/Modules/Hardening.php:274
@@ -1092,7 +1137,7 @@ msgstr ""
 msgid "Watching %1$d administrators, %2$d plugins, %3$d must-use plugins, %4$d drop-ins, wp-config.php and %5$d site settings."
 msgstr ""
 
-#: src/Plugin.php:125
+#: src/Plugin.php:126
 msgid "WPHouse 0.x supports single sites only. Activate it per site instead of network-wide."
 msgstr ""
 

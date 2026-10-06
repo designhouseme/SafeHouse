@@ -12,6 +12,7 @@ use WPHouse\Core\AbstractModule;
 use WPHouse\Core\Compat;
 use WPHouse\Core\Integrations;
 use WPHouse\Core\Log;
+use WPHouse\Core\Net;
 use WPHouse\Core\ObjectCache;
 use WPHouse\Core\SafeMode;
 use WPHouse\Core\Settings;
@@ -206,6 +207,25 @@ final class Page {
 										<td>
 											<input type="text" class="regular-text" id="wphouse-general-alert_emails" name="<?php echo esc_attr( Settings::OPTION ); ?>[general][alert_emails]" value="<?php echo esc_attr( (string) $this->plugin->settings->value( 'general', 'alert_emails', '' ) ); ?>" placeholder="<?php echo esc_attr( (string) get_option( 'admin_email' ) ); ?>" <?php disabled( $locked ); ?>>
 											<p class="description"><?php esc_html_e( 'Comma-separated. Empty means the site admin address.', 'wphouse' ); ?></p>
+										</td>
+									</tr>
+									<tr>
+										<th scope="row"><label for="wphouse-general-proxy"><?php esc_html_e( 'Proxy in front of the site', 'wphouse' ); ?></label></th>
+										<td>
+											<?php $proxy_pinned = defined( 'WPHOUSE_TRUSTED_PROXIES' ); ?>
+											<select id="wphouse-general-proxy" name="<?php echo esc_attr( Settings::OPTION ); ?>[general][proxy]" <?php disabled( $locked || $proxy_pinned ); ?>>
+												<option value=""><?php esc_html_e( 'None: visitors connect directly', 'wphouse' ); ?></option>
+												<option value="cloudflare" <?php selected( Net::behind_cloudflare() ); ?>>Cloudflare</option>
+											</select>
+											<p class="description">
+												<?php
+												echo esc_html(
+													$proxy_pinned
+														? __( 'Set in wp-config.php with WPHOUSE_TRUSTED_PROXIES.', 'wphouse' )
+														: __( 'With Cloudflare, WPHouse takes the visitor address from Cloudflare\'s header, but only on connections that really come from Cloudflare. Login limits and the activity log depend on it.', 'wphouse' )
+												);
+												?>
+											</p>
 										</td>
 									</tr>
 								</table>

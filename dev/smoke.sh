@@ -182,6 +182,22 @@ check "empty ?wc-api= gets 503"           503 "$(code "$U/?wc-api=")"
 check "wp-login still answers"            200 "$(code "$U/wp-login.php")"
 check "wp-cron still answers"             200 "$(code "$U/wp-cron.php")"
 
+echo "== Cloudflare proxy (visitor address)"
+cf=$(wp eval '
+$o = get_option( "wphouse_settings" ); $orig = $o["general"]["proxy"] ?? "";
+$set = function ( $v ) use ( &$o ) { $o["general"]["proxy"] = $v; update_option( "wphouse_settings", $o ); };
+$set( "cloudflare" ); $_SERVER["HTTP_CF_CONNECTING_IP"] = "203.0.113.9";
+$_SERVER["REMOTE_ADDR"] = "173.245.48.5"; echo WPHouse\Core\Net::client_ip(), " ";
+$_SERVER["REMOTE_ADDR"] = "2606:4700::1"; echo WPHouse\Core\Net::client_ip(), " ";
+$_SERVER["REMOTE_ADDR"] = "198.51.100.20"; echo WPHouse\Core\Net::client_ip(), " ";
+$set( "" ); $_SERVER["REMOTE_ADDR"] = "173.245.48.5"; echo WPHouse\Core\Net::client_ip(), " ", WPHouse\Core\Net::knows_visitor_ip() ? "known" : "unknown";
+$set( $orig );')
+check "Cloudflare on: visitor from CF-Connecting-IP"        203.0.113.9   "$(echo "$cf" | cut -d" " -f1)"
+check "Cloudflare on: IPv6 edge too"                        203.0.113.9   "$(echo "$cf" | cut -d" " -f2)"
+check "Cloudflare on: direct hit ignores a forged header"   198.51.100.20 "$(echo "$cf" | cut -d" " -f3)"
+check "Cloudflare off: the header is not believed"          173.245.48.5  "$(echo "$cf" | cut -d" " -f4)"
+check "Cloudflare off: the visitor address counts as unknown" unknown    "$(echo "$cf" | cut -d" " -f5)"
+
 echo "== integrations"
 check "Wordfence and WooCommerce detected"   "wordfence,woocommerce" "$(wp eval 'echo implode( ",", array_keys( WPHouse\Core\Integrations::detected() ) );')"
 

@@ -2,9 +2,14 @@
 /**
  * Client IP detection that cannot be spoofed with request headers.
  *
- * REMOTE_ADDR is used unless the request comes from a proxy listed in wp-config:
- *   define( 'WPHOUSE_TRUSTED_PROXIES', [ '10.0.0.0/8', '173.245.48.0/20' ] );
- *   define( 'WPHOUSE_PROXY_HEADER', 'HTTP_CF_CONNECTING_IP' ); // default HTTP_X_FORWARDED_FOR
+ * REMOTE_ADDR is used unless the request comes from a proxy we were told about:
+ *   - Cloudflare: "Proxy in front of the site" on the settings page, or
+ *     define( 'WPHOUSE_TRUSTED_PROXIES', 'cloudflare' ). CF-Connecting-IP is believed only when the
+ *     connection itself comes from a Cloudflare address (the TCP peer cannot be forged); a request
+ *     that reaches the server directly is judged by REMOTE_ADDR alone.
+ *   - Other proxies, in wp-config:
+ *     define( 'WPHOUSE_TRUSTED_PROXIES', [ '10.0.0.0/8' ] );
+ *     define( 'WPHOUSE_PROXY_HEADER', 'HTTP_X_REAL_IP' ); // default HTTP_X_FORWARDED_FOR
  *
  * @package WPHouse
  */
@@ -15,6 +20,34 @@ defined( 'ABSPATH' ) || exit;
 
 final class Net {
 
+	/** Cloudflare's edge ranges from https://www.cloudflare.com/ips/, checked 2026-10-06. Refresh with dev/cloudflare-ips.sh. */
+	public const CLOUDFLARE_RANGES = [
+		// cloudflare-ips:begin
+		'173.245.48.0/20',
+		'103.21.244.0/22',
+		'103.22.200.0/22',
+		'103.31.4.0/22',
+		'141.101.64.0/18',
+		'108.162.192.0/18',
+		'190.93.240.0/20',
+		'188.114.96.0/20',
+		'197.234.240.0/22',
+		'198.41.128.0/17',
+		'162.158.0.0/15',
+		'104.16.0.0/13',
+		'104.24.0.0/14',
+		'172.64.0.0/13',
+		'131.0.72.0/22',
+		'2400:cb00::/32',
+		'2606:4700::/32',
+		'2803:f800::/32',
+		'2405:b500::/32',
+		'2405:8100::/32',
+		'2a06:98c0::/29',
+		'2c0f:f248::/32',
+		// cloudflare-ips:end
+	];
+
 	private const FORWARD_HEADERS = [ 'HTTP_X_FORWARDED_FOR', 'HTTP_CF_CONNECTING_IP', 'HTTP_X_REAL_IP', 'HTTP_FORWARDED', 'HTTP_TRUE_CLIENT_IP' ];
 
 	/**
@@ -23,6 +56,9 @@ final class Net {
 	 * this false, which callers must treat as "unknown", never as a reason to trust anything.
 	 */
 	public static function knows_visitor_ip(): bool {
+		if ( self::behind_cloudflare() ) {
+			return ! self::from_cloudflare() || '' !== self::cloudflare_visitor();
+		}
 		if ( defined( 'WPHOUSE_TRUSTED_PROXIES' ) && is_array( WPHOUSE_TRUSTED_PROXIES ) && WPHOUSE_TRUSTED_PROXIES ) {
 			return true;
 		}
@@ -35,7 +71,11 @@ final class Net {
 	}
 
 	public static function client_ip(): string {
-		$remote = isset( $_SERVER['REMOTE_ADDR'] ) ? self::valid_ip( sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) ) : '';
+		$remote = self::remote_addr();
+		if ( '' !== $remote && self::behind_cloudflare() ) {
+			$visitor = self::from_cloudflare( $remote ) ? self::cloudflare_visitor() : '';
+			return '' !== $visitor ? $visitor : $remote;
+		}
 		if ( '' === $remote || ! self::is_trusted_proxy( $remote ) ) {
 			return $remote;
 		}
@@ -57,6 +97,75 @@ final class Net {
 			}
 		}
 		return $remote;
+	}
+
+	/** The site sits behind Cloudflare: the settings page says so, or WPHOUSE_TRUSTED_PROXIES is 'cloudflare'. */
+	public static function behind_cloudflare(): bool {
+		if ( defined( 'WPHOUSE_TRUSTED_PROXIES' ) ) {
+			return 'cloudflare' === WPHOUSE_TRUSTED_PROXIES;
+		}
+		$settings = get_option( Settings::OPTION );
+		return is_array( $settings ) && 'cloudflare' === ( $settings['general']['proxy'] ?? '' );
+	}
+
+	/** The connection (REMOTE_ADDR, or the given address) is a Cloudflare edge server. */
+	public static function from_cloudflare( ?string $ip = null ): bool {
+		$ip ??= self::remote_addr();
+		foreach ( self::CLOUDFLARE_RANGES as $range ) {
+			if ( self::in_range( $ip, $range ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * @param array<string, callable[]|array<string, mixed>> $tests Site Health tests.
+	 * @return array<string, mixed>
+	 */
+	public static function site_health_test( array $tests ): array {
+		if ( self::from_cloudflare() || self::behind_cloudflare() ) {
+			$tests['direct']['wphouse_proxy'] = [
+				'label' => __( 'WPHouse and Cloudflare', 'wphouse' ),
+				'test'  => [ self::class, 'site_health_result' ],
+			];
+		}
+		return $tests;
+	}
+
+	/** @return array<string, mixed> */
+	public static function site_health_result(): array {
+		if ( self::from_cloudflare() && ! self::behind_cloudflare() ) {
+			$status = 'critical';
+			$label  = __( 'Requests come through Cloudflare, but WPHouse is not set up for it', 'wphouse' );
+			$text   = __( 'Every visitor looks like a Cloudflare server: the activity log shows Cloudflare addresses and login limits cannot block by address. In WPHouse → General, set "Proxy in front of the site" to Cloudflare.', 'wphouse' );
+		} elseif ( self::from_cloudflare() ) {
+			$status = 'good';
+			$label  = __( 'WPHouse sees visitors\' real addresses behind Cloudflare', 'wphouse' );
+			$text   = __( 'The visitor address comes from Cloudflare\'s CF-Connecting-IP header, which is trusted only on connections from Cloudflare\'s own servers.', 'wphouse' );
+		} else {
+			$status = 'recommended';
+			$label  = __( 'WPHouse is set up for Cloudflare, but this request did not come through it', 'wphouse' );
+			$text   = __( 'That is fine when you reach the server directly. If the site no longer uses Cloudflare, set "Proxy in front of the site" back to none.', 'wphouse' );
+		}
+		return [
+			'label'       => $label,
+			'status'      => $status,
+			'badge'       => [
+				'label' => __( 'Security', 'wphouse' ),
+				'color' => 'blue',
+			],
+			'description' => '<p>' . esc_html( $text ) . '</p>',
+			'test'        => 'wphouse_proxy',
+		];
+	}
+
+	private static function remote_addr(): string {
+		return isset( $_SERVER['REMOTE_ADDR'] ) ? self::valid_ip( sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) ) : '';
+	}
+
+	private static function cloudflare_visitor(): string {
+		return isset( $_SERVER['HTTP_CF_CONNECTING_IP'] ) ? self::valid_ip( sanitize_text_field( wp_unslash( $_SERVER['HTTP_CF_CONNECTING_IP'] ) ) ) : '';
 	}
 
 	private static function is_trusted_proxy( string $ip ): bool {

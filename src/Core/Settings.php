@@ -115,6 +115,7 @@ final class Settings {
 			'modules' => [],
 			'general' => [
 				'alert_emails' => AbstractModule::clean_email_list( (string) ( $input['general']['alert_emails'] ?? '' ) ),
+				'proxy'        => 'cloudflare' === ( $input['general']['proxy'] ?? '' ) ? 'cloudflare' : '',
 			],
 		];
 
