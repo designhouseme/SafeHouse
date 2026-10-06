@@ -1,6 +1,6 @@
-// Hero: two halftone hands reaching for the logo and the stream of light falling from it.
-// Everything moves on the GPU: positions, breathing, cursor push and the falling streaks are
-// computed in shaders from per-dot attributes, so the CPU does no per-frame work.
+// Hero: two halftone hands reaching for the logo, and a pixel beam falling through it onto the panel.
+// Everything moves on the GPU: positions, breathing, cursor push and the beam's flicker are
+// computed in shaders from per-point attributes, so the CPU does no per-frame work.
 import * as THREE from 'three';
 
 const HANDS = [
@@ -8,7 +8,6 @@ const HANDS = [
 	{ src: 'assets/hand-human.webp', side: 1 },
 ];
 
-const randn = () => (Math.random() + Math.random() + Math.random() - 1.5) / 1.5;
 const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
 
 // Robot: silver turning into signal blue in the shadows. Human: warm, toward ember.
@@ -53,7 +52,7 @@ const DOT_VERTEX = /* glsl */ `
 	float easeOutExpo(float t) { return t >= 1.0 ? 1.0 : 1.0 - pow(2.0, -10.0 * t); }
 
 	void main() {
-		float intro = uMotion > 0.5 ? easeOutExpo(clamp((uTime - aDelay) / 1.6, 0.0, 1.0)) : 1.0;
+		float intro = uMotion > 0.5 ? easeOutExpo(clamp((uTime - aDelay) / 2.0, 0.0, 1.0)) : 1.0;
 		// Both hands lean in and out together, so the gap between the fingertips breathes.
 		float breathe = (sin(uTime * 0.8) * 0.5 + 0.5) * 7.0 * -aSide * uMotion;
 		float bob = sin(uTime * 0.55 + (aSide > 0.0 ? 3.14159 : 0.0)) * 3.0 * uMotion;
@@ -68,7 +67,7 @@ const DOT_VERTEX = /* glsl */ `
 		gl_PointSize = aSize * 2.0 * twinkle * (0.4 + 0.6 * intro) * uDpr;
 		gl_Position = vec4(pos.x / uRes.x * 2.0 - 1.0, 1.0 - pos.y / uRes.y * 2.0, 0.0, 1.0);
 		vColor = aColor;
-		vAlpha = 0.25 + 0.75 * intro;
+		vAlpha = intro;
 	}
 `;
 
@@ -83,47 +82,69 @@ const DOT_FRAGMENT = /* glsl */ `
 	}
 `;
 
-const STREAK_VERTEX = /* glsl */ `
+// The beam is a grid of square pixels around a vertical axis: narrow at the top, flaring where
+// it lands on the panel. Brightness is stepped and faint pixels are dithered out, so it reads as
+// pixels rather than a smooth glow. Packets of light fall down each column.
+const BEAM_PITCH = 6;
+const beamWidth = (depth) => 14 + 64 * depth * depth + 280 * Math.pow(Math.min(1, Math.max(0, (depth - 0.8) / 0.2)), 2);
+
+const BEAM_VERTEX = /* glsl */ `
+	attribute vec2 aCell;
 	attribute float aSeed;
-	attribute float aSpeed;
-	attribute float aDrift;
-	attribute float aWarm;
 	uniform float uTime;
 	uniform vec2 uRes;
-	uniform vec2 uEmitter;
+	uniform float uAxis;
+	uniform float uFloor;
 	uniform float uFade;
 	uniform float uDpr;
+	varying vec3 vColor;
 	varying float vAlpha;
-	varying float vWarm;
+
+	float hash(float n) { return fract(sin(n) * 43758.5453); }
+
 	void main() {
-		float span = uRes.y - uEmitter.y;
-		float travel = mod(aSeed * span + uTime * aSpeed * 60.0, span);
-		float depth = travel / span;
-		// Falls slowly near the logo, faster and wider as it drops.
-		float y = uEmitter.y + travel * (0.6 + depth * 0.4);
-		float x = uEmitter.x + aDrift * depth * depth * 140.0;
-		gl_PointSize = (10.0 + 26.0 * depth) * uDpr;
-		gl_Position = vec4(x / uRes.x * 2.0 - 1.0, 1.0 - y / uRes.y * 2.0, 0.0, 1.0);
-		vAlpha = (1.0 - depth) * 0.9 * uFade;
-		vWarm = aWarm;
+		float depth = clamp(aCell.y / uFloor, 0.0, 1.0);
+		float flare = clamp((depth - 0.8) / 0.2, 0.0, 1.0);
+		float width = 14.0 + 64.0 * depth * depth + 280.0 * flare * flare;
+		float d = abs(aCell.x) / width;
+		float body = exp(-d * d * 2.2);
+		float core = exp(-pow(aCell.x / 5.0, 2.0)) * (0.55 + 0.45 * depth);
+
+		float column = hash(aCell.x * 0.173 + 3.1);
+		float head = fract(column * 5.3 + uTime * (0.16 + column * 0.28));
+		float tail = head - depth;
+		float packet = tail >= 0.0 && tail < 0.14 ? 1.0 - tail / 0.14 : 0.0;
+		float twinkle = hash(aSeed * 71.0 + floor(uTime * 9.0 + aSeed * 13.0));
+
+		float light = body * (0.3 + 0.3 * twinkle) + packet * body * 0.85 + core + flare * flare * body * 0.6;
+		light *= smoothstep(0.0, 0.3, depth) * uFade;
+		if (light < 0.16 && aSeed > light * 6.0) light = 0.0;
+		light = floor(clamp(light, 0.0, 1.0) * 5.0 + 0.5) / 5.0;
+
+		vec3 cold = vec3(0.24, 0.42, 1.0);
+		vec3 ice = vec3(0.66, 0.8, 1.0);
+		vec3 warm = vec3(1.0, 0.72, 0.42);
+		vec3 colour = mix(cold, ice, smoothstep(0.2, 0.6, light));
+		colour = mix(colour, vec3(1.0), smoothstep(0.7, 1.0, light));
+		colour = mix(colour, warm, flare * step(0.0, aCell.x) * (1.0 - light) * 0.8);
+
+		vColor = colour;
+		vAlpha = light;
+		gl_PointSize = float(${BEAM_PITCH - 1}) * uDpr;
+		gl_Position = vec4((uAxis + aCell.x) / uRes.x * 2.0 - 1.0, 1.0 - aCell.y / uRes.y * 2.0, 0.0, 1.0);
 	}
 `;
 
-const STREAK_FRAGMENT = /* glsl */ `
+const BEAM_FRAGMENT = /* glsl */ `
+	varying vec3 vColor;
 	varying float vAlpha;
-	varying float vWarm;
 	void main() {
-		vec2 p = gl_PointCoord - 0.5;
-		float line = smoothstep(0.06, 0.0, abs(p.x)) * smoothstep(0.5, 0.0, abs(p.y));
-		vec3 cold = vec3(0.61, 0.78, 1.0);
-		vec3 warm = vec3(0.95, 0.71, 0.36);
-		float a = line * vAlpha;
-		if (a < 0.01) discard;
-		gl_FragColor = vec4(mix(cold, warm, vWarm) * a, a);
+		if (vAlpha < 0.01) discard;
+		gl_FragColor = vec4(vColor * vAlpha, vAlpha);
 	}
 `;
 
-export async function mountHero({ canvas, target, beam, reduced }) {
+export async function mountHero({ canvas, target, panel, reduced }) {
 	const [robot, human] = await Promise.all(HANDS.map((h) => loadImage(h.src)));
 	const sources = [
 		{ ...HANDS[0], px: pixels(robot), colour: robotColour },
@@ -142,21 +163,22 @@ export async function mountHero({ canvas, target, beam, reduced }) {
 		uPush: { value: 0 },
 		uDpr: { value: 1 },
 		uMotion: { value: reduced ? 0 : 1 },
-		uEmitter: { value: new THREE.Vector2() },
-		uFade: { value: reduced ? 0 : 0 },
+		uAxis: { value: 0 },
+		uFloor: { value: 1 },
+		uFade: { value: reduced ? 1 : 0 },
 	};
 
 	const dotMaterial = new THREE.ShaderMaterial({ uniforms, vertexShader: DOT_VERTEX, fragmentShader: DOT_FRAGMENT, transparent: true, depthTest: false });
-	const streakMaterial = new THREE.ShaderMaterial({
+	const beamMaterial = new THREE.ShaderMaterial({
 		uniforms,
-		vertexShader: STREAK_VERTEX,
-		fragmentShader: STREAK_FRAGMENT,
+		vertexShader: BEAM_VERTEX,
+		fragmentShader: BEAM_FRAGMENT,
 		transparent: true,
 		depthTest: false,
 		blending: THREE.AdditiveBlending,
 	});
 	let dots = null;
-	let streaks = null;
+	let beam = null;
 	let emitter = { x: 0, y: 0, size: 0 };
 
 	function layout() {
@@ -169,19 +191,19 @@ export async function mountHero({ canvas, target, beam, reduced }) {
 
 		const t = target.getBoundingClientRect();
 		emitter = { x: t.left - rect.left + t.width / 2, y: t.top - rect.top + t.height / 2, size: t.width };
-		uniforms.uEmitter.value.set(emitter.x, emitter.y + emitter.size * 0.36);
+		// Layout offsets, not the bounding box: the panel is still sliding in when this first runs.
+		const floor = panel.offsetTop;
+		uniforms.uAxis.value = emitter.x;
+		uniforms.uFloor.value = floor;
+		panel.style.setProperty('--impact', `${(emitter.x - panel.offsetLeft).toFixed(1)}px`);
 
 		if (dots) scene.remove(dots), dots.geometry.dispose();
-		if (streaks) scene.remove(streaks), streaks.geometry.dispose();
+		if (beam) scene.remove(beam), beam.geometry.dispose();
 		dots = new THREE.Points(buildDots(rect.width, rect.height), dotMaterial);
-		streaks = new THREE.Points(buildStreaks(rect.width < 700 ? 140 : 260), streakMaterial);
+		beam = new THREE.Points(buildBeam(floor), beamMaterial);
 		dots.frustumCulled = false;
-		streaks.frustumCulled = false;
-		scene.add(streaks, dots);
-
-		// The CSS beam core sits on the same x.
-		beam.style.left = `${emitter.x}px`;
-		beam.style.top = `${emitter.y + emitter.size * 0.34}px`;
+		beam.frustumCulled = false;
+		scene.add(beam, dots);
 	}
 
 	// Sample each photo on a dot grid, then slide the hand so its fingertip waits beside the logo.
@@ -207,7 +229,10 @@ export async function mountHero({ canvas, target, beam, reduced }) {
 					const u = Math.min(px.w - 1, Math.floor(x / scale));
 					const v = Math.min(px.h - 1, Math.floor(y / scale));
 					const i = (v * px.w + u) * 4;
-					const l = (0.2126 * px.data[i] + 0.7152 * px.data[i + 1] + 0.0722 * px.data[i + 2]) / 255;
+					// Fade toward the photo's edges so its frame never shows as a straight cut.
+					const e = Math.min(1, Math.min(u, v, px.w - 1 - u, px.h - 1 - v) / (px.w * 0.2));
+					const edge = e * e * (3 - 2 * e);
+					const l = (edge * (0.2126 * px.data[i] + 0.7152 * px.data[i + 1] + 0.0722 * px.data[i + 2])) / 255;
 					if (l < 0.06) continue;
 					raw.push(x, y, l);
 					if (!tip || (source.side < 0 ? x > tip.x : x < tip.x)) tip = { x, y };
@@ -221,12 +246,15 @@ export async function mountHero({ canvas, target, beam, reduced }) {
 				const hx = raw[k] + dx;
 				const hy = raw[k + 1] + dy;
 				home.push(hx, hy);
-				start.push(hx + randn() * w * 0.45, hy + randn() * h * 0.45);
+				// Each dot arrives from far off-screen along a random bearing, so nothing appears in a box.
+				const angle = Math.random() * Math.PI * 2;
+				const reach = Math.hypot(w, h) * (0.7 + Math.random() * 0.6);
+				start.push(hx + Math.cos(angle) * reach, hy + Math.sin(angle) * reach);
 				const [r, g, b] = source.colour(l);
 				colour.push(r / 255, g / 255, b / 255);
 				size.push(spacing * 0.48 * Math.max(0.28, Math.pow(l, 0.45)));
 				phase.push(Math.random() * Math.PI * 2);
-				delay.push(Math.random() * 0.55);
+				delay.push(Math.random() * 0.7);
 				side.push(source.side);
 			}
 		}
@@ -243,13 +271,21 @@ export async function mountHero({ canvas, target, beam, reduced }) {
 		return geometry;
 	}
 
-	function buildStreaks(count) {
+	// Only cells inside the beam's envelope get a point; the shader decides how bright each one is.
+	function buildBeam(floor) {
+		const cells = [];
+		const seeds = [];
+		for (let y = BEAM_PITCH / 2; y < floor; y += BEAM_PITCH) {
+			const reach = beamWidth(y / floor) * 2.2;
+			for (let x = BEAM_PITCH / 2; x < reach; x += BEAM_PITCH) {
+				cells.push(x, y, -x, y);
+				seeds.push(Math.random(), Math.random());
+			}
+		}
 		const geometry = new THREE.BufferGeometry();
-		geometry.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(count * 3), 3));
-		geometry.setAttribute('aSeed', new THREE.Float32BufferAttribute(Array.from({ length: count }, Math.random), 1));
-		geometry.setAttribute('aSpeed', new THREE.Float32BufferAttribute(Array.from({ length: count }, () => 0.6 + Math.random() * 1.6), 1));
-		geometry.setAttribute('aDrift', new THREE.Float32BufferAttribute(Array.from({ length: count }, () => randn()), 1));
-		geometry.setAttribute('aWarm', new THREE.Float32BufferAttribute(Array.from({ length: count }, () => (Math.random() < 0.12 ? 1 : 0)), 1));
+		geometry.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(seeds.length * 3), 3));
+		geometry.setAttribute('aCell', new THREE.Float32BufferAttribute(cells, 2));
+		geometry.setAttribute('aSeed', new THREE.Float32BufferAttribute(seeds, 1));
 		return geometry;
 	}
 
@@ -271,7 +307,7 @@ export async function mountHero({ canvas, target, beam, reduced }) {
 	function frame(now) {
 		const t = (now - born) / 1000;
 		uniforms.uTime.value = reduced ? 10 : t;
-		uniforms.uFade.value = reduced ? 0 : Math.min(1, Math.max(0, (t - 1.2) / 1.2));
+		uniforms.uFade.value = reduced ? 1 : Math.min(1, Math.max(0, (t - 0.9) / 1.4));
 		pointer.push += ((pointer.active && !reduced ? 1 : 0) - pointer.push) * 0.12;
 		uniforms.uPush.value = pointer.push;
 		const p = uniforms.uPointer.value;

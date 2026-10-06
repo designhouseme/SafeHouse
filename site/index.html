@@ -5,8 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>WPHouse: jedna wtyczka zamiast wielu</title>
 <meta name="description" content="WPHouse zastępuje kilkanaście małych wtyczek WordPressa jedną: zabezpieczenia, blokadę instalacji, alerty o zmianach i codzienne drobiazgi. Działa obok Wordfence i WooCommerce, aktualizacje są podpisane.">
-<meta name="theme-color" content="#050814">
+<meta name="theme-color" content="#07080b">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='6' y='1' width='4' height='4' fill='%239CC7FF'/%3E%3Crect x='1' y='6' width='4' height='4' fill='%232F6BFF'/%3E%3Crect x='11' y='6' width='4' height='4' fill='%23F2B45C'/%3E%3Crect x='6' y='11' width='4' height='4' fill='%239CC7FF'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <script type="importmap">
 { "imports": {
@@ -18,11 +21,64 @@
 <body>
 <header class="hero" id="top">
 	<div class="hero-bg" aria-hidden="true"></div>
-	<div class="beam" id="beam" aria-hidden="true"></div>
 	<canvas class="hero-dots" id="hero-dots" aria-hidden="true"></canvas>
 
-	<div class="target" id="target" aria-hidden="true">
-		<canvas id="voxel"></canvas>
+	<nav class="nav" aria-label="Główna nawigacja">
+		<a class="brand" href="#top" aria-label="WPHouse, strona główna">
+			<svg class="brand-mark" viewBox="0 0 16 16" aria-hidden="true"><rect x="6" y="1" width="4" height="4"/><rect x="1" y="6" width="4" height="4"/><rect x="11" y="6" width="4" height="4"/><rect x="6" y="11" width="4" height="4"/></svg>
+			<span>wphouse</span>
+		</a>
+		<ul class="nav-links">
+			<li><a href="#dlaczego">Dlaczego</a></li>
+			<li><a href="#moduly">Moduły</a></li>
+			<li><a href="#wordfence">Z Wordfence</a></li>
+			<li><a href="#aktualizacje">Aktualizacje</a></li>
+		</ul>
+		<div class="nav-end">
+			<a class="pill pill--ghost" href="https://designhouse.me/">Kontakt</a>
+			<a class="pill pill--ghost" href="#pobierz">Pobierz</a>
+		</div>
+	</nav>
+
+	<div class="hero-copy">
+		<h1>Jedna wtyczka.<br>Zero balastu.</h1>
+		<p>WPHouse zastępuje kilkanaście małych wtyczek jedną: zabezpieczenia, alerty i&nbsp;codzienne drobiazgi. Działa obok Wordfence i&nbsp;WooCommerce.</p>
+	</div>
+
+	<div class="hero-stage">
+		<div class="target" id="target" aria-hidden="true">
+			<canvas id="voxel"></canvas>
+		</div>
+	</div>
+
+	<div class="panel" id="panel" role="img" aria-label="Panel WPHouse w kokpicie WordPressa: lista modułów z przełącznikami i dziennik zdarzeń">
+		<aside class="panel-side">
+			<svg class="panel-mark" viewBox="0 0 16 16"><rect x="6" y="1" width="4" height="4"/><rect x="1" y="6" width="4" height="4"/><rect x="11" y="6" width="4" height="4"/><rect x="6" y="11" width="4" height="4"/></svg>
+			<span>Kokpit</span><span>Wpisy</span><span>Strony</span><span>WooCommerce</span><span>Wtyczki</span><span>Wordfence</span><span class="is-active">WPHouse</span><span>Ustawienia</span>
+		</aside>
+		<div class="panel-main">
+			<div class="panel-crumbs">Ustawienia <i>/</i> <b>WPHouse</b></div>
+			<div class="panel-title">WPHouse <span>0.1.0</span></div>
+			<div class="panel-tabs"><span class="is-active">Moduły</span><span>Dziennik</span><span>Narzędzia</span></div>
+			<ul class="panel-mods">
+				<li><i class="tog is-on"></i><b>Podstawowe zabezpieczenia</b><em class="chip">XML-RPC → 403</em></li>
+				<li><i class="tog is-on"></i><b>Blokada instalacji</b><em class="chip chip--warm">odblokuj na 30 min</em></li>
+				<li><i class="tog is-on"></i><b>Alerty o&nbsp;zmianach</b><em class="chip">3 odbiorców</em></li>
+				<li><i class="tog is-on"></i><b>Kondycja wtyczek</b><em class="chip chip--warm">1 zamknięta</em></li>
+				<li><i class="tog"></i><b>Alerty o&nbsp;lukach</b><em class="chip chip--mute">robi to Wordfence</em></li>
+				<li><i class="tog"></i><b>Tryb serwisowy</b><em class="chip chip--mute">wyłączony</em></li>
+			</ul>
+		</div>
+		<div class="panel-log">
+			<div class="panel-log-head">Dziennik <span>5</span></div>
+			<ul>
+				<li><i class="dot dot--warm"></i><b>Nowy administrator: mallory</b><span>e-mail do zespołu · 2 min temu</span></li>
+				<li><i class="dot"></i><b>Instalacja wtyczki zablokowana</b><span>wp plugin install · 14 min temu</span></li>
+				<li><i class="dot dot--warm"></i><b>Quick Page/Post Redirect zamknięta na WordPress.org</b><span>security-issue · 1 godz. temu</span></li>
+				<li><i class="dot"></i><b>Zmieniono wp-config.php</b><span>alert wysłany · 3 godz. temu</span></li>
+				<li><i class="dot dot--ok"></i><b>Aktualizacja 0.1.1: podpis poprawny</b><span>Ed25519 · wczoraj</span></li>
+			</ul>
+		</div>
 	</div>
 </header>
 

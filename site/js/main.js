@@ -4,8 +4,8 @@ const $ = (id) => document.getElementById(id);
 const target = $('target');
 
 import('./hero.js')
-	.then(({ mountHero }) => mountHero({ canvas: $('hero-dots'), target, beam: $('beam'), reduced }))
-	.catch(() => $('hero-dots').remove()); // No WebGL: the mountains, beam and logo still carry the hero.
+	.then(({ mountHero }) => mountHero({ canvas: $('hero-dots'), target, panel: $('panel'), reduced }))
+	.catch(() => $('hero-dots').remove()); // No WebGL: the mountains, logo and panel still carry the hero.
 
 import('./voxel.js')
 	.then(({ mountVoxel }) => mountVoxel($('voxel'), { svgUrl: 'assets/wordpress.svg', reduced }))

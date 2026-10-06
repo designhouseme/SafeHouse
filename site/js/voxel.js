@@ -1,5 +1,5 @@
 // The WordPress mark rebuilt from glowing voxels: blue light from the robot's side,
-// warm light from the human's side. Assembles once, then breathes; click to spin it.
+// warm light from the human's side. Flies in from the distance, then breathes; click to spin it.
 import * as THREE from 'three';
 
 const GRID = 30;
@@ -78,6 +78,7 @@ export async function mountVoxel(canvas, { svgUrl, reduced, onAssembled }) {
 	scene.add(group);
 
 	const half = GRID / 2 - 0.5;
+	const fovSlope = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
 	const ice = new THREE.Color(0x9cc7ff);
 	const signal = new THREE.Color(0x4f86ff);
 	const ember = new THREE.Color(0xf2c48a);
@@ -86,10 +87,14 @@ export async function mountVoxel(canvas, { svgUrl, reduced, onAssembled }) {
 	for (const [x, y] of cells) {
 		for (let z = 0; z < DEPTH; z++) {
 			const home = new THREE.Vector3(x - half, half - y, z - (DEPTH - 1) / 2);
-			const dir = new THREE.Vector3().randomDirection().multiplyScalar(GRID * (1.2 + Math.random()));
+			// Start far behind the mark and well inside the view at that depth, so each cube grows out
+			// of the distance instead of crossing the canvas edge.
+			const depth = GRID * (4 + Math.random() * 5);
+			const reach = (camera.position.z + depth) * fovSlope * 0.25;
+			const from = new THREE.Vector3(home.x * 1.5 + (Math.random() * 2 - 1) * reach, home.y * 1.5 + (Math.random() * 2 - 1) * reach, -depth);
 			voxels.push({
 				home,
-				from: home.clone().add(dir),
+				from,
 				delay: Math.random() * 0.5 + (Math.hypot(home.x, home.y) / GRID) * 0.4,
 				phase: (x + y) * 0.35,
 			});
@@ -118,7 +123,7 @@ export async function mountVoxel(canvas, { svgUrl, reduced, onAssembled }) {
 				// A slow wave runs across the mark once it has assembled.
 				dummy.position.z += Math.sin(t * 1.7 - v.phase) * 0.22;
 			}
-			const s = reduced ? 1 : 0.35 + 0.65 * k;
+			const s = reduced ? 1 : k;
 			dummy.scale.setScalar(s);
 			dummy.rotation.set((1 - k) * 2.2, (1 - k) * 1.4, 0);
 			dummy.updateMatrix();
@@ -131,14 +136,16 @@ export async function mountVoxel(canvas, { svgUrl, reduced, onAssembled }) {
 		const t = (now - born) / 1000;
 		place(t);
 		if (!reduced) {
+			// Hold still while cubes are in flight: tilting the group would swing the distant ones out of view.
+			const settle = easeInOutCubic(Math.min(1, Math.max(0, (t - 1.2) / 1.6)));
 			let extra = 0;
 			if (spin.start >= 0) {
 				const p = (now - spin.start) / 1300;
 				extra = easeInOutCubic(Math.min(1, p)) * Math.PI * 2;
 				if (p >= 1) spin.start = -1;
 			}
-			group.rotation.y = Math.sin(t * 0.45) * 0.42 + pointer.x * 0.35 + extra;
-			group.rotation.x = Math.sin(t * 0.33) * 0.12 - pointer.y * 0.25;
+			group.rotation.y = (Math.sin(t * 0.45) * 0.42 + pointer.x * 0.35) * settle + extra;
+			group.rotation.x = (Math.sin(t * 0.33) * 0.12 - pointer.y * 0.25) * settle;
 			group.position.y = Math.sin(t * 0.9) * 0.4;
 			material.emissiveIntensity = 0.5 + Math.sin(t * 2.1) * 0.12;
 		}
