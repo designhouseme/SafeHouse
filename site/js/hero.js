@@ -206,6 +206,29 @@ export async function mountHero({ canvas, target, panel, reduced }) {
 		scene.add(beam, dots);
 	}
 
+	// Dots for one photo drawn drawW wide. The edge the arm comes in from stays sharp (it sits past
+	// the screen edge); the others fade so the photo's frame never shows as a straight cut.
+	function sample(px, drawW, spacing, side) {
+		const scale = drawW / px.w;
+		const drawH = px.h * scale;
+		const raw = [];
+		let tip = null;
+		for (let y = 0; y < drawH; y += spacing) {
+			for (let x = 0; x < drawW; x += spacing) {
+				const u = Math.min(px.w - 1, Math.floor(x / scale));
+				const v = Math.min(px.h - 1, Math.floor(y / scale));
+				const i = (v * px.w + u) * 4;
+				const e = Math.min(1, Math.min(v, px.h - 1 - v, side < 0 ? px.w - 1 - u : u) / (px.w * 0.2));
+				const edge = e * e * (3 - 2 * e);
+				const l = (edge * (0.2126 * px.data[i] + 0.7152 * px.data[i + 1] + 0.0722 * px.data[i + 2])) / 255;
+				if (l < 0.06) continue;
+				raw.push(x, y, l);
+				if (!tip || (side < 0 ? x > tip.x : x < tip.x)) tip = { x, y };
+			}
+		}
+		return { raw, tip };
+	}
+
 	// Sample each photo on a dot grid, then slide the hand so its fingertip waits beside the logo.
 	function buildDots(w, h) {
 		const spacing = w < 700 ? 6 : w < 1100 ? 7 : 8;
@@ -219,27 +242,18 @@ export async function mountHero({ canvas, target, panel, reduced }) {
 
 		for (const source of sources) {
 			const { px } = source;
-			const drawW = Math.max(w * (w < 700 ? 0.7 : 0.6), 380);
-			const scale = drawW / px.w;
-			const drawH = px.h * scale;
-			const raw = [];
-			let tip = null;
-			for (let y = 0; y < drawH; y += spacing) {
-				for (let x = 0; x < drawW; x += spacing) {
-					const u = Math.min(px.w - 1, Math.floor(x / scale));
-					const v = Math.min(px.h - 1, Math.floor(y / scale));
-					const i = (v * px.w + u) * 4;
-					// Fade toward the photo's edges so its frame never shows as a straight cut.
-					const e = Math.min(1, Math.min(u, v, px.w - 1 - u, px.h - 1 - v) / (px.w * 0.2));
-					const edge = e * e * (3 - 2 * e);
-					const l = (edge * (0.2126 * px.data[i] + 0.7152 * px.data[i + 1] + 0.0722 * px.data[i + 2])) / 255;
-					if (l < 0.06) continue;
-					raw.push(x, y, l);
-					if (!tip || (source.side < 0 ? x > tip.x : x < tip.x)) tip = { x, y };
-				}
-			}
 			const gap = emitter.size * 0.62;
-			const dx = (source.side < 0 ? emitter.x - gap : emitter.x + gap) - tip.x;
+			const tipX = source.side < 0 ? emitter.x - gap : emitter.x + gap;
+			let drawW = Math.max(w * (w < 700 ? 0.7 : 0.6), 380);
+			let { raw, tip } = sample(px, drawW, spacing, source.side);
+			// Grow the hand until its arm runs past the screen edge instead of stopping short of it.
+			const reach = source.side < 0 ? tip.x : drawW - tip.x;
+			const room = (source.side < 0 ? tipX : w - tipX) + spacing * 2;
+			if (reach < room) {
+				drawW = Math.min((drawW * room) / reach, w * 1.2);
+				({ raw, tip } = sample(px, drawW, spacing, source.side));
+			}
+			const dx = tipX - tip.x;
 			const dy = emitter.y + emitter.size * 0.08 - tip.y;
 			for (let k = 0; k < raw.length; k += 3) {
 				const l = Math.min(1, raw[k + 2] * 1.2);
