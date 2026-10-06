@@ -452,8 +452,48 @@ main section { position: relative; padding: 168px 0; }
 
 .dark code { font: 500 0.88em var(--mono); color: var(--ice); }
 
-.c-dim { color: #727786; }
-.c-ok { color: #7ee0a8; }
+/* light sections */
+
+.light {
+	background:
+		radial-gradient(36% 30% at 0% 60%, rgba(156, 199, 255, 0.4), transparent 70%),
+		radial-gradient(30% 28% at 100% 20%, rgba(255, 210, 176, 0.35), transparent 70%),
+		var(--paper);
+	color: #0b0c10;
+}
+.light .lede { color: #3a3d46; }
+.light code { font: 500 0.88em var(--mono); color: #2148c9; }
+
+/* privacy: two lit lines out of the site, and nothing else */
+
+.reach-map { position: relative; aspect-ratio: 1216 / 440; margin-top: 88px; view-timeline-name: --reach; }
+.reach-lines { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.reach-glow { fill: none; stroke-width: 36; opacity: 0.35; filter: blur(10px); }
+.reach-line { fill: none; stroke-width: 14; stroke-dasharray: 5 2; }
+.reach-glow--cold,
+.reach-line--cold { stroke: url(#reach-cold); }
+.reach-glow--warm,
+.reach-line--warm { stroke: url(#reach-warm); }
+.reach-node {
+	position: absolute;
+	padding: 20px 22px;
+	border-radius: 18px;
+	background: #fff;
+	box-shadow: 0 1px 0 rgba(10, 20, 50, 0.05), 0 28px 56px -30px rgba(10, 20, 50, 0.4);
+}
+.reach-node p { margin: 8px 0 0; font-size: 15px; line-height: 1.5; color: #5b6070; }
+.reach-node code { font: 500 16px var(--mono); }
+.reach-node--site { top: 50%; left: 0; width: 24.7%; translate: 0 -50%; color: #fff; background: #0b0c10; box-shadow: 0 30px 70px -24px rgba(47, 107, 255, 0.55), 0 0 0 4px rgba(255, 255, 255, 0.85); }
+.reach-node--site b { display: block; margin-top: 14px; font-size: 20px; font-weight: 500; letter-spacing: -0.02em; }
+.reach-node--site span { display: block; margin-top: 2px; font-size: 14.5px; color: rgba(255, 255, 255, 0.55); }
+.reach-mark { width: 30px; height: 30px; }
+.reach-node--org,
+.reach-node--dh { right: 0; width: 32.9%; translate: 0 -50%; }
+.reach-node--org { top: 25%; }
+.reach-node--dh { top: 75%; }
+.reach-node--org code { color: #2148c9; }
+.reach-node--dh code { color: #b5541b; }
+.reach-none { margin: 48px 0 0; font-size: 17px; color: #3a3d46; }
 
 /* maintenance mode: a wall of light that stops visitors and lets payments through */
 
@@ -549,39 +589,41 @@ main section { position: relative; padding: 168px 0; }
 @keyframes beam-in { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 @keyframes flare { from { opacity: 0; scale: 0.3; } to { opacity: 1; scale: 1; } }
 
-/* updates: the steps beside the terminal that proves them */
+/* safe mode: one empty file, and every module light goes out */
 
-.docs { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 72px; align-items: start; }
-.steps { margin: 36px 0 0; padding: 0; list-style: none; counter-reset: step; }
-.steps li { position: relative; padding: 12px 0 12px 50px; font-size: 17px; color: rgba(255, 255, 255, 0.68); counter-increment: step; }
-.steps li::before {
-	content: counter(step);
-	position: absolute;
-	top: 10px;
-	left: 0;
-	display: grid;
-	place-items: center;
-	width: 30px;
-	height: 30px;
-	border-radius: 6px;
-	font: 500 13px var(--mono);
-	color: #fff;
-	background: var(--signal);
+.safe-grid { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 24px; align-items: start; margin-top: 88px; view-timeline-name: --safe; }
+.files { overflow: hidden; border-radius: 18px; background: #fff; box-shadow: 0 1px 0 rgba(10, 20, 50, 0.05), 0 28px 56px -30px rgba(10, 20, 50, 0.4); font: 400 14px var(--mono); }
+.files-path { margin: 0; padding: 14px 20px; font-size: 13px; color: #50575e; background: #eef0f4; }
+.files ul { margin: 0; padding: 6px 0; list-style: none; }
+.files li { display: flex; justify-content: space-between; gap: 16px; padding: 12px 20px; color: #9aa0ad; }
+.files b { font-weight: 500; color: #1d2027; }
+.files-new { background: #fff1de; }
+.files-new b { color: #a35b14; }
+
+.board { padding: 20px; border-radius: 22px; background: #0b0c10; box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.85), 0 40px 80px -30px rgba(26, 38, 80, 0.55); }
+.board ul { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
+.board li { position: relative; min-height: 88px; padding: 36px 14px 14px; border-radius: 12px; font-size: 13.5px; line-height: 1.3; color: rgba(255, 255, 255, 0.45); background: #15161c; }
+/* A square lamp per module: the state it shows is real, it is not decoration. */
+.board li::before { content: ""; position: absolute; top: 14px; left: 14px; width: 12px; height: 12px; border-radius: 3px; background: #2c2e37; }
+.safe-notice { margin-top: 14px; padding: 12px 14px; border-left: 4px solid #dba617; background: #fff; font: 400 13px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #1d2327; }
+.safe-ways { display: flex; flex-wrap: wrap; gap: 16px 48px; margin: 40px 0 0; }
+.safe-ways dt { font-size: 15px; color: #5b6070; }
+.safe-ways dt code { color: inherit; }
+.safe-ways dd { margin: 6px 0 0; font-size: 17px; }
+
+/* As the section arrives the file lands, the four modules that were on go dark, then the notice shows. */
+@supports (animation-timeline: view()) {
+	.files-new { animation: file-in linear both; animation-timeline: --safe; animation-range: entry 30% cover 35%; }
+	.board li.was-on { animation: lamp-off linear both; animation-timeline: --safe; animation-range: cover 30% cover 45%; }
+	.board li.was-on::before { animation: lamp-off-light linear both; animation-timeline: --safe; animation-range: cover 30% cover 45%; }
+	.safe-notice { animation: notice-in linear both; animation-timeline: --safe; animation-range: cover 42% cover 50%; }
+	.reach-lines { animation: reach-draw linear both; animation-timeline: --reach; animation-range: entry 20% cover 45%; }
 }
-.steps b { font-weight: 500; color: #fff; }
-.note { max-width: 560px; margin: 28px 0 0; font-size: 15.5px; line-height: 1.5; color: rgba(255, 255, 255, 0.55); }
-.term {
-	margin: 0 0 16px;
-	padding: 22px 24px;
-	overflow-x: auto;
-	border: 1px solid rgba(255, 255, 255, 0.08);
-	border-radius: 14px;
-	background: #16171c;
-	font: 400 13px/1.75 var(--mono);
-	color: #e8ecf5;
-}
-.term code { font: inherit; color: inherit; }
-.docs-side .note { margin-top: 8px; }
+@keyframes file-in { from { opacity: 0; translate: 0 8px; } to { opacity: 1; translate: 0; } }
+@keyframes lamp-off { from { color: #fff; background: #1a2340; } to { color: rgba(255, 255, 255, 0.45); background: #15161c; } }
+@keyframes lamp-off-light { from { background: #4f86ff; box-shadow: 0 0 14px rgba(79, 134, 255, 0.9); } to { background: #2c2e37; box-shadow: none; } }
+@keyframes notice-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes reach-draw { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 
 /* final call to action: a dial lit from the robot's side and the human's, marking the five hours */
 
@@ -696,7 +738,28 @@ main section { position: relative; padding: 168px 0; }
 	.panel-bar { gap: 16px; }
 	.hero-stage { height: 280px; }
 	main section { padding: 112px 0; }
-	.docs { grid-template-columns: minmax(0, 1fr); gap: 48px; }
+	.reach-map { display: grid; gap: 28px; aspect-ratio: auto; margin-top: 56px; }
+	.reach-lines { display: none; }
+	.reach-node { position: static; width: auto !important; translate: none !important; }
+	.reach-node--org,
+	.reach-node--dh { position: relative; top: auto; }
+	/* The two lines become short pixel links between the stacked cards. */
+	.reach-node--org::before,
+	.reach-node--dh::before {
+		content: "";
+		position: absolute;
+		bottom: 100%;
+		left: 32px;
+		width: 12px;
+		height: 28px;
+		mask-image: linear-gradient(90deg, #000 0 5px, transparent 5px), linear-gradient(#000 0 5px, transparent 5px);
+		mask-size: 6px 6px;
+		mask-composite: intersect;
+		-webkit-mask-composite: source-in;
+	}
+	.reach-node--org::before { background: #4f86ff; }
+	.reach-node--dh::before { background: #f28a3c; }
+	.safe-grid { grid-template-columns: minmax(0, 1fr); margin-top: 56px; }
 	.lanes { grid-template-columns: minmax(0, 1fr) 20px minmax(0, 1fr); row-gap: 40px; margin-top: 64px; }
 	.wall-label { grid-column: 2; }
 	.lane { grid-template-areas: "src src src" "in wall out" "res res res"; row-gap: 12px; }
@@ -744,7 +807,8 @@ main section { position: relative; padding: 168px 0; }
 	.chip { display: none; }
 	.panel-mods li { grid-template-columns: 34px minmax(0, 1fr); }
 	.lede { font-size: 18px; }
-	.term { padding: 18px; font-size: 12px; }
+	.board ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.board li { min-height: 76px; }
 	.dial-crown { right: -32px; width: 12px; height: 36px; }
 }
 

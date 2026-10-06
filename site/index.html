@@ -48,8 +48,9 @@
 			<span>wphouse</span>
 		</a>
 		<ul class="nav-links">
+			<li><a href="#prywatnosc">Prywatność</a></li>
 			<li><a href="#serwis">Tryb serwisowy</a></li>
-			<li><a href="#aktualizacje">Aktualizacje</a></li>
+			<li><a href="#awaryjny">Tryb awaryjny</a></li>
 		</ul>
 		<div class="nav-end">
 			<a class="pill pill--ghost" href="https://designhouse.me/">Kontakt</a>
@@ -148,6 +149,40 @@
 </header>
 
 <main id="tresc">
+	<section class="light reach" id="prywatnosc" aria-labelledby="prywatnosc-h">
+		<div class="wrap">
+			<h2 class="display" id="prywatnosc-h">Dwa adresy.<br>Żadnej telemetrii.</h2>
+			<p class="lede">Poza Twoim serwerem SMTP WPHouse łączy się tylko z&nbsp;WordPress.org i&nbsp;serwerem aktualizacji Design House. Dziennik zdarzeń zostaje w&nbsp;bazie strony i&nbsp;sam się czyści po 90 dniach.</p>
+
+			<div class="reach-map">
+				<svg class="reach-lines" viewBox="0 0 1216 440" preserveAspectRatio="none" aria-hidden="true">
+					<defs>
+						<linearGradient id="reach-cold" x1="0" x2="1"><stop offset="0" stop-color="#9cc7ff"/><stop offset="1" stop-color="#2f6bff"/></linearGradient>
+						<linearGradient id="reach-warm" x1="0" x2="1"><stop offset="0" stop-color="#ffd9a8"/><stop offset="1" stop-color="#f28a3c"/></linearGradient>
+					</defs>
+					<path class="reach-glow reach-glow--cold" d="M 300 220 C 560 220 560 110 816 110"/>
+					<path class="reach-glow reach-glow--warm" d="M 300 220 C 560 220 560 330 816 330"/>
+					<path class="reach-line reach-line--cold" d="M 300 220 C 560 220 560 110 816 110"/>
+					<path class="reach-line reach-line--warm" d="M 300 220 C 560 220 560 330 816 330"/>
+				</svg>
+				<div class="reach-node reach-node--site">
+					<svg class="brand-mark reach-mark" viewBox="0 0 16 16" aria-hidden="true"><rect x="6" y="1" width="4" height="4"/><rect x="1" y="6" width="4" height="4"/><rect x="11" y="6" width="4" height="4"/><rect x="6" y="11" width="4" height="4"/></svg>
+					<b>moj-sklep.pl</b>
+					<span>Twoja strona z&nbsp;WPHouse</span>
+				</div>
+				<div class="reach-node reach-node--org">
+					<code>api.wordpress.org</code>
+					<p>Raz w&nbsp;tygodniu i&nbsp;po każdej zmianie wtyczek: nazwy zainstalowanych wtyczek, żeby sprawdzić, czy nie zostały zamknięte albo porzucone.</p>
+				</div>
+				<div class="reach-node reach-node--dh">
+					<code>updates.designhouse.me</code>
+					<p>Co kilka godzin aktualizacje WPHouse, najwyżej co 6&nbsp;godzin podpisane dane o&nbsp;lukach. Strona pobiera tylko pliki ze swoim oprogramowaniem, każdy to około 1/256 bazy.</p>
+				</div>
+			</div>
+			<p class="reach-none">Nie wysyła statystyk ani telemetrii. Lista Twoich wtyczek nie trafia do Design House.</p>
+		</div>
+	</section>
+
 	<section class="dark gate" id="serwis" aria-labelledby="serwis-h">
 		<div class="wrap">
 			<h2 class="display" id="serwis-h">Sklep zamknięty.<br>Płatności dalej wchodzą.</h2>
@@ -192,37 +227,44 @@
 		</div>
 	</section>
 
-	<section class="dark updates" id="aktualizacje" aria-labelledby="aktualizacje-h">
-		<div class="wrap docs">
-			<div class="docs-body">
-				<h2 class="display" id="aktualizacje-h">Podpisane<br>aktualizacje.</h2>
-				<p class="lede">W&nbsp;2026 roku napastnicy przejmowali serwery aktualizacji popularnych wtyczek premium i&nbsp;rozsyłali z&nbsp;nich złośliwe wersje. Paczki WPHouse podpisujemy kluczem, którego nie ma na żadnym serwerze. Zanim WordPress podmieni pliki, wtyczka sprawdza:</p>
-				<ol class="steps">
-					<li><b>Manifest.</b> Pobiera opis nowej wersji.</li>
-					<li><b>Podpis.</b> Sprawdza podpis Ed25519 kluczem wbudowanym w&nbsp;siebie.</li>
-					<li><b>Sumę kontrolną.</b> Porównuje SHA-256 pobranej paczki z&nbsp;podpisanym manifestem.</li>
-					<li><b>Instalację.</b> Dopiero wtedy WordPress podmienia pliki.</li>
-				</ol>
-				<p class="note">Strony wdrażane z&nbsp;gita albo rsync wyłączają aktualizacje stałą <code>WPHOUSE_DISABLE_UPDATES</code>, żeby kolejne wdrożenie nie cofnęło wersji.</p>
+	<section class="light safe" id="awaryjny" aria-labelledby="awaryjny-h">
+		<div class="wrap">
+			<h2 class="display" id="awaryjny-h">Coś nie działa?<br>Jeden pusty plik.</h2>
+			<p class="lede">Tryb awaryjny zatrzymuje wszystkie moduły i&nbsp;nie dotyka bazy. Wgraj przez FTP pusty plik <code>wphouse-safe-mode</code> do <code>wp-content</code>. Usuń go, a&nbsp;moduły wracają.</p>
+
+			<div class="safe-grid">
+				<div class="files" aria-label="Zawartość katalogu wp-content">
+					<p class="files-path">/wp-content</p>
+					<ul>
+						<li><b>languages/</b><span>katalog</span></li>
+						<li><b>plugins/</b><span>katalog</span></li>
+						<li><b>themes/</b><span>katalog</span></li>
+						<li><b>uploads/</b><span>katalog</span></li>
+						<li class="files-new"><b>wphouse-safe-mode</b><span>0&nbsp;B</span></li>
+					</ul>
+				</div>
+				<div class="board" aria-label="Moduły WPHouse w trybie awaryjnym: wszystkie zatrzymane">
+					<ul>
+						<li class="was-on">Podstawowe zabezpieczenia</li>
+						<li class="was-on">Alerty o&nbsp;zmianach</li>
+						<li class="was-on">Kondycja wtyczek</li>
+						<li class="was-on">Alerty o&nbsp;lukach</li>
+						<li>Blokada instalacji</li>
+						<li>Usprawnienia</li>
+						<li>Duplikowanie</li>
+						<li>Poczta SMTP</li>
+						<li>Skrypty</li>
+						<li>Tryb serwisowy</li>
+						<li>Cache LiteSpeed</li>
+						<li>Ochrona przed botami</li>
+					</ul>
+					<div class="safe-notice">Tryb awaryjny WPHouse jest włączony: wszystkie moduły są zatrzymane. Usuń plik wp-content/wphouse-safe-mode lub stałą WPHOUSE_SAFE_MODE, aby je wznowić.</div>
+				</div>
 			</div>
-			<div class="docs-side">
-				<pre class="term" aria-label="Wynik testu aktualizacji"><code><span class="c-dim">$ ./dev/update-test.sh</span>
-<span class="c-ok">PASS</span> 0.1.0 installed from zip
-<span class="c-ok">PASS</span> tampered manifest rejected
-<span class="c-ok">PASS</span> swapped zip rejected
-<span class="c-ok">PASS</span> details modal shows 0.1.1 and its changelog
-<span class="c-ok">PASS</span> auto-update forced on for WPHouse
-<span class="c-ok">PASS</span> signed 0.1.1 installed with lockdown on</code></pre>
-				<pre class="term" aria-label="Stan modułów z WP-CLI"><code><span class="c-dim">$ wp wphouse status</span>
-module           enabled  running  source    overlaps
-hardening        yes      yes      settings  user_enumeration: Wordfence
-lockdown         yes      yes      settings
-watch            yes      yes      settings
-plugin_health    yes      yes      settings
-vulnerabilities  yes      no       settings
-maintenance      no       no       settings</code></pre>
-				<p class="note">Z&nbsp;terminala także <code>wp wphouse unlock</code> i&nbsp;<code>wp wphouse safe-mode on</code>. Tryb awaryjny wyłącza wszystkie moduły bez dotykania bazy; wystarczy też pusty plik <code>wphouse-safe-mode</code> w&nbsp;<code>wp-content</code>.</p>
-			</div>
+			<dl class="safe-ways">
+				<div><dt>Albo w&nbsp;<code>wp-config.php</code></dt><dd><code>define( 'WPHOUSE_SAFE_MODE', true );</code></dd></div>
+				<div><dt>Albo z&nbsp;terminala</dt><dd><code>wp wphouse safe-mode on</code></dd></div>
+			</dl>
 		</div>
 	</section>
 

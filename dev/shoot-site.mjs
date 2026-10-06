@@ -23,7 +23,7 @@ for (const s of shots) {
 	await page.waitForTimeout(3500);
 	await page.screenshot({ path: `${out}/${s.name}-hero.png` });
 	// Section by section: a full-page capture of this page fails in headless Chromium with WebGL running.
-	for (const id of ['serwis', 'aktualizacje', 'pobierz']) {
+	for (const id of ['prywatnosc', 'serwis', 'awaryjny', 'pobierz']) {
 		await page.evaluate((id) => {
 			const el = document.getElementById(id);
 			window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'instant' });
