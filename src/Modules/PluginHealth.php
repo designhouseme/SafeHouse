@@ -92,6 +92,7 @@ final class PluginHealth extends AbstractModule {
 		'login-lockdown'                => 'login_limits',
 		'limit-login-attempts'          => 'login_limits',
 		'wp-limit-login-attempts'       => 'login_limits',
+		'cloudflare'                    => 'cloudflare',
 	];
 
 	public function id(): string {

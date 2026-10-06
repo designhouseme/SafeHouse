@@ -16,6 +16,7 @@ use WPHouse\Core\Net;
 use WPHouse\Core\ObjectCache;
 use WPHouse\Core\SafeMode;
 use WPHouse\Core\Settings;
+use WPHouse\Core\Turnstile;
 use WPHouse\Plugin;
 
 defined( 'ABSPATH' ) || exit;
@@ -396,6 +397,7 @@ final class Page {
 			'woocommerce' => [ 'WooCommerce', __( 'Compatible with HPOS and the block checkout. Generic login errors also cover the My Account form, maintenance mode lets the Store API and payment callbacks through, and product reviews survive "disable comments".', 'wphouse' ) ],
 			'payments'    => [ __( 'Payment gateways', 'wphouse' ), __( 'Autopay, Przelewy24, PayU, imoje, Paynow, Stripe, PayPal and WooPayments. Their callbacks (?wc-api= and the REST API) pass maintenance mode, and XML-RPC stays on for WooPayments.', 'wphouse' ) ],
 			'redis'       => [ __( 'Redis object cache', 'wphouse' ), __( 'WPHouse has its own Redis object cache: install it with "wp wphouse object-cache enable". Every cached value is signed, so other sites on a shared Redis cannot plant data. A site that uses the Redis Object Cache plugin instead shows its status here.', 'wphouse' ) ],
+			'cloudflare'  => [ 'Cloudflare', __( 'Real visitor addresses behind Cloudflare (General, "Proxy in front of the site"), cache clearing after changes (the Cloudflare cache module, token in wp-config.php) and Turnstile on forms (Bot protection). WPHouse contacts Cloudflare only for the parts that are on.', 'wphouse' ) ],
 			'elementor'   => [ 'Elementor', __( 'Elementor and Elementor Pro. Watched for new vulnerabilities like everything on this list.', 'wphouse' ) ],
 		];
 		?>
@@ -415,7 +417,9 @@ final class Page {
 						<td>
 							<?php
 							$items = $found[ $group ] ?? [];
-							if ( 'redis' === $group ) {
+							if ( 'cloudflare' === $group ) {
+								$this->render_cloudflare_status();
+							} elseif ( 'redis' === $group ) {
 								$this->render_object_cache_status( $items );
 							} elseif ( ! $items ) {
 								echo '<span class="wphouse-badge">' . esc_html__( 'not installed', 'wphouse' ) . '</span>';
@@ -427,7 +431,7 @@ final class Page {
 									) . '</p>';
 								}
 							}
-							if ( 'redis' !== $group ) {
+							if ( ! in_array( $group, [ 'redis', 'cloudflare' ], true ) ) {
 								foreach ( $items as $item ) {
 									$this->render_plugin_status( $item );
 								}
@@ -448,6 +452,18 @@ final class Page {
 	 */
 	private function render_plugin_status( array $item ): void {
 		echo '<div><span class="wphouse-status wphouse-status--' . ( $item['active'] ? 'on' : 'off' ) . '">' . esc_html( $item['active'] ? __( 'active', 'wphouse' ) : __( 'inactive', 'wphouse' ) ) . '</span> ' . esc_html( $item['name'] ) . '</div>';
+	}
+
+	/** Which Cloudflare parts are on: visitor addresses, cache clearing, Turnstile. */
+	private function render_cloudflare_status(): void {
+		$parts = [
+			[ Net::behind_cloudflare(), __( 'visitor addresses', 'wphouse' ) ],
+			[ $this->plugin->is_running( 'cloudflare' ), __( 'cache clearing', 'wphouse' ) ],
+			[ $this->plugin->is_running( 'bots' ) && Turnstile::configured(), 'Turnstile' ],
+		];
+		foreach ( $parts as [ $on, $label ] ) {
+			echo '<div><span class="wphouse-status wphouse-status--' . ( $on ? 'on' : 'off' ) . '">' . esc_html( $on ? __( 'on', 'wphouse' ) : __( 'off', 'wphouse' ) ) . '</span> ' . esc_html( $label ) . '</div>';
+		}
 	}
 
 	/**

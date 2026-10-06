@@ -25,9 +25,9 @@
 namespace WPHouse\Modules;
 
 use WP_CLI;
-use WP_Post;
 use WPHouse\Core\AbstractModule;
 use WPHouse\Core\Compat;
+use WPHouse\Core\ContentChanges;
 use WPHouse\Core\Log;
 
 defined( 'ABSPATH' ) || exit;
@@ -95,11 +95,8 @@ final class LiteSpeed extends AbstractModule {
 		add_action( 'set_comment_cookies', [ $this, 'commented' ] );
 		add_action( 'woocommerce_set_cart_cookies', [ $this, 'cart_cookies' ] );
 
-		add_action( 'transition_post_status', [ $this, 'post_changed' ], 10, 3 );
-		add_action( 'before_delete_post', [ $this, 'post_deleted' ], 10, 2 );
-		foreach ( [ 'comment_post', 'edit_comment', 'wp_set_comment_status', 'switch_theme', 'customize_save_after', 'wp_update_nav_menu', 'update_option_sidebars_widgets', 'update_option_wphouse_settings', 'upgrader_process_complete', 'activated_plugin', 'deactivated_plugin', '_core_updated_successfully', 'woocommerce_product_set_stock', 'woocommerce_variation_set_stock', 'woocommerce_product_set_stock_status', 'woocommerce_variation_set_stock_status', 'litespeed_purge_all' ] as $hook ) {
-			add_action( $hook, [ $this, 'purge' ] );
-		}
+		// Any change clears all of this site's LiteSpeed pages: tag purges are cheap, unlike Cloudflare's.
+		add_action( ContentChanges::ACTION, [ $this, 'purge' ] ); // phpcs:ignore WordPress.NamingConventions.ValidHookName.UseUnderscores
 
 		add_filter( 'site_status_tests', [ $this, 'site_health_test' ] );
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
@@ -174,18 +171,6 @@ final class LiteSpeed extends AbstractModule {
 		if ( ! headers_sent() && isset( $_COOKIE[ self::VARY ] ) ) {
 			setcookie( self::VARY, '', self::cookie_options( time() - YEAR_IN_SECONDS ) );
 			unset( $_COOKIE[ self::VARY ] );
-		}
-	}
-
-	public function post_changed( string $new_status, string $old_status, WP_Post $post ): void {
-		if ( ( 'publish' === $new_status || 'publish' === $old_status ) && ! wp_is_post_revision( $post ) && is_post_type_viewable( $post->post_type ) ) {
-			$this->purge();
-		}
-	}
-
-	public function post_deleted( int $post_id, WP_Post $post ): void {
-		if ( 'publish' === $post->post_status ) {
-			$this->purge();
 		}
 	}
 

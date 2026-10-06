@@ -35,6 +35,7 @@ final class Plugin {
 		Modules\LiteSpeed::class,
 		Modules\Bots::class,
 		Modules\LoginLimits::class,
+		Modules\Cloudflare::class,
 	];
 
 	private static ?Plugin $instance = null;
@@ -72,6 +73,7 @@ final class Plugin {
 		Updater::register(); // Also in safe mode: that is how a fix for a broken module arrives.
 		ObjectCache::register(); // Also in safe mode: status and `wp wphouse object-cache disable` must stay reachable.
 		add_filter( 'site_status_tests', [ Core\Net::class, 'site_health_test' ] );
+		Core\ContentChanges::register();
 
 		if ( ! SafeMode::active() ) {
 			foreach ( $plugin->modules as $id => $module ) {

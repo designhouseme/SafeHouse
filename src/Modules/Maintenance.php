@@ -161,7 +161,7 @@ final class Maintenance extends AbstractModule {
 		self::purge_page_caches();
 	}
 
-	/** Purge the page caches we know about. Cloudflare HTML caching (APO, Cache Everything) needs a manual purge. */
+	/** Purge the page caches we know about. `litespeed_purge_all` also reaches the WPHouse LiteSpeed and Cloudflare modules (Core\ContentChanges); without the Cloudflare module, Cloudflare HTML caching needs a manual purge. */
 	private static function purge_page_caches(): void {
 		do_action( 'litespeed_purge_all' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- LiteSpeed Cache API.
 		if ( function_exists( 'rocket_clean_domain' ) ) {

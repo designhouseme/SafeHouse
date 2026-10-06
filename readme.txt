@@ -36,6 +36,7 @@ Off by default:
 * **Header and footer scripts:** tracking codes, verification tags and widgets in `<head>`, after `<body>` or before `</body>`. HTML and JavaScript only, never PHP; only administrators allowed to post unfiltered HTML can edit them.
 * **Maintenance mode:** visitors get a short "back soon" page with HTTP 503 and Retry-After. Logged-in staff see the normal site; wp-login, the REST API, cron and payment callbacks keep working. Switching it on or off purges LiteSpeed Cache, WP Rocket, W3 Total Cache, WP Super Cache and Autoptimize; Cloudflare HTML caching (APO, Cache Everything) needs a manual purge.
 * **LiteSpeed page cache:** on LiteSpeed servers, pages for visitors who are not logged in and have no cart are served from the server cache without running WordPress. WPHouse only sends cache headers and clears the cache after content, menu, theme, plugin and stock changes; it writes no files and no `.htaccess`. Logged-in users, commenters, visitors with a cart, and the cart, checkout and account pages are never cached. On LiteSpeed Enterprise the host, or one `CacheLookup public on` line in `.htaccess`, turns the server cache on; Site Health checks that it works. Stands down while the LiteSpeed Cache plugin is active.
+* **Cloudflare cache:** for sites where Cloudflare caches whole pages (APO or a Cache Everything rule). After a change WPHouse clears the post's own page and the listings it appears on (home, archives, its categories); menus, widgets, themes and plugins clear everything. At most one call every 30 seconds; changes in between follow by cron. Needs `WPHOUSE_CLOUDFLARE_TOKEN` (an API token with only Zone → Cache Purge) and `WPHOUSE_CLOUDFLARE_ZONE` in wp-config.php.
 
 = Integrations =
 
@@ -46,6 +47,7 @@ WPHouse is built to run alongside these plugins. The Integrations card on the se
 * **Payment gateways:** Autopay, Przelewy24, PayU, imoje, Paynow, Stripe, PayPal and WooPayments. Their callbacks (`?wc-api=` and the REST API) pass maintenance mode.
 * **Elementor** and Elementor Pro.
 * **Redis Object Cache:** its connection status is shown, but WPHouse has its own Redis object cache (below).
+* **Cloudflare:** real visitor addresses ("Proxy in front of the site"), cache clearing (Cloudflare cache module) and Turnstile on forms (Bot protection), each switched on separately.
 
 Design House watches all of these, and every plugin a WPHouse module replaces, for newly published vulnerabilities.
 
@@ -91,10 +93,11 @@ Yes. `define( 'WPHOUSE_MODULES', [ 'lockdown' => true, 'scripts' => false ] );` 
 * `WP_REDIS_HOST`, `WP_REDIS_PORT`, `WP_REDIS_PASSWORD`, `WP_REDIS_DATABASE`, `WP_REDIS_PREFIX` and the other `WP_REDIS_*` constants: the Redis connection for the object cache. `WPHOUSE_OBJECT_CACHE` set to false switches the cache off without removing it.
 * `WPHOUSE_TRUSTED_PROXIES` and `WPHOUSE_PROXY_HEADER`: for sites behind a proxy or CDN. `'cloudflare'` (or the "Proxy in front of the site" setting) trusts Cloudflare's visitor header, but only on connections from Cloudflare's own addresses; an array of ranges does the same for other proxies. Without them WPHouse takes the visitor IP from `REMOTE_ADDR` only, so it cannot be spoofed with request headers.
 * `WPHOUSE_LOGIN_ALLOWLIST`: an array of addresses or ranges that login limits never lock out.
+* `WPHOUSE_CLOUDFLARE_TOKEN` and `WPHOUSE_CLOUDFLARE_ZONE`: the Cloudflare cache module's API token (Zone → Cache Purge only) and zone ID.
 
 = Which WP-CLI commands are there? =
 
-`wp wphouse status`, `wp wphouse module enable|disable <module>`, `wp wphouse log`, `wp wphouse safe-mode on|off` and `wp wphouse update-check`. Modules add `wp wphouse unlock` and `wp wphouse lock` (install lockdown), `wp wphouse watch accept` (change alerts; run it at the end of deploy scripts), `wp wphouse plugin-health`, `wp wphouse vulnerabilities`, `wp wphouse cache purge` (LiteSpeed page cache) and `wp wphouse login status|unlock <address or login>|--all` (login limits). `wp wphouse object-cache enable|disable|status|flush` manages the Redis object cache.
+`wp wphouse status`, `wp wphouse module enable|disable <module>`, `wp wphouse log`, `wp wphouse safe-mode on|off` and `wp wphouse update-check`. Modules add `wp wphouse unlock` and `wp wphouse lock` (install lockdown), `wp wphouse watch accept` (change alerts; run it at the end of deploy scripts), `wp wphouse plugin-health`, `wp wphouse vulnerabilities`, `wp wphouse cache purge` (LiteSpeed page cache) and `wp wphouse login status|unlock <address or login>|--all` (login limits) and `wp wphouse cloudflare purge` (Cloudflare cache). `wp wphouse object-cache enable|disable|status|flush` manages the Redis object cache.
 
 = Is it translated? =
 
@@ -102,12 +105,13 @@ English and Polish.
 
 == External services ==
 
-Apart from the SMTP and Redis servers you configure yourself, WPHouse contacts up to three services. Requests use WordPress's HTTP API and its default user agent, which includes the site address.
+Apart from the SMTP and Redis servers you configure yourself, WPHouse contacts up to four services. Requests use WordPress's HTTP API and its default user agent, which includes the site address.
 
 * **WordPress.org plugin directory** (api.wordpress.org), for Plugin health: once a week, and when plugins are added, removed or updated, it sends the slugs of the installed plugins to read their status (closed, last update). [Terms and privacy](https://wordpress.org/about/privacy/).
 * **Design House update host** (updates.designhouse.me): WordPress checks it for WPHouse updates every few hours, and Vulnerability alerts download the signed vulnerability data from it at most every 6 hours. The site never sends its plugin list: it fetches an index and only the data files that cover its installed software, each file covering about 1/256 of all plugins and themes. The vulnerability data comes from Wordfence Intelligence. [Privacy policy](https://designhouse.me/polityka-prywatnosci).
 
 * **Cloudflare Turnstile** (challenges.cloudflare.com), for Bot protection, only when its keys are set in wp-config.php. Pages with a protected form load Cloudflare's Turnstile script in the visitor's browser. When the form is sent, the site sends the Turnstile token to Cloudflare to check it, together with the visitor's IP address when the site knows it (no proxy in front, or trusted proxies set in `WPHOUSE_TRUSTED_PROXIES`). [Turnstile privacy addendum](https://www.cloudflare.com/turnstile-privacy-policy/), [Cloudflare privacy policy](https://www.cloudflare.com/privacypolicy/).
+* **Cloudflare API** (api.cloudflare.com), for the Cloudflare cache module, only when it is on and its token is set: the zone ID and the addresses of changed pages, at most once every 30 seconds. [Cloudflare's privacy policy](https://www.cloudflare.com/privacypolicy/).
 
 WPHouse sends no telemetry. The activity log stays in the site's database, stores the user and IP address of each event and deletes entries after 90 days.
 
@@ -120,6 +124,7 @@ WPHouse sends no telemetry. The activity log stays in the site's database, store
 * Install lockdown, change alerts (also for open registration, the default role, the admin e-mail and the site address) and plugin health.
 * Vulnerability alerts for sites without Wordfence, from signed Wordfence Intelligence data.
 * Login limits: lockouts by address, accounts paused only for new devices, Cloudflare visitor addresses.
+* Cloudflare cache: clears changed pages after edits, everything after site-wide changes.
 * Integrations card for Wordfence, WooCommerce, payment gateways and Elementor.
 * LiteSpeed page cache without the LiteSpeed Cache plugin: cache headers only, safe for WooCommerce.
 * Redis object cache with signed values, installed with WP-CLI.
