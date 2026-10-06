@@ -1,3 +1,5 @@
+import { mountCollapse } from './collapse.js';
+
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = (id) => document.getElementById(id);
 
@@ -17,5 +19,29 @@ import('./voxel.js')
 		img.className = 'voxel-fallback';
 		$('voxel').replaceWith(img);
 	});
+
+mountCollapse({
+	canvas: $('plugins-grid'),
+	section: $('collapse-card'),
+	count: $('plugin-count'),
+	word: $('plugin-word'),
+	reduced,
+});
+
+// Module switches behave like the ones in the plugin's settings page.
+for (const row of document.querySelectorAll('.switch-row')) {
+	const button = row.querySelector('.switch');
+	const out = row.querySelector('.switch-out');
+	const render = () => {
+		const on = button.getAttribute('aria-checked') === 'true';
+		row.classList.toggle('is-on', on);
+		out.textContent = on ? button.dataset.out : 'wyłączony';
+	};
+	button.addEventListener('click', () => {
+		button.setAttribute('aria-checked', String(button.getAttribute('aria-checked') !== 'true'));
+		render();
+	});
+	render();
+}
 
 requestAnimationFrame(() => document.body.classList.add('is-ready'));

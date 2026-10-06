@@ -22,6 +22,15 @@ for (const s of shots) {
 	await page.goto('http://127.0.0.1:8899/', { waitUntil: 'networkidle' });
 	await page.waitForTimeout(3500);
 	await page.screenshot({ path: `${out}/${s.name}-hero.png` });
+	// Section by section: a full-page capture of this page fails in headless Chromium with WebGL running.
+	for (const id of ['dlaczego', 'moduly', 'wordfence', 'aktualizacje', 'pobierz']) {
+		await page.evaluate((id) => {
+			const el = document.getElementById(id);
+			window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'instant' });
+		}, id);
+		await page.waitForTimeout(700);
+		await page.screenshot({ path: `${out}/${s.name}-${id}.png` });
+	}
 	console.log(s.name, errors.length ? `errors: ${errors.join(' | ')}` : 'no errors');
 	await page.close();
 }
