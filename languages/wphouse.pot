@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-06T13:03:08+00:00\n"
+"POT-Creation-Date: 2026-10-06T13:03:23+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: wphouse\n"
@@ -330,27 +330,27 @@ msgstr ""
 msgid "Leave this field empty"
 msgstr ""
 
-#: src/Modules/Bots.php:309
+#: src/Modules/Bots.php:311
 msgid "This looks like an automated submission. Please make sure JavaScript is on and try again."
 msgstr ""
 
-#: src/Modules/Bots.php:326
+#: src/Modules/Bots.php:328
 msgid "The anti-bot check is unavailable right now. Please try again in a few minutes."
 msgstr ""
 
-#: src/Modules/Bots.php:329
+#: src/Modules/Bots.php:331
 msgid "The anti-bot check did not pass. Please wait for it to finish and try again."
 msgstr ""
 
-#: src/Modules/Bots.php:368
+#: src/Modules/Bots.php:370
 msgid "Turnstile is off: add WPHOUSE_TURNSTILE_SITE_KEY and WPHOUSE_TURNSTILE_SECRET_KEY to wp-config.php. The honeypot works without them."
 msgstr ""
 
-#: src/Modules/Bots.php:370
+#: src/Modules/Bots.php:372
 msgid "Turnstile is off: wp-config.php has Cloudflare test keys, which always give the same answer and are not allowed on a production site."
 msgstr ""
 
-#: src/Modules/Bots.php:372
+#: src/Modules/Bots.php:374
 msgid "Turnstile is on, with keys from wp-config.php."
 msgstr ""
 
@@ -449,13 +449,13 @@ msgid "WPHouse registration check"
 msgstr ""
 
 #: src/Modules/Hardening.php:244
-msgid "New accounts are set to get an admin-level role"
+msgid "New accounts are set to get a role that can manage the site"
 msgstr ""
 
 #. translators: %s: role name, e.g. Administrator.
 #: src/Modules/Hardening.php:247
 #, php-format
-msgid "The default role for new accounts is %s, which can manage the site. Attackers set this so that they can register their own administrator. Change it in Settings → General and check who changed it."
+msgid "The default role for new accounts is %s, which can manage users, plugins, settings or the shop, or post raw HTML. Attackers set this so that they can register their own administrator. Change it in Settings → General and check who changed it."
 msgstr ""
 
 #: src/Modules/Hardening.php:251

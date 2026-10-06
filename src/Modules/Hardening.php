@@ -241,10 +241,10 @@ final class Hardening extends AbstractModule {
 
 		if ( self::is_admin_role( $role ) ) {
 			$status      = 'critical';
-			$label       = __( 'New accounts are set to get an admin-level role', 'wphouse' );
+			$label       = __( 'New accounts are set to get a role that can manage the site', 'wphouse' );
 			$description = sprintf(
 				/* translators: %s: role name, e.g. Administrator. */
-				__( 'The default role for new accounts is %s, which can manage the site. Attackers set this so that they can register their own administrator. Change it in Settings → General and check who changed it.', 'wphouse' ),
+				__( 'The default role for new accounts is %s, which can manage users, plugins, settings or the shop, or post raw HTML. Attackers set this so that they can register their own administrator. Change it in Settings → General and check who changed it.', 'wphouse' ),
 				$name
 			);
 			if ( $this->feature_on( 'safe_default_role' ) ) {
