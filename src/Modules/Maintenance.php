@@ -4,8 +4,10 @@
  *
  * Only front-end page views are stopped (template_redirect). wp-admin, wp-login, admin-ajax,
  * wp-cron, the REST API and WooCommerce's ?wc-api= callbacks never reach that hook, so payment
- * webhooks keep working. Page caches are purged when the mode is switched, otherwise they keep
- * serving the old pages (or the 503) after the switch.
+ * webhooks keep working. There is deliberately no exception based on request headers or the query
+ * string: the client controls those, so an Accept header or an empty ?wc-api= must not unlock the
+ * site. Page caches are purged when the mode is switched, otherwise they keep serving the old
+ * pages (or the 503) after the switch.
  *
  * @package WPHouse
  */
@@ -80,10 +82,10 @@ final class Maintenance extends AbstractModule {
 	}
 
 	public function maybe_block(): void {
-		if ( is_admin() || wp_doing_ajax() || wp_doing_cron() || wp_is_json_request() || is_robots() || is_favicon() ) {
+		if ( is_admin() || wp_doing_ajax() || wp_doing_cron() || is_robots() || is_favicon() ) {
 			return;
 		}
-		if ( ( defined( 'REST_REQUEST' ) && REST_REQUEST ) || ( defined( 'WP_CLI' ) && WP_CLI ) || isset( $_GET['wc-api'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- routing check only.
+		if ( ( defined( 'REST_REQUEST' ) && REST_REQUEST ) || ( defined( 'WP_CLI' ) && WP_CLI ) ) {
 			return;
 		}
 		if ( current_user_can( (string) $this->opt( 'bypass' ) ) ) {

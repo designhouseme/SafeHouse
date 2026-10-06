@@ -87,7 +87,11 @@ check "footer snippet printed"            1   "$(curl -s "$U/" | grep -c 'smoke-
 echo "== maintenance"
 wp eval '$o = get_option("wphouse_settings"); $o["modules"]["maintenance"] = true; update_option("wphouse_settings", $o);' >/dev/null
 check "visitors get 503"                  503 "$(code "$U/")"
+check "JSON Accept header gets 503"       503 "$(code -H 'Accept: application/json' "$U/")"
+check "empty ?wc-api= gets 503"           503 "$(code "$U/?wc-api=")"
 [ "$has_woo" = 1 ] && check "Store API still answers" 200 "$(code "$U/wp-json/wc/store/v1/cart")"
+# 400 means WooCommerce answered the callback itself (nothing hooked) before maintenance could: gateways still work.
+[ "$has_woo" = 1 ] && check "?wc-api= callbacks reach Woo" 400 "$(code "$U/?wc-api=wphouse_smoke")"
 check "wp-login still answers"            200 "$(code "$U/wp-login.php")"
 check "wp-cron still answers"             200 "$(code "$U/wp-cron.php")"
 
