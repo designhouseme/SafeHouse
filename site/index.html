@@ -48,7 +48,7 @@
 			<span>wphouse</span>
 		</a>
 		<ul class="nav-links">
-			<li><a href="#prywatnosc">Prywatność</a></li>
+			<li><a href="#robi">Co robi</a></li>
 			<li><a href="#serwis">Tryb serwisowy</a></li>
 			<li><a href="#awaryjny">Tryb awaryjny</a></li>
 		</ul>
@@ -60,7 +60,7 @@
 
 	<div class="hero-copy">
 		<h1>Jedna wtyczka.<br>Zero balastu.</h1>
-		<p>WPHouse zastępuje kilkanaście małych wtyczek jedną: zabezpieczenia, alerty i&nbsp;codzienne drobiazgi. Działa obok Wordfence i&nbsp;WooCommerce.</p>
+		<p>WPHouse pilnuje Twojej strony na WordPressie: utrudnia włamanie i&nbsp;od razu daje znać mailem, gdy dzieje się coś podejrzanego. Jedna wtyczka zamiast kilkunastu, czyli mniej miejsc, przez które ktoś może wejść.</p>
 	</div>
 
 	<div class="hero-stage">
@@ -140,70 +140,105 @@
 		</div>
 	</div>
 
-	<div class="hero-strip">
-		<p>Wszystko, czego potrzebuje strona na WordPressie:</p>
-		<ul>
-			<li>Zabezpieczenia</li><li>Blokada instalacji</li><li>Alerty o&nbsp;zmianach</li><li>Alerty o&nbsp;lukach</li><li>Kondycja wtyczek</li><li>Poczta SMTP</li><li>Tryb serwisowy</li><li>Cache stron LiteSpeed</li><li>Ochrona przed botami</li>
-		</ul>
-	</div>
 </header>
 
 <main id="tresc">
-	<section class="light reach" id="prywatnosc" aria-labelledby="prywatnosc-h">
-		<div class="wrap">
-			<h2 class="display" id="prywatnosc-h">Dwa adresy.<br>Żadnej telemetrii.</h2>
-			<p class="lede">Poza Twoim serwerem SMTP WPHouse łączy się tylko z&nbsp;WordPress.org i&nbsp;serwerem aktualizacji Design House. Dziennik zdarzeń zostaje w&nbsp;bazie strony i&nbsp;sam się czyści po 90 dniach.</p>
-
-			<div class="reach-map">
-				<svg class="reach-lines" viewBox="0 0 1216 440" preserveAspectRatio="none" aria-hidden="true">
-					<defs>
-						<linearGradient id="reach-cold" x1="0" x2="1"><stop offset="0" stop-color="#9cc7ff"/><stop offset="1" stop-color="#2f6bff"/></linearGradient>
-						<linearGradient id="reach-warm" x1="0" x2="1"><stop offset="0" stop-color="#ffd9a8"/><stop offset="1" stop-color="#f28a3c"/></linearGradient>
-					</defs>
-					<path class="reach-glow reach-glow--cold" d="M 300 220 C 560 220 560 110 816 110"/>
-					<path class="reach-glow reach-glow--warm" d="M 300 220 C 560 220 560 330 816 330"/>
-					<path class="reach-line reach-line--cold" d="M 300 220 C 560 220 560 110 816 110"/>
-					<path class="reach-line reach-line--warm" d="M 300 220 C 560 220 560 330 816 330"/>
-				</svg>
-				<div class="reach-node reach-node--site">
-					<svg class="brand-mark reach-mark" viewBox="0 0 16 16" aria-hidden="true"><rect x="6" y="1" width="4" height="4"/><rect x="1" y="6" width="4" height="4"/><rect x="11" y="6" width="4" height="4"/><rect x="6" y="11" width="4" height="4"/></svg>
-					<b>moj-sklep.pl</b>
-					<span>Twoja strona z&nbsp;WPHouse</span>
-				</div>
-				<div class="reach-node reach-node--org">
-					<code>api.wordpress.org</code>
-					<p>Raz w&nbsp;tygodniu i&nbsp;po każdej zmianie wtyczek: nazwy zainstalowanych wtyczek, żeby sprawdzić, czy nie zostały zamknięte albo porzucone.</p>
-				</div>
-				<div class="reach-node reach-node--dh">
-					<code>updates.designhouse.me</code>
-					<p>Co kilka godzin aktualizacje WPHouse, najwyżej co 6&nbsp;godzin podpisane dane o&nbsp;lukach. Strona pobiera tylko pliki ze swoim oprogramowaniem, każdy to około 1/256 bazy.</p>
-				</div>
+	<section class="light robi" id="robi" aria-labelledby="robi-h">
+		<div class="mb-head">
+			<div>
+				<h2 class="display" id="robi-h">Co robi WPHouse.</h2>
+				<p class="lede">Dwanaście rzeczy, na które zwykle instaluje się osobne wtyczki. Każdą włączasz jednym przełącznikiem w&nbsp;panelu.</p>
 			</div>
-			<p class="reach-none">Nie wysyła statystyk ani telemetrii. Lista Twoich wtyczek nie trafia do Design House.</p>
+		</div>
+		<div class="mb">
+			<span class="mb-beam" aria-hidden="true"></span>
+
+			<article class="mb-card mb-a">
+				<p class="mb-text"><b>Zamyka typowe furtki.</b> Ukrywa nazwy kont i&nbsp;nie zdradza, czy włamywacz zgadł login, czy hasło.</p>
+				<ul class="mb-vis mb-check" aria-hidden="true">
+					<li><span class="mb-box" aria-hidden="true"></span>Nazwy kont ukryte</li>
+					<li><span class="mb-box" aria-hidden="true"></span>Jeden komunikat przy złym haśle</li>
+					<li><span class="mb-box" aria-hidden="true"></span>Edytor kodu w&nbsp;panelu wyłączony</li>
+				</ul>
+			</article>
+
+			<article class="mb-card mb-b">
+				<p class="mb-text"><b>Daje znać mailem.</b> Gdy ktoś doda administratora, wgra wtyczkę albo zmieni adres strony.</p>
+				<div class="mb-vis mb-mails" aria-hidden="true">
+					<div class="mb-mail mb-mail--back"><b>Nowa wtyczka na stronie</b><span>wczoraj</span></div>
+					<div class="mb-mail"><b>Nowe konto administratora</b><span>mallory, przed chwilą</span></div>
+				</div>
+			</article>
+
+			<div class="mb-card mb-c">
+				<p class="mb-num">12</p>
+				<p class="mb-num-label">funkcji w&nbsp;jednej wtyczce</p>
+			</div>
+
+			<article class="mb-card mb-d">
+				<p class="mb-text"><b>Nikt nie doinstaluje Ci wtyczki.</b> Nawet przez dziurę w&nbsp;innej. Sam otwierasz instalację na 30&nbsp;minut.</p>
+				<div class="mb-vis mb-lock" aria-hidden="true">
+					<div class="mb-row"><span class="mb-ico"></span><b>Kalendarz</b><span class="mb-btn">Zainstaluj</span></div>
+					<p class="mb-pill mb-pill--warm">Instalacja zablokowana</p>
+				</div>
+			</article>
+
+			<article class="mb-card mb-e">
+				<p class="mb-text"><b>Ostrzega o&nbsp;dziurawych wtyczkach.</b> I&nbsp;mówi, do jakiej wersji je zaktualizować.</p>
+				<div class="mb-vis mb-list" aria-hidden="true">
+					<p class="mb-list-head">Twoje wtyczki</p>
+					<div class="mb-list-row is-bad"><b>Galeria Demo</b><span>zaktualizuj do 2.1.1</span></div>
+					<div class="mb-list-row"><b>Formularz kontaktowy</b><span>w&nbsp;porządku</span></div>
+					<div class="mb-list-row"><b>Kalendarz</b><span>w&nbsp;porządku</span></div>
+				</div>
+			</article>
+
+			<article class="mb-card mb-f">
+				<p class="mb-text"><b>Zatrzymuje boty.</b> Fałszywe rejestracje, spam w&nbsp;komentarzach, fałszywe zamówienia i&nbsp;zgadywanie haseł.</p>
+				<div class="mb-vis mb-bots" aria-hidden="true">
+					<span class="mb-orb"><svg class="mb-mark" viewBox="0 0 16 16" aria-hidden="true"><rect x="6" y="1" width="4" height="4"/><rect x="1" y="6" width="4" height="4"/><rect x="11" y="6" width="4" height="4"/><rect x="6" y="11" width="4" height="4"/></svg></span>
+					<span class="mb-bot" style="--x: 26%; --y: 14%">fałszywa rejestracja</span>
+					<span class="mb-bot" style="--x: 76%; --y: 6%">spam w&nbsp;komentarzach</span>
+					<span class="mb-bot" style="--x: 22%; --y: 66%">zgadywanie hasła</span>
+					<span class="mb-bot" style="--x: 78%; --y: 60%">fałszywe zamówienie</span>
+					<span class="mb-bot mb-bot--far" style="--x: 50%; --y: 80%">zalew resetów hasła</span>
+				</div>
+			</article>
+
+			<article class="mb-card mb-g">
+				<p class="mb-text"><b>Wyłapuje porzucone wtyczki.</b> Te wycofane z&nbsp;katalogu WordPressa i&nbsp;te, których autor od lat nie poprawia.</p>
+				<div class="mb-vis mb-stack" aria-hidden="true">
+					<div class="mb-sheet mb-sheet--back"><b>Narzędzie do migracji</b><span>zostawione po przeprowadzce strony</span></div>
+					<div class="mb-sheet"><b>Prosty Slider</b><span class="mb-sheet-bad">Wycofana z&nbsp;katalogu WordPressa</span><span>Ostatnia poprawka: 2 lata temu</span></div>
+				</div>
+			</article>
+		</div>
+		<div class="mb-head">
+			<p class="mb-more">Do tego szybsze ładowanie strony na serwerach LiteSpeed, maile ze sklepu wysyłane przez Twoją skrzynkę pocztową, kopiowanie stron, kody Google Analytics i&nbsp;wyłączanie komentarzy. Tryb serwisowy i&nbsp;tryb awaryjny pokazujemy niżej.</p>
 		</div>
 	</section>
 
 	<section class="dark gate" id="serwis" aria-labelledby="serwis-h">
 		<div class="wrap">
 			<h2 class="display" id="serwis-h">Sklep zamknięty.<br>Płatności dalej wchodzą.</h2>
-			<p class="lede">Tryb serwisowy pokazuje odwiedzającym „Zaraz wracamy” z&nbsp;kodem 503, który wyszukiwarki rozumieją jako przerwę. Ty pracujesz na normalnej stronie, a&nbsp;bramki płatności, REST API i&nbsp;cron przechodzą jak zawsze.</p>
+			<p class="lede">Przebudowujesz sklep albo wgrywasz zmiany? Włącz tryb serwisowy. Klienci zobaczą „Zaraz wracamy”, Google zrozumie, że to tylko chwilowa przerwa, a&nbsp;Ty spokojnie pracujesz na normalnej stronie. Płatności złożone tuż przed zamknięciem dalej się księgują.</p>
 
 			<div class="lanes">
 				<p class="wall-label">Tryb serwisowy</p>
 				<span class="wall" aria-hidden="true"></span>
 
 				<div class="lane lane--blocked">
-					<p class="lane-src"><b>Odwiedzający</b><span>każda strona sklepu</span></p>
+					<p class="lane-src"><b>Klienci</b><span>wchodzą na stronę sklepu</span></p>
 					<span class="lane-beam lane-beam--in" aria-hidden="true"></span>
 					<span class="lane-beam lane-beam--out" aria-hidden="true"></span>
-					<p class="lane-out"><b>„Zaraz wracamy”</b><span class="lane-tags"><span class="tag tag--stop">HTTP 503</span><span class="tag">Retry-After: 3600</span></span></p>
+					<p class="lane-out"><b>„Zaraz wracamy”</b><span>Google traktuje to jako chwilową przerwę</span></p>
 				</div>
 
 				<div class="lane">
-					<p class="lane-src"><b>Zespół</b><span>każdy, kto może edytować treści</span></p>
+					<p class="lane-src"><b>Ty i&nbsp;Twój zespół</b><span>po zalogowaniu</span></p>
 					<span class="lane-beam lane-beam--in" aria-hidden="true"></span>
 					<span class="lane-beam lane-beam--out" aria-hidden="true"></span>
-					<p class="lane-out"><b>Normalna strona</b><span>z&nbsp;paskiem „Tryb serwisowy jest włączony”</span></p>
+					<p class="lane-out"><b>Normalna strona</b><span>z&nbsp;paskiem przypominającym, że sklep jest zamknięty</span></p>
 				</div>
 
 				<div class="lane lane--pay">
@@ -214,14 +249,14 @@
 					</div>
 					<span class="lane-beam lane-beam--in" aria-hidden="true"></span>
 					<span class="lane-beam lane-beam--out" aria-hidden="true"></span>
-					<p class="lane-out"><b><code>?wc-api=</code> i&nbsp;Store API</b><span>powiadomienia o&nbsp;płatnościach docierają do WooCommerce</span></p>
+					<p class="lane-out"><b>Płatności się księgują</b><span>potwierdzenia od bramek trafiają do sklepu, zamówienia nie giną</span></p>
 				</div>
 
 				<div class="lane">
-					<p class="lane-src"><b>System</b><span>REST API, wp-cron, wp-login</span></p>
+					<p class="lane-src"><b>Zadania w&nbsp;tle</b><span>maile, zaplanowane wpisy, logowanie</span></p>
 					<span class="lane-beam lane-beam--in" aria-hidden="true"></span>
 					<span class="lane-beam lane-beam--out" aria-hidden="true"></span>
-					<p class="lane-out"><b>Działa bez przerwy</b><span>zadania w&nbsp;tle i&nbsp;logowanie</span></p>
+					<p class="lane-out"><b>Działają bez przerwy</b><span>nic nie staje w&nbsp;tle</span></p>
 				</div>
 			</div>
 		</div>
@@ -229,8 +264,8 @@
 
 	<section class="light safe" id="awaryjny" aria-labelledby="awaryjny-h">
 		<div class="wrap">
-			<h2 class="display" id="awaryjny-h">Coś nie działa?<br>Jeden pusty plik.</h2>
-			<p class="lede">Tryb awaryjny zatrzymuje wszystkie moduły i&nbsp;nie dotyka bazy. Wgraj przez FTP pusty plik <code>wphouse-safe-mode</code> do <code>wp-content</code>. Usuń go, a&nbsp;moduły wracają.</p>
+			<h2 class="display" id="awaryjny-h">Coś się zepsuło?<br>Wyłączysz to jednym plikiem.</h2>
+			<p class="lede">Jeśli po zmianach strona przestanie działać i&nbsp;nie da się nawet zalogować do panelu, WPHouse wyłączysz bez panelu. Wystarczy wgrać na serwer jeden pusty plik. Wszystkie funkcje WPHouse stają, ustawienia zostają nietknięte, a&nbsp;po usunięciu pliku wszystko wraca.</p>
 
 			<div class="safe-grid">
 				<div class="files" aria-label="Zawartość katalogu wp-content">
@@ -262,8 +297,9 @@
 				</div>
 			</div>
 			<dl class="safe-ways">
-				<div><dt>Albo w&nbsp;<code>wp-config.php</code></dt><dd><code>define( 'WPHOUSE_SAFE_MODE', true );</code></dd></div>
-				<div><dt>Albo z&nbsp;terminala</dt><dd><code>wp wphouse safe-mode on</code></dd></div>
+				<div><dt>Dla programisty: plik do <code>wp-content</code></dt><dd><code>wphouse-safe-mode</code></dd></div>
+				<div><dt>albo w&nbsp;<code>wp-config.php</code></dt><dd><code>define( 'WPHOUSE_SAFE_MODE', true );</code></dd></div>
+				<div><dt>albo z&nbsp;terminala</dt><dd><code>wp wphouse safe-mode on</code></dd></div>
 			</dl>
 		</div>
 	</section>
@@ -292,9 +328,9 @@
 			</figure>
 			<div class="final-copy">
 				<h2 class="display" id="pobierz-h">Wersja 0.1<br>gotowa do testów.</h2>
-				<p class="lede">Polski i&nbsp;angielski, WordPress 6.6 lub nowszy, PHP 8.1 lub nowszy. Na początek trafia na strony klientów Design House.</p>
+				<p class="lede">Na początek instalujemy WPHouse na stronach klientów Design House. Działa po polsku i&nbsp;angielsku, na aktualnym WordPressie. Chcesz go u&nbsp;siebie? Napisz do nas.</p>
 				<div class="actions">
-					<a class="pill pill--glow" href="https://updates.designhouse.me/wphouse/wphouse-latest.zip">Pobierz wphouse-0.1.0.zip</a>
+					<a class="pill pill--glow" href="https://updates.designhouse.me/wphouse/wphouse-latest.zip">Pobierz WPHouse 0.1</a>
 					<a class="pill pill--ghost" href="https://designhouse.me/">Napisz do Design House</a>
 				</div>
 			</div>
