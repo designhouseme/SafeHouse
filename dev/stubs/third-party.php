@@ -31,6 +31,9 @@ namespace {
 		public function is_type( $type ): bool {}
 		/** @return int[] */
 		public function get_children() {}
+	}
+
+	class WC_Product_Variable extends WC_Product {
 		/** @return int[] */
 		public function get_visible_children() {}
 	}

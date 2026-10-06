@@ -16,6 +16,7 @@ use SafeHouse\Core\AbstractModule;
 use SafeHouse\Core\Compat;
 use WC_Product;
 use WC_Product_Factory;
+use WC_Product_Variable;
 use WP_CLI;
 use WP_Post;
 
@@ -208,8 +209,9 @@ final class Omnibus extends AbstractModule {
 		}
 		$target = $product;
 		if ( $product->is_type( self::DERIVED_TYPES ) ) {
-			// WooCommerce crosses out a variable product's price only when every variation costs the same; then they share one line.
-			if ( ! str_contains( $html, '<del' ) ) {
+			// A grouped product lists its children, each with its own line. A variable product's price is crossed
+			// out only when every variation costs the same; then they share one line.
+			if ( ! $product instanceof WC_Product_Variable || ! str_contains( $html, '<del' ) ) {
 				return $html;
 			}
 			[ $target, $found ] = self::lowest_of_children( $product );
@@ -379,7 +381,7 @@ final class Omnibus extends AbstractModule {
 	 *
 	 * @return array{0: WC_Product, 1: array{0: float, 1: string}|null}
 	 */
-	private static function lowest_of_children( WC_Product $product ): array {
+	private static function lowest_of_children( WC_Product_Variable $product ): array {
 		$target = $product;
 		$found  = null;
 		foreach ( $product->get_visible_children() as $child_id ) {

@@ -125,6 +125,12 @@ foreach (['S', 'M'] as \$size) { \$v = new WC_Product_Variation(); \$v->set_pare
 WC_Product_Variable::sync(\$id); echo \$id;")
 made+=("$same")
 check "same-price variations share one line"        1 "$(lines "$same")"
+simple 100 80; a=$id; simple 100 80; b=$id
+group=$(php "\$g = new WC_Product_Grouped(); \$g->set_name('Omnibus group'); \$g->set_status('publish'); \$g->set_children([$a, $b]); echo \$g->save();")
+made+=("$group")
+check "grouped product: no line of its own"         0 "$(lines "$group")"
+check "grouped product page renders"                200 "$(curl -s -o /dev/null -w '%{http_code}' "$(php "echo get_permalink($group);")")"
+check "grouped product page: lines for its children" 1 "$(page "$group" | grep -c '<small class="shouse-omnibus"' | awk '{print ($1 >= 1)}')"
 
 echo "== pages never write"
 before=$(all_rows)
