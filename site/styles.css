@@ -455,6 +455,100 @@ main section { position: relative; padding: 168px 0; }
 .c-dim { color: #727786; }
 .c-ok { color: #7ee0a8; }
 
+/* maintenance mode: a wall of light that stops visitors and lets payments through */
+
+.gate { overflow: hidden; }
+.gate::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background:
+		radial-gradient(30% 42% at 55% 62%, rgba(255, 90, 50, 0.16), transparent 70%),
+		radial-gradient(34% 40% at 80% 70%, rgba(70, 105, 255, 0.14), transparent 70%);
+}
+.gate .wrap { position: relative; }
+
+.lanes {
+	--wall: 56%;
+	position: relative;
+	display: grid;
+	grid-template-columns: 250px minmax(0, 1fr) 28px minmax(0, 1fr) 270px;
+	row-gap: 34px;
+	margin-top: 96px;
+	view-timeline-name: --lanes;
+}
+.lane { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; align-items: center; }
+/* Explicit rows, so the lanes share them with the wall instead of being placed after it. */
+.lane:nth-of-type(1) { grid-row: 2; }
+.lane:nth-of-type(2) { grid-row: 3; }
+.lane:nth-of-type(3) { grid-row: 4; }
+.lane:nth-of-type(4) { grid-row: 5; }
+.lane-src { grid-column: 1; margin: 0; padding-right: 24px; }
+.lane-src b,
+.lane-out b { display: block; font-size: 18px; font-weight: 500; letter-spacing: -0.015em; color: #fff; }
+.lane-src > span,
+.lane-out > span { display: block; margin-top: 3px; font-size: 14.5px; color: rgba(255, 255, 255, 0.5); }
+.lane-out { grid-column: 5; margin: 0; padding-left: 28px; }
+.lane-out code { font: 500 0.92em var(--mono); color: var(--ice); }
+.lane-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; padding: 0; list-style: none; }
+.lane .tag { padding: 3px 10px; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 999px; font-size: 12.5px; color: rgba(255, 255, 255, 0.8); background: rgba(255, 255, 255, 0.04); }
+.lane .tag--stop { border-color: rgba(255, 90, 60, 0.5); color: #ffb3a1; background: rgba(255, 70, 40, 0.12); }
+
+/* The beams are pixel bands: blue where traffic passes, white burning to red where it stops. */
+.lane-beam {
+	height: 16px;
+	mask-image: linear-gradient(90deg, #000 0 5px, transparent 5px), linear-gradient(#000 0 5px, transparent 5px);
+	mask-size: 6px 6px;
+	mask-composite: intersect;
+	-webkit-mask-composite: source-in;
+}
+.lane-beam--in { grid-column: 2; background: linear-gradient(90deg, transparent, rgba(120, 155, 255, 0.55) 30%, #9cc7ff); }
+.lane-beam--out { grid-column: 4; background: linear-gradient(90deg, #cfe0ff, rgba(79, 134, 255, 0.9) 45%, rgba(47, 107, 255, 0.45)); }
+.lane--pay .lane-beam--in { background: linear-gradient(90deg, transparent, rgba(255, 170, 90, 0.5) 30%, #ffc98a); }
+.lane--pay .lane-beam--out { background: linear-gradient(90deg, #ffe1bd, rgba(242, 160, 70, 0.9) 45%, rgba(242, 140, 60, 0.45)); }
+.lane--blocked .lane-beam--in { background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45) 30%, #fff 80%, #ff6a45); }
+.lane--blocked .lane-beam--out { display: none; }
+.lane--blocked .lane-out { grid-column: 4 / 6; padding-left: 40px; }
+
+.wall {
+	position: relative;
+	z-index: 1;
+	grid-column: 3;
+	grid-row: 2 / span 4;
+	margin: -34px 0 -16px;
+	background: linear-gradient(180deg, rgba(255, 120, 80, 0.15), #ff6a45 18%, #ff4d2e 60%, rgba(255, 77, 46, 0.25));
+	mask-image: linear-gradient(90deg, #000 0 5px, transparent 5px), linear-gradient(#000 0 5px, transparent 5px);
+	mask-size: 6px 6px;
+	mask-composite: intersect;
+	-webkit-mask-composite: source-in;
+	filter: drop-shadow(0 0 18px rgba(255, 80, 50, 0.8));
+}
+.wall-label { grid-column: 3; grid-row: 1; justify-self: center; margin: 0 0 6px; font-size: 13px; font-weight: 500; letter-spacing: 0.02em; white-space: nowrap; color: #ffb3a1; }
+/* Passing traffic crosses the wall at a bright point; stopped traffic flares against it. */
+.lane::after {
+	content: "";
+	z-index: 2;
+	grid-column: 3;
+	grid-row: 1;
+	justify-self: center;
+	width: 60px;
+	height: 60px;
+	border-radius: 50%;
+	background: radial-gradient(closest-side, rgba(200, 220, 255, 0.95), rgba(79, 134, 255, 0.35) 55%, transparent);
+	pointer-events: none;
+}
+.lane--pay::after { background: radial-gradient(closest-side, rgba(255, 230, 200, 0.95), rgba(242, 150, 70, 0.4) 55%, transparent); }
+.lane--blocked::after { width: 120px; height: 120px; background: radial-gradient(closest-side, #fff, rgba(255, 106, 69, 0.75) 35%, rgba(255, 60, 40, 0.15) 70%, transparent); }
+
+@supports (animation-timeline: view()) {
+	.lane-beam--in { animation: beam-in linear both; animation-timeline: --lanes; animation-range: entry 20% cover 40%; }
+	.lane-beam--out { animation: beam-in linear both; animation-timeline: --lanes; animation-range: cover 35% cover 55%; }
+	.lane::after { animation: flare linear both; animation-timeline: --lanes; animation-range: cover 30% cover 42%; }
+}
+@keyframes beam-in { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes flare { from { opacity: 0; scale: 0.3; } to { opacity: 1; scale: 1; } }
+
 /* updates: the steps beside the terminal that proves them */
 
 .docs { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 72px; align-items: start; }
@@ -603,6 +697,30 @@ main section { position: relative; padding: 168px 0; }
 	.hero-stage { height: 280px; }
 	main section { padding: 112px 0; }
 	.docs { grid-template-columns: minmax(0, 1fr); gap: 48px; }
+	.lanes { grid-template-columns: minmax(0, 1fr) 20px minmax(0, 1fr); row-gap: 40px; margin-top: 64px; }
+	.wall-label { grid-column: 2; }
+	.lane { grid-template-areas: "src src src" "in wall out" "res res res"; row-gap: 12px; }
+	.lane-src { grid-area: src; padding: 0; }
+	.lane-beam--in { grid-area: in; }
+	.lane-beam--out { grid-area: out; }
+	.lane::after { grid-area: wall; }
+	.lane-out,
+	.lane--blocked .lane-out { grid-area: res; padding: 0; }
+	/* On a phone the wall would run through the text; each lane gets its own piece of it. */
+	.wall,
+	.wall-label { display: none; }
+	.lane::before {
+		content: "";
+		grid-area: wall;
+		justify-self: center;
+		width: 20px;
+		height: 44px;
+		background: linear-gradient(180deg, rgba(255, 106, 69, 0.2), #ff6a45 30%, #ff4d2e 70%, rgba(255, 77, 46, 0.2));
+		mask-image: linear-gradient(90deg, #000 0 5px, transparent 5px), linear-gradient(#000 0 5px, transparent 5px);
+		mask-size: 6px 6px;
+		mask-composite: intersect;
+		-webkit-mask-composite: source-in;
+	}
 	.final { padding: 120px 0 112px; }
 	.final-grid { grid-template-columns: minmax(0, 1fr); gap: 72px; }
 	.dial { width: min(360px, 78vw); }

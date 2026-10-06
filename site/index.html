@@ -48,6 +48,7 @@
 			<span>wphouse</span>
 		</a>
 		<ul class="nav-links">
+			<li><a href="#serwis">Tryb serwisowy</a></li>
 			<li><a href="#aktualizacje">Aktualizacje</a></li>
 		</ul>
 		<div class="nav-end">
@@ -146,6 +147,50 @@
 </header>
 
 <main id="tresc">
+	<section class="dark gate" id="serwis" aria-labelledby="serwis-h">
+		<div class="wrap">
+			<h2 class="display" id="serwis-h">Sklep zamknięty.<br>Płatności dalej wchodzą.</h2>
+			<p class="lede">Tryb serwisowy pokazuje odwiedzającym „Zaraz wracamy” z&nbsp;kodem 503, który wyszukiwarki rozumieją jako przerwę. Ty pracujesz na normalnej stronie, a&nbsp;bramki płatności, REST API i&nbsp;cron przechodzą jak zawsze.</p>
+
+			<div class="lanes">
+				<p class="wall-label">Tryb serwisowy</p>
+				<span class="wall" aria-hidden="true"></span>
+
+				<div class="lane lane--blocked">
+					<p class="lane-src"><b>Odwiedzający</b><span>każda strona sklepu</span></p>
+					<span class="lane-beam lane-beam--in" aria-hidden="true"></span>
+					<span class="lane-beam lane-beam--out" aria-hidden="true"></span>
+					<p class="lane-out"><b>„Zaraz wracamy”</b><span class="lane-tags"><span class="tag tag--stop">HTTP 503</span><span class="tag">Retry-After: 3600</span></span></p>
+				</div>
+
+				<div class="lane">
+					<p class="lane-src"><b>Zespół</b><span>każdy, kto może edytować treści</span></p>
+					<span class="lane-beam lane-beam--in" aria-hidden="true"></span>
+					<span class="lane-beam lane-beam--out" aria-hidden="true"></span>
+					<p class="lane-out"><b>Normalna strona</b><span>z&nbsp;paskiem „Tryb serwisowy jest włączony”</span></p>
+				</div>
+
+				<div class="lane lane--pay">
+					<div class="lane-src"><b>Bramki płatności</b>
+						<ul class="lane-tags">
+							<li class="tag">Autopay</li><li class="tag">Przelewy24</li><li class="tag">PayU</li><li class="tag">imoje</li><li class="tag">Paynow</li><li class="tag">Stripe</li><li class="tag">PayPal</li><li class="tag">WooPayments</li>
+						</ul>
+					</div>
+					<span class="lane-beam lane-beam--in" aria-hidden="true"></span>
+					<span class="lane-beam lane-beam--out" aria-hidden="true"></span>
+					<p class="lane-out"><b><code>?wc-api=</code> i&nbsp;Store API</b><span>powiadomienia o&nbsp;płatnościach docierają do WooCommerce</span></p>
+				</div>
+
+				<div class="lane">
+					<p class="lane-src"><b>System</b><span>REST API, wp-cron, wp-login</span></p>
+					<span class="lane-beam lane-beam--in" aria-hidden="true"></span>
+					<span class="lane-beam lane-beam--out" aria-hidden="true"></span>
+					<p class="lane-out"><b>Działa bez przerwy</b><span>zadania w&nbsp;tle i&nbsp;logowanie</span></p>
+				</div>
+			</div>
+		</div>
+	</section>
+
 	<section class="dark updates" id="aktualizacje" aria-labelledby="aktualizacje-h">
 		<div class="wrap docs">
 			<div class="docs-body">
