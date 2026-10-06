@@ -632,28 +632,97 @@ main section { position: relative; padding: 168px 0; }
 .term code { font: inherit; color: inherit; }
 .docs-side .note { margin-top: 8px; }
 
-/* final call to action: a pixel beam lands on the headline */
+/* final call to action: a dial lit from the robot's side and the human's, marking the five hours */
 
-.final { overflow: hidden; padding: 280px 0 180px; text-align: center; background: var(--ink); }
-.final .lede { margin-inline: auto; color: rgba(255, 255, 255, 0.62); }
-.final-beam {
+.final { overflow: hidden; padding: 180px 0 160px; background: var(--ink); view-timeline-name: --final; }
+.final-grid { display: grid; grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); gap: 72px; align-items: center; }
+.final-copy .display { font-size: clamp(44px, 5.2vw, 78px); background: linear-gradient(180deg, #fff 40%, #d9dcf2); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.final-copy .lede { color: rgba(255, 255, 255, 0.72); }
+.actions { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 40px; }
+
+.dial-wrap { position: relative; margin: 0; isolation: isolate; }
+
+/* Bands of light crossing behind the dial, built from the same pixels as the beam above. */
+.final-light {
 	position: absolute;
-	top: 0;
-	left: 50%;
-	width: 720px;
-	height: 270px;
-	translate: -50% 0;
-	background:
-		radial-gradient(3% 100% at 50% 0, #fff, rgba(200, 220, 255, 0.8) 40%, transparent 90%),
-		radial-gradient(40% 36% at 50% 100%, #fff, rgba(156, 199, 255, 0.85) 25%, rgba(47, 107, 255, 0.4) 55%, transparent),
-		radial-gradient(12% 100% at 50% 0, rgba(79, 134, 255, 0.55), transparent 85%);
-	mask-image: linear-gradient(90deg, #000 0 5px, transparent 5px), linear-gradient(#000 0 5px, transparent 5px), linear-gradient(#000 55%, transparent);
-	mask-size: 6px 6px, 6px 6px, 100% 100%;
+	top: 50%;
+	z-index: -1;
+	height: 150px;
+	rotate: 22deg;
+	mask-image: linear-gradient(90deg, #000 0 5px, transparent 5px), linear-gradient(#000 0 5px, transparent 5px);
+	mask-size: 6px 6px;
 	mask-composite: intersect;
 	-webkit-mask-composite: source-in;
 }
-.final .wrap { position: relative; }
-.actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; margin-top: 48px; }
+.final-light--warm {
+	right: 50%;
+	width: 120%;
+	translate: 0 -110%;
+	transform-origin: right center;
+	background: linear-gradient(90deg, transparent, rgba(255, 110, 40, 0.25) 35%, rgba(255, 130, 60, 0.95) 100%);
+}
+.final-light--cold {
+	left: 50%;
+	width: 150%;
+	translate: 0 10%;
+	transform-origin: left center;
+	background: linear-gradient(90deg, rgba(110, 140, 255, 0.95), rgba(70, 100, 255, 0.35) 55%, transparent);
+}
+
+.dial {
+	position: relative;
+	width: min(440px, 100%);
+	aspect-ratio: 1;
+	margin-inline: auto;
+	border-radius: 50%;
+	background:
+		radial-gradient(circle at 28% 46%, rgba(255, 110, 40, 0.5), transparent 46%),
+		radial-gradient(circle at 74% 44%, rgba(70, 105, 255, 0.55), transparent 48%),
+		radial-gradient(circle, #15161c 52%, #0a0b0e 72%);
+	box-shadow:
+		0 0 0 12px #16171c,
+		0 0 0 13px rgba(255, 255, 255, 0.14),
+		0 0 0 26px #0c0d10,
+		0 0 0 27px rgba(255, 255, 255, 0.06),
+		0 50px 110px rgba(0, 0, 0, 0.7),
+		-60px 0 140px -40px rgba(255, 110, 40, 0.35),
+		60px 0 140px -40px rgba(70, 105, 255, 0.4);
+}
+/* Pixel texture on the lit parts of the face. */
+.dial::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: 50%;
+	background:
+		radial-gradient(circle at 26% 46%, rgba(255, 150, 80, 0.55), transparent 42%),
+		radial-gradient(circle at 76% 42%, rgba(120, 150, 255, 0.6), transparent 44%);
+	mask-image: linear-gradient(90deg, #000 0 2px, transparent 2px), linear-gradient(#000 0 2px, transparent 2px);
+	mask-size: 4px 4px;
+	mask-composite: intersect;
+	-webkit-mask-composite: source-in;
+}
+.dial-mark { position: absolute; inset: 28%; width: 44%; height: 44%; filter: drop-shadow(-6px 0 14px rgba(255, 110, 40, 0.35)) drop-shadow(6px 0 14px rgba(70, 105, 255, 0.4)); }
+.dial-mark rect { fill: #101116; stroke: rgba(255, 255, 255, 0.07); stroke-width: 0.12; }
+.dial-face { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.dial-ticks line { stroke: rgba(255, 255, 255, 0.28); stroke-width: 2; stroke-linecap: round; }
+.dial-nums text { font: 500 13px var(--sans); text-anchor: middle; fill: rgba(255, 255, 255, 0.3); }
+.dial-track { fill: none; stroke: rgba(120, 150, 255, 0.35); stroke-width: 4; }
+.dial-arc { fill: none; stroke: url(#arc-warm); stroke-width: 5; stroke-linecap: round; filter: drop-shadow(0 0 6px rgba(255, 110, 40, 0.9)); }
+.dial-hand { stroke-linecap: round; transform-box: view-box; transform-origin: 200px 200px; }
+.dial-hand--minute { stroke: rgba(255, 255, 255, 0.55); stroke-width: 2.5; }
+.dial-hand--hour { stroke: #fff; stroke-width: 5; transform: rotate(150deg); filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.5)); }
+.dial-pin { fill: #fff; }
+.dial-crown { position: absolute; top: 50%; right: -40px; width: 16px; height: 46px; translate: 0 -50%; border-radius: 4px; background: linear-gradient(90deg, #2a2c33, #4a4d57 50%, #1c1d22); }
+.final-note { margin: 28px 0 0; font-size: 14px; color: rgba(255, 255, 255, 0.45); }
+
+/* Where the browser can tie animation to scrolling, the hand turns to five as the section arrives. */
+@supports (animation-timeline: view()) {
+	.dial-hand--hour { animation: dial-hour linear both; animation-timeline: --final; animation-range: entry 10% cover 45%; }
+	.dial-arc { stroke-dasharray: 1; animation: dial-arc linear both; animation-timeline: --final; animation-range: entry 10% cover 45%; }
+}
+@keyframes dial-hour { from { transform: rotate(0deg); } to { transform: rotate(150deg); } }
+@keyframes dial-arc { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 
 .footer { background: var(--ink); border-top: 1px solid rgba(255, 255, 255, 0.08); }
 .footer-inner { display: flex; flex-wrap: wrap; align-items: center; gap: 20px 40px; padding: 36px 0 48px; font-size: 13.5px; color: rgba(255, 255, 255, 0.5); }
@@ -684,7 +753,9 @@ main section { position: relative; padding: 168px 0; }
 	.docs { grid-template-columns: minmax(0, 1fr); gap: 48px; }
 	.split { gap: 16px; }
 	.wp-form th { width: auto; }
-	.final { padding: 240px 0 128px; }
+	.final { padding: 120px 0 112px; }
+	.final-grid { grid-template-columns: minmax(0, 1fr); gap: 72px; }
+	.dial { width: min(360px, 78vw); }
 	.footer p { margin-left: 0; }
 }
 
@@ -727,7 +798,7 @@ main section { position: relative; padding: 168px 0; }
 	.wp-form tr + tr td { border-top: 0; }
 	.wp-form em { display: block; margin: 4px 0 0; }
 	.term { padding: 18px; font-size: 12px; }
-	.final-beam { width: 100%; }
+	.dial-crown { right: -32px; width: 12px; height: 36px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
