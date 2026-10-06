@@ -68,15 +68,17 @@
 		</div>
 	</div>
 
-	<div class="panel" id="panel" role="img" aria-label="Panel WPHouse w kokpicie WordPressa: lista modułów z przełącznikami i dziennik zdarzeń">
-		<aside class="panel-side">
-			<svg class="panel-mark" viewBox="0 0 16 16"><rect x="6" y="1" width="4" height="4"/><rect x="1" y="6" width="4" height="4"/><rect x="11" y="6" width="4" height="4"/><rect x="6" y="11" width="4" height="4"/></svg>
-			<span>Kokpit</span><span>Wpisy</span><span>Strony</span><span>WooCommerce</span><span>Wtyczki</span><span>Wordfence</span><span class="is-active">WPHouse</span><span>Ustawienia</span>
-		</aside>
+	<div class="panel" id="panel" role="img" aria-label="Panel WPHouse w kokpicie WordPressa: zakładki, moduły z przełącznikami i dziennik zdarzeń">
+		<div class="panel-bar">
+			<span class="panel-app">
+				<svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#0f1113"/><g fill="#e6ff32" transform="translate(5 8.3) scale(0.1457)"><rect x="73.18" y="0" width="31.73" height="31.73" rx="5.88"/><rect x="0" y="31.82" width="73.39" height="73.39" rx="5.88"/><rect x="104.8" y="31.81" width="45.5" height="45.5" rx="5.88"/></g></svg>
+				<span>WPHouse <i>0.1.0</i></span>
+			</span>
+			<span class="panel-tabs"><b class="is-active">Moduły</b><b>Integracje</b><b>Ogólne</b></span>
+			<span class="panel-status"><i class="dot dot--ok"></i>4 z&nbsp;10 włączonych</span>
+		</div>
 		<div class="panel-main">
-			<div class="panel-crumbs">Ustawienia <i>/</i> <b>WPHouse</b></div>
-			<div class="panel-title">WPHouse <span>0.1.0</span></div>
-			<div class="panel-tabs"><span class="is-active">Moduły</span><span>Dziennik</span><span>Narzędzia</span></div>
+			<div class="panel-head">Moduły <span>każdy włączasz osobno</span></div>
 			<ul class="panel-mods">
 				<li><i class="tog is-on"></i><b>Podstawowe zabezpieczenia</b><em class="chip">XML-RPC → 403</em></li>
 				<li><i class="tog is-on"></i><b>Blokada instalacji</b><em class="chip chip--warm">odblokuj na 30 min</em></li>
@@ -87,7 +89,7 @@
 			</ul>
 		</div>
 		<div class="panel-log">
-			<div class="panel-log-head">Dziennik <span>5</span></div>
+			<div class="panel-log-head">Dziennik zdarzeń <span>5</span></div>
 			<ul>
 				<li><i class="dot dot--warm"></i><b>Nowy administrator: mallory</b><span>e-mail do zespołu · 2 min temu</span></li>
 				<li><i class="dot"></i><b>Instalacja wtyczki zablokowana</b><span>wp plugin install · 14 min temu</span></li>
