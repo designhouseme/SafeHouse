@@ -9,6 +9,7 @@ namespace WPHouse\Admin;
 
 use WPHouse\Core\AbstractModule;
 use WPHouse\Core\Compat;
+use WPHouse\Core\Integrations;
 use WPHouse\Core\Log;
 use WPHouse\Core\SafeMode;
 use WPHouse\Core\Settings;
@@ -135,6 +136,8 @@ final class Page {
 						</tr>
 					</table>
 				</section>
+
+				<?php $this->render_integrations(); ?>
 
 				<?php
 				foreach ( $this->plugin->modules() as $id => $module ) {
@@ -286,6 +289,56 @@ final class Page {
 				?>
 			</td>
 		</tr>
+		<?php
+	}
+
+	/** What WPHouse does alongside the plugins it is built for, and which of them this site has. */
+	private function render_integrations(): void {
+		$found = Integrations::detected();
+		$rows  = [
+			'wordfence'   => [ 'Wordfence', __( 'WPHouse skips what Wordfence already does (for example username discovery and login error masking) and leaves the firewall, two-factor login and malware scans to it. Vulnerability alerts stand down, because Wordfence warns about vulnerable plugins itself.', 'wphouse' ) ],
+			'woocommerce' => [ 'WooCommerce', __( 'Compatible with HPOS and the block checkout. Generic login errors also cover the My Account form, maintenance mode lets the Store API and payment callbacks through, and product reviews survive "disable comments".', 'wphouse' ) ],
+			'payments'    => [ __( 'Payment gateways', 'wphouse' ), __( 'Autopay, Przelewy24, PayU, imoje, Paynow, Stripe, PayPal and WooPayments. Their callbacks (?wc-api= and the REST API) pass maintenance mode, and XML-RPC stays on for WooPayments.', 'wphouse' ) ],
+			'elementor'   => [ 'Elementor', __( 'Elementor and Elementor Pro. Watched for new vulnerabilities like everything on this list.', 'wphouse' ) ],
+		];
+		?>
+		<section class="wphouse-card" id="wphouse-integrations">
+			<header class="wphouse-card__head"><h2><?php esc_html_e( 'Integrations', 'wphouse' ); ?></h2></header>
+			<p class="wphouse-card__desc"><?php esc_html_e( 'WPHouse is built to run alongside these plugins. Design House watches all of them for new vulnerabilities (CVE) and tells you when an update cannot wait.', 'wphouse' ); ?></p>
+			<table class="widefat striped wphouse-integrations">
+				<thead><tr>
+					<th><?php esc_html_e( 'Integration', 'wphouse' ); ?></th>
+					<th><?php esc_html_e( 'On this site', 'wphouse' ); ?></th>
+					<th><?php esc_html_e( 'What WPHouse does', 'wphouse' ); ?></th>
+				</tr></thead>
+				<tbody>
+				<?php foreach ( $rows as $group => [ $label, $text ] ) : ?>
+					<tr>
+						<td><strong><?php echo esc_html( $label ); ?></strong></td>
+						<td>
+							<?php
+							$items = $found[ $group ] ?? [];
+							if ( ! $items ) {
+								echo '<span class="wphouse-badge">' . esc_html__( 'not installed', 'wphouse' ) . '</span>';
+								if ( 'wordfence' === $group ) {
+									echo '<p class="description">' . esc_html(
+										$this->plugin->is_running( 'vulnerabilities' )
+											? __( 'WPHouse vulnerability alerts cover this site. For a firewall and two-factor login, install Wordfence.', 'wphouse' )
+											: __( 'Nothing warns about vulnerable plugins on this site: switch on WPHouse vulnerability alerts below, or install Wordfence.', 'wphouse' )
+									) . '</p>';
+								}
+							}
+							foreach ( $items as $item ) {
+								echo '<div><span class="wphouse-status wphouse-status--' . ( $item['active'] ? 'on' : 'off' ) . '">' . esc_html( $item['active'] ? __( 'active', 'wphouse' ) : __( 'inactive', 'wphouse' ) ) . '</span> ' . esc_html( $item['name'] ) . '</div>';
+							}
+							?>
+						</td>
+						<td><?php echo esc_html( $text ); ?></td>
+					</tr>
+				<?php endforeach; ?>
+				</tbody>
+			</table>
+		</section>
 		<?php
 	}
 

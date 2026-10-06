@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-06T11:03:37+00:00\n"
+"POT-Creation-Date: 2026-10-06T11:11:50+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: wphouse\n"
@@ -35,97 +35,158 @@ msgstr ""
 msgid "Design House"
 msgstr ""
 
-#: src/Admin/Page.php:48
+#: src/Admin/Page.php:49
 msgid "Settings"
 msgstr ""
 
-#: src/Admin/Page.php:73
+#: src/Admin/Page.php:74
 msgid "WPHouse safe mode is on: every module is stopped. Remove wp-content/wphouse-safe-mode or the WPHOUSE_SAFE_MODE constant to resume."
 msgstr ""
 
-#: src/Admin/Page.php:86
+#: src/Admin/Page.php:87
 msgid "You are not allowed to do this."
 msgstr ""
 
-#: src/Admin/Page.php:94
+#: src/Admin/Page.php:95
 msgid "Unknown task."
 msgstr ""
 
-#: src/Admin/Page.php:114
+#: src/Admin/Page.php:115
 msgid "Small, audited replacements for single-purpose plugins. Every module is a switch. Features that Wordfence or wp-config already handle are skipped automatically."
 msgstr ""
 
-#: src/Admin/Page.php:117
+#: src/Admin/Page.php:118
 msgid "Settings are locked by WPHOUSE_LOCK_SETTINGS in wp-config.php. Change them in code."
 msgstr ""
 
-#: src/Admin/Page.php:120
+#: src/Admin/Page.php:121
 msgid "WPHOUSE_IGNORE_OVERLAPS is on: features run even where another plugin already provides them."
 msgstr ""
 
-#: src/Admin/Page.php:127
+#: src/Admin/Page.php:128
 msgid "General"
 msgstr ""
 
-#: src/Admin/Page.php:130
+#: src/Admin/Page.php:131
 msgid "Alert recipients"
 msgstr ""
 
-#: src/Admin/Page.php:133
+#: src/Admin/Page.php:134
 msgid "Comma-separated. Empty means the site admin address."
 msgstr ""
 
-#: src/Admin/Page.php:167
+#: src/Admin/Page.php:170
 msgid "Unavailable"
 msgstr ""
 
-#: src/Admin/Page.php:169
+#: src/Admin/Page.php:172
 msgid "Running"
 msgstr ""
 
-#: src/Admin/Page.php:171
+#: src/Admin/Page.php:174
 msgid "Enabled, not running"
 msgstr ""
 
-#: src/Admin/Page.php:173
+#: src/Admin/Page.php:176
 msgid "Off"
 msgstr ""
 
-#: src/Admin/Page.php:187
+#: src/Admin/Page.php:190
 msgid "Pinned by WPHOUSE_MODULES in wp-config.php."
 msgstr ""
 
 #. translators: %s: plugin or setting name, e.g. Wordfence.
-#: src/Admin/Page.php:281
+#: src/Admin/Page.php:284
 #, php-format
 msgid "Handled by %s, skipped here."
 msgstr ""
 
-#: src/Admin/Page.php:296
-msgid "Activity log"
+#: src/Admin/Page.php:299
+msgid "WPHouse skips what Wordfence already does (for example username discovery and login error masking) and leaves the firewall, two-factor login and malware scans to it. Vulnerability alerts stand down, because Wordfence warns about vulnerable plugins itself."
 msgstr ""
 
-#: src/Admin/Page.php:298
-msgid "No events yet."
+#: src/Admin/Page.php:300
+msgid "Compatible with HPOS and the block checkout. Generic login errors also cover the My Account form, maintenance mode lets the Store API and payment callbacks through, and product reviews survive \"disable comments\"."
+msgstr ""
+
+#: src/Admin/Page.php:301
+msgid "Payment gateways"
+msgstr ""
+
+#: src/Admin/Page.php:301
+msgid "Autopay, Przelewy24, PayU, imoje, Paynow, Stripe, PayPal and WooPayments. Their callbacks (?wc-api= and the REST API) pass maintenance mode, and XML-RPC stays on for WooPayments."
 msgstr ""
 
 #: src/Admin/Page.php:302
-msgid "Time (UTC)"
-msgstr ""
-
-#: src/Admin/Page.php:303
-msgid "Event"
-msgstr ""
-
-#: src/Admin/Page.php:304
-msgid "User"
-msgstr ""
-
-#: src/Admin/Page.php:305
-msgid "IP"
+msgid "Elementor and Elementor Pro. Watched for new vulnerabilities like everything on this list."
 msgstr ""
 
 #: src/Admin/Page.php:306
+msgid "Integrations"
+msgstr ""
+
+#: src/Admin/Page.php:307
+msgid "WPHouse is built to run alongside these plugins. Design House watches all of them for new vulnerabilities (CVE) and tells you when an update cannot wait."
+msgstr ""
+
+#: src/Admin/Page.php:310
+msgid "Integration"
+msgstr ""
+
+#: src/Admin/Page.php:311
+msgid "On this site"
+msgstr ""
+
+#: src/Admin/Page.php:312
+msgid "What WPHouse does"
+msgstr ""
+
+#: src/Admin/Page.php:322
+msgid "not installed"
+msgstr ""
+
+#: src/Admin/Page.php:326
+msgid "WPHouse vulnerability alerts cover this site. For a firewall and two-factor login, install Wordfence."
+msgstr ""
+
+#: src/Admin/Page.php:327
+msgid "Nothing warns about vulnerable plugins on this site: switch on WPHouse vulnerability alerts below, or install Wordfence."
+msgstr ""
+
+#: src/Admin/Page.php:332
+msgid "active"
+msgstr ""
+
+#: src/Admin/Page.php:332
+#: src/Modules/PluginHealth.php:382
+msgid "inactive"
+msgstr ""
+
+#: src/Admin/Page.php:349
+msgid "Activity log"
+msgstr ""
+
+#: src/Admin/Page.php:351
+msgid "No events yet."
+msgstr ""
+
+#: src/Admin/Page.php:355
+msgid "Time (UTC)"
+msgstr ""
+
+#: src/Admin/Page.php:356
+msgid "Event"
+msgstr ""
+
+#: src/Admin/Page.php:357
+msgid "User"
+msgstr ""
+
+#: src/Admin/Page.php:358
+msgid "IP"
+msgstr ""
+
+#: src/Admin/Page.php:359
 #: src/Modules/Vulnerabilities.php:421
 msgid "Details"
 msgstr ""
@@ -434,10 +495,6 @@ msgstr ""
 
 #: src/Modules/PluginHealth.php:380
 msgid "Findings"
-msgstr ""
-
-#: src/Modules/PluginHealth.php:382
-msgid "inactive"
 msgstr ""
 
 #: src/Modules/Scripts.php:39

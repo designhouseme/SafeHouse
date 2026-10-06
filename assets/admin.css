@@ -45,5 +45,11 @@
 .wphouse-badge--warning { background: #fcf9e8; color: #6b4e00; }
 .wphouse-badge--info { background: #f0f6fc; color: #0a4b78; }
 
+.wphouse-integrations { margin-top: 12px; }
+.wphouse-integrations td:first-child { width: 150px; }
+.wphouse-integrations td:nth-child(2) { width: 280px; }
+.wphouse-integrations td div + div { margin-top: 4px; }
+.wphouse-integrations .description { margin-top: 6px; }
+
 .wphouse-log tr.wphouse-log__critical td { background: #fcf0f1; }
 .wphouse-log tr.wphouse-log__warning td { background: #fcf9e8; }

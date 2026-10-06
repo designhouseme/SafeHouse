@@ -35,97 +35,97 @@ msgstr "Lekkie, sprawdzone zamienniki małych wtyczek narzędziowych: podstawowe
 msgid "Design House"
 msgstr "Design House"
 
-#: src/Admin/Page.php:48
+#: src/Admin/Page.php:49
 msgid "Settings"
 msgstr "Ustawienia"
 
-#: src/Admin/Page.php:73
+#: src/Admin/Page.php:74
 msgid "WPHouse safe mode is on: every module is stopped. Remove wp-content/wphouse-safe-mode or the WPHOUSE_SAFE_MODE constant to resume."
 msgstr "Tryb awaryjny WPHouse jest włączony: wszystkie moduły są zatrzymane. Usuń plik wp-content/wphouse-safe-mode lub stałą WPHOUSE_SAFE_MODE, aby je wznowić."
 
-#: src/Admin/Page.php:86
+#: src/Admin/Page.php:87
 msgid "You are not allowed to do this."
 msgstr "Nie masz uprawnień do tej operacji."
 
-#: src/Admin/Page.php:94
+#: src/Admin/Page.php:95
 msgid "Unknown task."
 msgstr "Nieznane zadanie."
 
-#: src/Admin/Page.php:114
+#: src/Admin/Page.php:115
 msgid "Small, audited replacements for single-purpose plugins. Every module is a switch. Features that Wordfence or wp-config already handle are skipped automatically."
 msgstr "Małe, sprawdzone zamienniki jednozadaniowych wtyczek. Każdy moduł włączasz osobno. Funkcje, które obsługuje już Wordfence lub wp-config.php, są automatycznie pomijane."
 
-#: src/Admin/Page.php:117
+#: src/Admin/Page.php:118
 msgid "Settings are locked by WPHOUSE_LOCK_SETTINGS in wp-config.php. Change them in code."
 msgstr "Ustawienia są zablokowane stałą WPHOUSE_LOCK_SETTINGS w wp-config.php. Zmieniaj je w kodzie."
 
-#: src/Admin/Page.php:120
+#: src/Admin/Page.php:121
 msgid "WPHOUSE_IGNORE_OVERLAPS is on: features run even where another plugin already provides them."
 msgstr "Stała WPHOUSE_IGNORE_OVERLAPS jest włączona: funkcje działają nawet tam, gdzie zapewnia je już inna wtyczka."
 
-#: src/Admin/Page.php:127
+#: src/Admin/Page.php:128
 msgid "General"
 msgstr "Ogólne"
 
-#: src/Admin/Page.php:130
+#: src/Admin/Page.php:131
 msgid "Alert recipients"
 msgstr "Odbiorcy alertów"
 
-#: src/Admin/Page.php:133
+#: src/Admin/Page.php:134
 msgid "Comma-separated. Empty means the site admin address."
 msgstr "Adresy oddzielone przecinkami. Puste pole oznacza adres administratora witryny."
 
-#: src/Admin/Page.php:167
+#: src/Admin/Page.php:170
 msgid "Unavailable"
 msgstr "Niedostępny"
 
-#: src/Admin/Page.php:169
+#: src/Admin/Page.php:172
 msgid "Running"
 msgstr "Działa"
 
-#: src/Admin/Page.php:171
+#: src/Admin/Page.php:174
 msgid "Enabled, not running"
 msgstr "Włączony, nie działa"
 
-#: src/Admin/Page.php:173
+#: src/Admin/Page.php:176
 msgid "Off"
 msgstr "Wyłączony"
 
-#: src/Admin/Page.php:187
+#: src/Admin/Page.php:190
 msgid "Pinned by WPHOUSE_MODULES in wp-config.php."
 msgstr "Ustawione na stałe przez WPHOUSE_MODULES w wp-config.php."
 
 #. translators: %s: plugin or setting name, e.g. Wordfence.
-#: src/Admin/Page.php:281
+#: src/Admin/Page.php:284
 #, php-format
 msgid "Handled by %s, skipped here."
 msgstr "Obsługuje to %s, więc tutaj pominięte."
 
-#: src/Admin/Page.php:296
+#: src/Admin/Page.php:349
 msgid "Activity log"
 msgstr "Dziennik zdarzeń"
 
-#: src/Admin/Page.php:298
+#: src/Admin/Page.php:351
 msgid "No events yet."
 msgstr "Brak zdarzeń."
 
-#: src/Admin/Page.php:302
+#: src/Admin/Page.php:355
 msgid "Time (UTC)"
 msgstr "Czas (UTC)"
 
-#: src/Admin/Page.php:303
+#: src/Admin/Page.php:356
 msgid "Event"
 msgstr "Zdarzenie"
 
-#: src/Admin/Page.php:304
+#: src/Admin/Page.php:357
 msgid "User"
 msgstr "Użytkownik"
 
-#: src/Admin/Page.php:305
+#: src/Admin/Page.php:358
 msgid "IP"
 msgstr "IP"
 
-#: src/Admin/Page.php:306
+#: src/Admin/Page.php:359
 #: src/Modules/Vulnerabilities.php:421
 msgid "Details"
 msgstr "Szczegóły"
@@ -436,6 +436,7 @@ msgstr "Wtyczka"
 msgid "Findings"
 msgstr "Wyniki"
 
+#: src/Admin/Page.php:332
 #: src/Modules/PluginHealth.php:382
 msgid "inactive"
 msgstr "nieaktywna"
@@ -764,3 +765,59 @@ msgstr "%1$s %2$s%3$s: %4$s. Zaktualizuj do wersji %5$s lub nowszej."
 #, php-format
 msgid "%1$s %2$s%3$s: %4$s. No fixed version yet: deactivate it if you can do without it."
 msgstr "%1$s %2$s%3$s: %4$s. Nie ma jeszcze poprawionej wersji: wyłącz to oprogramowanie, jeśli możesz się bez niego obejść."
+
+#: src/Admin/Page.php:299
+msgid "WPHouse skips what Wordfence already does (for example username discovery and login error masking) and leaves the firewall, two-factor login and malware scans to it. Vulnerability alerts stand down, because Wordfence warns about vulnerable plugins itself."
+msgstr "WPHouse pomija to, co Wordfence już robi (na przykład blokadę wyliczania użytkowników i ogólne błędy logowania), a zaporę, logowanie dwuetapowe i skaner złośliwego kodu zostawia jemu. Ostrzeżenia o lukach się wyłączają, bo Wordfence sam ostrzega o podatnych wtyczkach."
+
+#: src/Admin/Page.php:300
+msgid "Compatible with HPOS and the block checkout. Generic login errors also cover the My Account form, maintenance mode lets the Store API and payment callbacks through, and product reviews survive \"disable comments\"."
+msgstr "Zgodny z HPOS i blokowym checkoutem. Ogólne błędy logowania obejmują też formularz „Moje konto”, tryb serwisowy przepuszcza Store API i powiadomienia z płatności, a recenzje produktów zostają mimo wyłączenia komentarzy."
+
+#: src/Admin/Page.php:301
+msgid "Payment gateways"
+msgstr "Bramki płatności"
+
+#: src/Admin/Page.php:301
+msgid "Autopay, Przelewy24, PayU, imoje, Paynow, Stripe, PayPal and WooPayments. Their callbacks (?wc-api= and the REST API) pass maintenance mode, and XML-RPC stays on for WooPayments."
+msgstr "Autopay, Przelewy24, PayU, imoje, Paynow, Stripe, PayPal i WooPayments. Ich powiadomienia (?wc-api= i REST API) przechodzą przez tryb serwisowy, a dla WooPayments XML-RPC zostaje włączone."
+
+#: src/Admin/Page.php:302
+msgid "Elementor and Elementor Pro. Watched for new vulnerabilities like everything on this list."
+msgstr "Elementor i Elementor Pro. Pilnujemy ich nowych luk, jak wszystkiego na tej liście."
+
+#: src/Admin/Page.php:306
+msgid "Integrations"
+msgstr "Integracje"
+
+#: src/Admin/Page.php:307
+msgid "WPHouse is built to run alongside these plugins. Design House watches all of them for new vulnerabilities (CVE) and tells you when an update cannot wait."
+msgstr "WPHouse działa razem z tymi wtyczkami. Design House pilnuje nowych luk (CVE) we wszystkich z nich i daje znać, gdy aktualizacja nie może czekać."
+
+#: src/Admin/Page.php:310
+msgid "Integration"
+msgstr "Integracja"
+
+#: src/Admin/Page.php:311
+msgid "On this site"
+msgstr "Na tej stronie"
+
+#: src/Admin/Page.php:312
+msgid "What WPHouse does"
+msgstr "Co robi WPHouse"
+
+#: src/Admin/Page.php:322
+msgid "not installed"
+msgstr "nie zainstalowano"
+
+#: src/Admin/Page.php:326
+msgid "WPHouse vulnerability alerts cover this site. For a firewall and two-factor login, install Wordfence."
+msgstr "Tę stronę chronią ostrzeżenia WPHouse o lukach. Zaporę i logowanie dwuetapowe da Wordfence."
+
+#: src/Admin/Page.php:327
+msgid "Nothing warns about vulnerable plugins on this site: switch on WPHouse vulnerability alerts below, or install Wordfence."
+msgstr "Nic nie ostrzega na tej stronie o podatnych wtyczkach: włącz niżej ostrzeżenia WPHouse o lukach albo zainstaluj Wordfence."
+
+#: src/Admin/Page.php:332
+msgid "active"
+msgstr "aktywna"
