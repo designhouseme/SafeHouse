@@ -168,6 +168,8 @@ wp option update users_can_register "$reg_before" >/dev/null
 [ "$has_woo" = 1 ] && wp option update woocommerce_enable_myaccount_registration "$woo_reg_before" >/dev/null
 for u in "hp$n" "whp$n"; do wp user delete "$u" --yes >/dev/null; done
 wp user list --field=user_email | grep -q "whp$n@example.test" && wp user delete "$(wp user get "whp$n@example.test" --field=ID)" --yes >/dev/null
+# The section edited wp-config.php and registration: keep the change alerts of the dev site quiet.
+wp wphouse watch accept >/dev/null
 
 echo "== maintenance"
 wp eval '$o = get_option("wphouse_settings"); $o["modules"]["maintenance"] = true; update_option("wphouse_settings", $o);' >/dev/null
