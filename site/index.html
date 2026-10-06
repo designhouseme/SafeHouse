@@ -49,7 +49,7 @@
 		</a>
 		<ul class="nav-links">
 			<li><a href="#robi">Co robi</a></li>
-			<li><a href="#serwis">Tryb serwisowy</a></li>
+			<li><a href="#bezpieczenstwo">Bezpieczeństwo</a></li>
 			<li><a href="#awaryjny">Tryb awaryjny</a></li>
 		</ul>
 		<div class="nav-end">
@@ -218,47 +218,45 @@
 		</div>
 	</section>
 
-	<section class="dark gate" id="serwis" aria-labelledby="serwis-h">
+	<section class="dark gate" id="bezpieczenstwo" aria-labelledby="bezpieczenstwo-h">
 		<div class="wrap">
-			<h2 class="display" id="serwis-h">Sklep zamknięty.<br>Płatności dalej wchodzą.</h2>
-			<p class="lede">Przebudowujesz sklep albo wgrywasz zmiany? Włącz tryb serwisowy. Klienci zobaczą „Zaraz wracamy”, Google zrozumie, że to tylko chwilowa przerwa, a&nbsp;Ty spokojnie pracujesz na normalnej stronie. Płatności złożone tuż przed zamknięciem dalej się księgują.</p>
+			<h2 class="display" id="bezpieczenstwo-h">Pilnuje strony.<br>Sama nie jest furtką.</h2>
+			<p class="lede">Wtyczka do bezpieczeństwa nie może być słabym punktem. Dlatego każdą aktualizację WPHouse podpisujemy, a&nbsp;kod piszemy według zasad spisanych z&nbsp;luk znalezionych w&nbsp;innych wtyczkach.</p>
 
 			<div class="lanes">
-				<p class="wall-label">Tryb serwisowy</p>
+				<p class="wall-label">WPHouse</p>
 				<span class="wall" aria-hidden="true"></span>
 
 				<div class="lane lane--blocked">
-					<p class="lane-src"><b>Klienci</b><span>wchodzą na stronę sklepu</span></p>
+					<p class="lane-src"><b>Podrobiona aktualizacja</b><span>na przykład z&nbsp;przejętego serwera</span></p>
 					<span class="lane-beam lane-beam--in" aria-hidden="true"></span>
 					<span class="lane-beam lane-beam--out" aria-hidden="true"></span>
-					<p class="lane-out"><b>„Zaraz wracamy”</b><span>Google traktuje to jako chwilową przerwę</span></p>
-				</div>
-
-				<div class="lane">
-					<p class="lane-src"><b>Ty i&nbsp;Twój zespół</b><span>po zalogowaniu</span></p>
-					<span class="lane-beam lane-beam--in" aria-hidden="true"></span>
-					<span class="lane-beam lane-beam--out" aria-hidden="true"></span>
-					<p class="lane-out"><b>Normalna strona</b><span>z&nbsp;paskiem przypominającym, że sklep jest zamknięty</span></p>
+					<p class="lane-out"><b>Odrzucona</b><span>podpis się nie zgadza, więc WordPress jej nie zainstaluje</span></p>
 				</div>
 
 				<div class="lane lane--pay">
-					<div class="lane-src"><b>Bramki płatności</b>
-						<ul class="lane-tags">
-							<li class="tag">Autopay</li><li class="tag">Przelewy24</li><li class="tag">PayU</li><li class="tag">imoje</li><li class="tag">Paynow</li><li class="tag">Stripe</li><li class="tag">PayPal</li><li class="tag">WooPayments</li>
-						</ul>
-					</div>
+					<p class="lane-src"><b>Aktualizacja od Design House</b><span>podpisana kluczem, którego nie ma na żadnym serwerze</span></p>
 					<span class="lane-beam lane-beam--in" aria-hidden="true"></span>
 					<span class="lane-beam lane-beam--out" aria-hidden="true"></span>
-					<p class="lane-out"><b>Płatności się księgują</b><span>potwierdzenia od bramek trafiają do sklepu, zamówienia nie giną</span></p>
+					<p class="lane-out"><b>Instaluje się</b><span>dopiero gdy zgadza się podpis i&nbsp;zawartość paczki</span></p>
+				</div>
+
+				<div class="lane lane--blocked">
+					<p class="lane-src"><b>Ktoś bez uprawnień</b><span>na przykład przez dziurę w&nbsp;innej wtyczce</span></p>
+					<span class="lane-beam lane-beam--in" aria-hidden="true"></span>
+					<span class="lane-beam lane-beam--out" aria-hidden="true"></span>
+					<p class="lane-out"><b>Odmowa</b><span>każda akcja WPHouse sprawdza, czy wykonuje ją administrator</span></p>
 				</div>
 
 				<div class="lane">
-					<p class="lane-src"><b>Zadania w&nbsp;tle</b><span>maile, zaplanowane wpisy, logowanie</span></p>
+					<p class="lane-src"><b>Ty, administrator</b><span>po zalogowaniu</span></p>
 					<span class="lane-beam lane-beam--in" aria-hidden="true"></span>
 					<span class="lane-beam lane-beam--out" aria-hidden="true"></span>
-					<p class="lane-out"><b>Działają bez przerwy</b><span>nic nie staje w&nbsp;tle</span></p>
+					<p class="lane-out"><b>Pełny dostęp</b><span>a&nbsp;każda zmiana ustawień trafia do dziennika</span></p>
 				</div>
 			</div>
+
+			<p class="gate-note">WPHouse nie da się sterować z&nbsp;zewnątrz, nie zapisuje plików na serwerze i&nbsp;nie wysyła nikomu danych o&nbsp;Twojej stronie.</p>
 		</div>
 	</section>
 
