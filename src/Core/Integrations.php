@@ -26,6 +26,7 @@ final class Integrations {
 		'woo-stripe-payment'          => 'payments',
 		'woocommerce-paypal-payments' => 'payments',
 		'woocommerce-payments'        => 'payments',
+		'redis-cache'                 => 'redis',
 		'elementor'                   => 'elementor',
 		'elementor-pro'               => 'elementor',
 	];
@@ -55,5 +56,31 @@ final class Integrations {
 			}
 		}
 		return $groups;
+	}
+
+	/**
+	 * Persistent object cache in use: "redis" with its connection state when the drop-in is Redis
+	 * Object Cache's, "other" for any other drop-in, "none" without one.
+	 *
+	 * @return array{type: string, connected: bool|null}
+	 */
+	public static function object_cache(): array {
+		if ( ! wp_using_ext_object_cache() ) {
+			return [
+				'type'      => 'none',
+				'connected' => null,
+			];
+		}
+		global $wp_object_cache;
+		if ( is_object( $wp_object_cache ) && method_exists( $wp_object_cache, 'redis_status' ) ) {
+			return [
+				'type'      => 'redis',
+				'connected' => (bool) $wp_object_cache->redis_status(),
+			];
+		}
+		return [
+			'type'      => 'other',
+			'connected' => null,
+		];
 	}
 }
