@@ -100,13 +100,21 @@ function wp_cache_get( $key, $group = '', $force = false, &$found = null ) {
 }
 
 /**
- * @param array<int, int|string> $keys  Keys.
- * @param string                 $group Group.
- * @param bool                   $force Skip the runtime copy.
+ * @param array<int, mixed> $keys  Keys; invalid ones (callers do pass them) get false, as in WP_Object_Cache.
+ * @param string            $group Group.
+ * @param bool              $force Skip the runtime copy.
  * @return array<int|string, mixed>
  */
 function wp_cache_get_multiple( $keys, $group = '', $force = false ): array {
-	return wphouse_object_cache()->get_multiple( array_values( array_filter( (array) $keys, 'wphouse_object_cache_valid_key' ) ), (string) $group, (bool) $force );
+	$keys  = (array) $keys;
+	$found = wphouse_object_cache()->get_multiple( array_values( array_filter( $keys, 'wphouse_object_cache_valid_key' ) ), (string) $group, (bool) $force );
+	$out   = [];
+	foreach ( $keys as $key ) {
+		if ( is_scalar( $key ) || null === $key ) {
+			$out[ (string) $key ] = $found[ (string) $key ] ?? false; // Like WP_Object_Cache: every requested key gets an entry.
+		}
+	}
+	return $out;
 }
 
 /**
@@ -118,12 +126,19 @@ function wp_cache_delete( $key, $group = '' ): bool {
 }
 
 /**
- * @param array<int, int|string> $keys  Keys.
- * @param string                 $group Group.
+ * @param array<int, mixed> $keys  Keys; invalid ones get false.
+ * @param string            $group Group.
  * @return array<int|string, bool>
  */
 function wp_cache_delete_multiple( array $keys, $group = '' ): array {
-	return wphouse_object_cache()->delete_multiple( array_values( array_filter( $keys, 'wphouse_object_cache_valid_key' ) ), (string) $group );
+	$done = wphouse_object_cache()->delete_multiple( array_values( array_filter( $keys, 'wphouse_object_cache_valid_key' ) ), (string) $group );
+	$out  = [];
+	foreach ( $keys as $key ) {
+		if ( is_scalar( $key ) || null === $key ) {
+			$out[ (string) $key ] = $done[ (string) $key ] ?? false;
+		}
+	}
+	return $out;
 }
 
 /**

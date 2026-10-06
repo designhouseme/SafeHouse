@@ -49,7 +49,8 @@ Design House watches all of these, and every plugin a WPHouse module replaces, f
 
 WPHouse has its own persistent object cache for servers with Redis and the PhpRedis extension. It keeps database results in Redis between requests, like the Redis Object Cache plugin, and reads the same `WP_REDIS_*` constants, so a site can switch by replacing the drop-in.
 
-* Installed and removed only with WP-CLI: `wp wphouse object-cache enable` and `disable`. There is no button in wp-admin, because WPHouse never writes files from a web request. Deactivating WPHouse removes it too.
+* Installed and removed with WP-CLI: `wp wphouse object-cache enable` and `disable`. There is no button in wp-admin: the drop-in file is written only by WP-CLI and removed only by WP-CLI or when WPHouse is deactivated or uninstalled.
+* Needs Redis 6.0 or newer and the PhpRedis extension in both the web server's PHP and the PHP that runs WP-CLI.
 * Every cached value is signed with a key derived from the site's secret keys and checked before it is unserialized, so other sites on a shared Redis cannot plant objects.
 * Only this site's keys are ever deleted, never the whole Redis database.
 * When Redis is down, WordPress falls back to its own cache and the site keeps working. Whatever changed meanwhile is not served stale later: the first request that reaches Redis again clears this site's keys first. The same happens after WPHouse safe mode, and when WP-CLI runs on a PHP without PhpRedis.

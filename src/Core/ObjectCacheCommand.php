@@ -33,6 +33,10 @@ final class ObjectCacheCommand {
 		if ( '' !== $error ) {
 			WP_CLI::error( 'Redis is not usable: ' . $error );
 		}
+		$version = ObjectCache::redis_version();
+		if ( '' === $version || version_compare( $version, ObjectCache::MIN_REDIS, '<' ) ) {
+			WP_CLI::error( sprintf( 'Redis %s or newer is required (this server: %s).', ObjectCache::MIN_REDIS, '' !== $version ? $version : 'unknown' ) );
+		}
 		$error = ObjectCache::install();
 		if ( '' !== $error ) {
 			WP_CLI::error( $error );

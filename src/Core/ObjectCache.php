@@ -76,6 +76,24 @@ final class ObjectCache {
 		return ! file_exists( self::dropin() );
 	}
 
+	/** Oldest Redis the cache supports: increments use SET ... KEEPTTL. */
+	public const MIN_REDIS = '6.0';
+
+	/** Version of the Redis server, '' when it cannot be read. */
+	public static function redis_version(): string {
+		require_once dirname( WPHOUSE_FILE ) . '/src/ObjectCache/connect.php';
+		[ $redis ] = wphouse_object_cache_connect();
+		if ( null === $redis ) {
+			return '';
+		}
+		try {
+			$info = $redis->info( 'server' );
+		} catch ( \Throwable ) {
+			return '';
+		}
+		return is_array( $info ) ? (string) ( $info['redis_version'] ?? '' ) : '';
+	}
+
 	/**
 	 * Drop this site's keys from Redis. Returns an error message, or '' on success.
 	 */
