@@ -8,3 +8,5 @@
 /.playwright-mcp/
 /docs/research/
 /site/assets/src/
+/site/.vercel/
+/site/.env*
