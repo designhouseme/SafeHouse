@@ -12,6 +12,7 @@ use WPHouse\Core\AbstractModule;
 use WPHouse\Core\Compat;
 use WPHouse\Core\Integrations;
 use WPHouse\Core\Log;
+use WPHouse\Core\ObjectCache;
 use WPHouse\Core\SafeMode;
 use WPHouse\Core\Settings;
 use WPHouse\Plugin;
@@ -369,15 +370,14 @@ final class Page {
 
 	/** What WPHouse does alongside the plugins it is built for, and which of them this site has. */
 	private function render_integrations(): void {
-		$found        = Integrations::detected();
-		$rows         = [
+		$found = Integrations::detected();
+		$rows  = [
 			'wordfence'   => [ 'Wordfence', __( 'WPHouse skips what Wordfence already does (for example username discovery and login error masking) and leaves the firewall, two-factor login and malware scans to it. Vulnerability alerts stand down, because Wordfence warns about vulnerable plugins itself.', 'wphouse' ) ],
 			'woocommerce' => [ 'WooCommerce', __( 'Compatible with HPOS and the block checkout. Generic login errors also cover the My Account form, maintenance mode lets the Store API and payment callbacks through, and product reviews survive "disable comments".', 'wphouse' ) ],
 			'payments'    => [ __( 'Payment gateways', 'wphouse' ), __( 'Autopay, Przelewy24, PayU, imoje, Paynow, Stripe, PayPal and WooPayments. Their callbacks (?wc-api= and the REST API) pass maintenance mode, and XML-RPC stays on for WooPayments.', 'wphouse' ) ],
-			'redis'       => [ 'Redis Object Cache', __( 'WPHouse has no object cache of its own: on servers with Redis, this is the plugin we recommend. The status shows whether its drop-in is connected.', 'wphouse' ) ],
+			'redis'       => [ __( 'Redis object cache', 'wphouse' ), __( 'WPHouse has its own Redis object cache: install it with "wp wphouse object-cache enable". Every cached value is signed, so other sites on a shared Redis cannot plant data. A site that uses the Redis Object Cache plugin instead shows its status here.', 'wphouse' ) ],
 			'elementor'   => [ 'Elementor', __( 'Elementor and Elementor Pro. Watched for new vulnerabilities like everything on this list.', 'wphouse' ) ],
 		];
-		$object_cache = Integrations::object_cache();
 		?>
 		<section class="wphouse-card" id="wphouse-integrations">
 			<header class="wphouse-card__head"><h2><?php esc_html_e( 'Integrations', 'wphouse' ); ?></h2></header>
@@ -395,7 +395,9 @@ final class Page {
 						<td>
 							<?php
 							$items = $found[ $group ] ?? [];
-							if ( ! $items ) {
+							if ( 'redis' === $group ) {
+								$this->render_object_cache_status( $items );
+							} elseif ( ! $items ) {
 								echo '<span class="wphouse-badge">' . esc_html__( 'not installed', 'wphouse' ) . '</span>';
 								if ( 'wordfence' === $group ) {
 									echo '<p class="description">' . esc_html(
@@ -405,18 +407,10 @@ final class Page {
 									) . '</p>';
 								}
 							}
-							foreach ( $items as $item ) {
-								echo '<div><span class="wphouse-status wphouse-status--' . ( $item['active'] ? 'on' : 'off' ) . '">' . esc_html( $item['active'] ? __( 'active', 'wphouse' ) : __( 'inactive', 'wphouse' ) ) . '</span> ' . esc_html( $item['name'] ) . '</div>';
-							}
-							if ( 'redis' === $group && 'none' !== $object_cache['type'] ) {
-								if ( 'other' === $object_cache['type'] ) {
-									$note = __( 'Another persistent object cache is in use.', 'wphouse' );
-								} elseif ( $object_cache['connected'] ) {
-									$note = __( 'Object cache connected to Redis.', 'wphouse' );
-								} else {
-									$note = __( 'Object cache drop-in installed, but Redis is not reachable.', 'wphouse' );
+							if ( 'redis' !== $group ) {
+								foreach ( $items as $item ) {
+									$this->render_plugin_status( $item );
 								}
-								echo '<p class="description">' . esc_html( $note ) . '</p>';
 							}
 							?>
 						</td>
@@ -427,6 +421,42 @@ final class Page {
 			</table>
 		</section>
 		<?php
+	}
+
+	/**
+	 * @param array{name: string, active: bool} $item Detected plugin.
+	 */
+	private function render_plugin_status( array $item ): void {
+		echo '<div><span class="wphouse-status wphouse-status--' . ( $item['active'] ? 'on' : 'off' ) . '">' . esc_html( $item['active'] ? __( 'active', 'wphouse' ) : __( 'inactive', 'wphouse' ) ) . '</span> ' . esc_html( $item['name'] ) . '</div>';
+	}
+
+	/**
+	 * Our drop-in first; otherwise the Redis Object Cache plugin or any other object cache.
+	 *
+	 * @param list<array{name: string, active: bool}> $items Redis Object Cache plugin, if installed.
+	 */
+	private function render_object_cache_status( array $items ): void {
+		if ( 'ours' === ObjectCache::dropin_state() ) {
+			$cache = ObjectCache::active();
+			$up    = null !== $cache && $cache->redis_status();
+			echo '<div><span class="wphouse-status wphouse-status--' . ( $up ? 'on' : 'warn' ) . '">' . esc_html( $up ? __( 'connected', 'wphouse' ) : __( 'Redis not reachable', 'wphouse' ) ) . '</span> ' . esc_html__( 'WPHouse object cache', 'wphouse' ) . '</div>';
+			return;
+		}
+		foreach ( $items as $item ) {
+			$this->render_plugin_status( $item );
+		}
+		$other = Integrations::object_cache();
+		if ( 'redis' === $other['type'] ) {
+			$note = $other['connected'] ? __( 'Object cache connected to Redis.', 'wphouse' ) : __( 'Object cache drop-in installed, but Redis is not reachable.', 'wphouse' );
+		} elseif ( 'other' === $other['type'] ) {
+			$note = __( 'Another persistent object cache is in use.', 'wphouse' );
+		} elseif ( ! $items ) {
+			echo '<span class="wphouse-badge">' . esc_html__( 'not installed', 'wphouse' ) . '</span>';
+			return;
+		} else {
+			return;
+		}
+		echo '<p class="description">' . esc_html( $note ) . '</p>';
 	}
 
 	private function render_log(): void {

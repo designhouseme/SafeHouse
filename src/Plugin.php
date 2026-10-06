@@ -11,6 +11,7 @@ namespace WPHouse;
 use WPHouse\Core\AbstractModule;
 use WPHouse\Core\Cli;
 use WPHouse\Core\Log;
+use WPHouse\Core\ObjectCache;
 use WPHouse\Core\SafeMode;
 use WPHouse\Core\Settings;
 use WPHouse\Core\Updater;
@@ -67,6 +68,7 @@ final class Plugin {
 		add_action( 'wphouse_daily', [ Log::class, 'purge' ] );
 		add_action( 'init', [ $plugin, 'load_textdomain' ] );
 		Updater::register(); // Also in safe mode: that is how a fix for a broken module arrives.
+		ObjectCache::register(); // Also in safe mode: status and `wp wphouse object-cache disable` must stay reachable.
 
 		if ( ! SafeMode::active() ) {
 			foreach ( $plugin->modules as $id => $module ) {
@@ -128,5 +130,6 @@ final class Plugin {
 	public static function deactivate(): void {
 		wp_clear_scheduled_hook( 'wphouse_hourly' );
 		wp_clear_scheduled_hook( 'wphouse_daily' );
+		ObjectCache::deactivate();
 	}
 }

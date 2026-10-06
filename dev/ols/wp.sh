@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# WP-CLI against the OpenLiteSpeed test site: ./dev/ols/wp.sh plugin list
+# WP-CLI on the OpenLiteSpeed test site, run by the site's own lsphp (it has PhpRedis): ./dev/ols/wp.sh plugin list
 set -euo pipefail
 cd "$(dirname "$0")"
-exec docker compose --profile cli run --rm -T wpcli php -d memory_limit=512M /usr/local/bin/wp --allow-root "$@"
+exec docker compose exec -T ols /usr/local/lsws/lsphp83/bin/php -d memory_limit=512M -d 'error_reporting=E_ALL & ~E_DEPRECATED' \
+	/usr/local/bin/wp-cli.phar --allow-root --path=/var/www/vhosts/localhost/html "$@"

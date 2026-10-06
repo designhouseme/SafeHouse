@@ -5,7 +5,10 @@ cd "$(dirname "$0")"
 URL="http://localhost:${OLS_PORT:-8896}"
 wp() { ./wp.sh "$@"; }
 
+[ -d ../../build/wp-cli.phar ] && rmdir ../../build/wp-cli.phar # created by `docker compose up` before the download
+[ -f ../../build/wp-cli.phar ] || { mkdir -p ../../build && curl -sSL -o ../../build/wp-cli.phar https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar; }
 docker compose up -d
+until docker compose exec -T ols true 2>/dev/null; do sleep 1; done
 if ! wp core is-installed 2>/dev/null; then
 	wp core download --force >/dev/null || true
 	wp config create --dbname=wordpress --dbuser=wordpress --dbpass=wordpress --dbhost=db --skip-check --force \
@@ -14,10 +17,12 @@ define( 'WP_ENVIRONMENT_TYPE', 'local' );
 define( 'WP_DEBUG', true );
 define( 'WP_DEBUG_LOG', true );
 define( 'WP_DEBUG_DISPLAY', false );
+define( 'WP_REDIS_HOST', 'redis' );
 PHP
 	wp core install --url="$URL" --title="WPHouse OLS" --admin_user=admin --admin_password=admin \
 		--admin_email=admin@example.test --skip-email
 fi
+wp config set WP_REDIS_HOST redis >/dev/null # sites set up before Redis was part of the harness
 wp theme install twentytwentyfive --activate >/dev/null 2>&1 || true
 wp plugin install woocommerce ${WOO_VERSION:+--version=$WOO_VERSION} --activate >/dev/null
 wp plugin activate wphouse >/dev/null

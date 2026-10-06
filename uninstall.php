@@ -27,6 +27,12 @@ $wpdb->query(
 wp_clear_scheduled_hook( 'wphouse_hourly' );
 wp_clear_scheduled_hook( 'wphouse_daily' );
 
+// Our object cache loader, if deactivation did not remove it already. Another plugin's drop-in is left alone.
+$wphouse_dropin = WP_CONTENT_DIR . '/object-cache.php';
+if ( file_exists( $wphouse_dropin ) && str_contains( (string) file_get_contents( $wphouse_dropin, false, null, 0, 1024 ), 'WPHouse object cache loader' ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- local file.
+	wp_delete_file( $wphouse_dropin );
+}
+
 $wphouse_flag = WP_CONTENT_DIR . '/wphouse-safe-mode';
 if ( file_exists( $wphouse_flag ) ) {
 	wp_delete_file( $wphouse_flag );

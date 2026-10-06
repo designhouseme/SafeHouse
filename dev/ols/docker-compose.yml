@@ -5,6 +5,7 @@ name: wphouse-ols
 # (checkPublicCache 1, enableCache 0), which is how the module works on LiteSpeed hosts.
 # Setup: ./dev/ols/setup.sh    Site: http://localhost:8896 (admin/admin)
 # OLS listens on 8896 inside the container too, so WordPress can reach itself (loopback, Site Health).
+# WP-CLI runs inside the ols container (dev/ols/wp.sh) with the same lsphp, which has PhpRedis.
 
 x-db-env: &db-env
   MARIADB_DATABASE: wordpress
@@ -13,6 +14,10 @@ x-db-env: &db-env
   MARIADB_ROOT_PASSWORD: wordpress
 
 services:
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"] # keeps data across restarts, like many hosts: tests the stale-data guard
+
   db:
     image: mariadb:11.4
     environment: *db-env
@@ -33,18 +38,7 @@ services:
     volumes:
       - wp:/var/www/vhosts/localhost/html
       - ../..:/var/www/vhosts/localhost/html/wp-content/plugins/wphouse
-
-  wpcli:
-    image: wordpress:cli-php8.3
-    profiles: ["cli"]
-    user: "0:0"
-    working_dir: /var/www/html
-    depends_on:
-      db:
-        condition: service_healthy
-    volumes:
-      - wp:/var/www/html
-      - ../..:/var/www/html/wp-content/plugins/wphouse
+      - ../../build/wp-cli.phar:/usr/local/bin/wp-cli.phar:ro
 
 volumes:
   wp:
