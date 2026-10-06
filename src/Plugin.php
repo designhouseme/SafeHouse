@@ -31,6 +31,7 @@ final class Plugin {
 		Modules\Scripts::class,
 		Modules\Maintenance::class,
 		Modules\Vulnerabilities::class,
+		Modules\LiteSpeed::class,
 	];
 
 	private static ?Plugin $instance = null;

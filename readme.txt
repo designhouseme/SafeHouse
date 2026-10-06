@@ -31,6 +31,7 @@ Off by default:
 * **SMTP mail:** all WordPress and WooCommerce mail through your SMTP server, with the credentials in wp-config.php. No mail log, so password-reset links are never stored.
 * **Header and footer scripts:** tracking codes, verification tags and widgets in `<head>`, after `<body>` or before `</body>`. HTML and JavaScript only, never PHP; only administrators allowed to post unfiltered HTML can edit them.
 * **Maintenance mode:** visitors get a short "back soon" page with HTTP 503 and Retry-After. Logged-in staff see the normal site; wp-login, the REST API, cron and payment callbacks keep working. Switching it on or off purges LiteSpeed Cache, WP Rocket, W3 Total Cache, WP Super Cache and Autoptimize; Cloudflare HTML caching (APO, Cache Everything) needs a manual purge.
+* **LiteSpeed page cache:** on LiteSpeed servers, pages for visitors who are not logged in and have no cart are served from the server cache without running WordPress. WPHouse only sends cache headers and clears the cache after content, menu, theme, plugin and stock changes; it writes no files and no `.htaccess`. Logged-in users, commenters, visitors with a cart, and the cart, checkout and account pages are never cached. On LiteSpeed Enterprise the host, or one `CacheLookup public on` line in `.htaccess`, turns the server cache on; Site Health checks that it works. Stands down while the LiteSpeed Cache plugin is active.
 
 = Integrations =
 
@@ -74,7 +75,7 @@ Yes. `define( 'WPHOUSE_MODULES', [ 'lockdown' => true, 'scripts' => false ] );` 
 
 = Which WP-CLI commands are there? =
 
-`wp wphouse status`, `wp wphouse module enable|disable <module>`, `wp wphouse log`, `wp wphouse safe-mode on|off` and `wp wphouse update-check`. Modules add `wp wphouse unlock` and `wp wphouse lock` (install lockdown), `wp wphouse watch accept` (change alerts; run it at the end of deploy scripts), `wp wphouse plugin-health` and `wp wphouse vulnerabilities`.
+`wp wphouse status`, `wp wphouse module enable|disable <module>`, `wp wphouse log`, `wp wphouse safe-mode on|off` and `wp wphouse update-check`. Modules add `wp wphouse unlock` and `wp wphouse lock` (install lockdown), `wp wphouse watch accept` (change alerts; run it at the end of deploy scripts), `wp wphouse plugin-health`, `wp wphouse vulnerabilities` and `wp wphouse cache purge` (LiteSpeed page cache).
 
 = Is it translated? =
 
@@ -97,6 +98,7 @@ WPHouse sends no telemetry. The activity log stays in the site's database, store
 * Install lockdown, change alerts and plugin health.
 * Vulnerability alerts for sites without Wordfence, from signed Wordfence Intelligence data.
 * Integrations card for Wordfence, WooCommerce, payment gateways and Elementor.
+* LiteSpeed page cache without the LiteSpeed Cache plugin: cache headers only, safe for WooCommerce.
 * Tweaks, duplicate posts, SMTP from wp-config, header and footer scripts, maintenance mode.
 * Signed self-hosted updates.
 * Design House branding on the settings page, the Updates screen and alert e-mails.

@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-06T11:59:30+00:00\n"
+"POT-Creation-Date: 2026-10-06T12:19:54+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: wphouse\n"
@@ -35,176 +35,176 @@ msgstr ""
 msgid "Design House"
 msgstr ""
 
-#: src/Admin/Page.php:81
+#: src/Admin/Page.php:82
 msgid "Settings"
 msgstr ""
 
-#: src/Admin/Page.php:106
+#: src/Admin/Page.php:107
 msgid "WPHouse safe mode is on: every module is stopped. Remove wp-content/wphouse-safe-mode or the WPHOUSE_SAFE_MODE constant to resume."
 msgstr ""
 
-#: src/Admin/Page.php:119
+#: src/Admin/Page.php:120
 msgid "You are not allowed to do this."
 msgstr ""
 
-#: src/Admin/Page.php:127
+#: src/Admin/Page.php:128
 msgid "Unknown task."
 msgstr ""
 
-#: src/Admin/Page.php:148
+#: src/Admin/Page.php:149
 msgid "Modules"
 msgstr ""
 
-#: src/Admin/Page.php:149
-#: src/Admin/Page.php:384
+#: src/Admin/Page.php:150
+#: src/Admin/Page.php:385
 msgid "Integrations"
 msgstr ""
 
-#: src/Admin/Page.php:150
-#: src/Admin/Page.php:202
+#: src/Admin/Page.php:151
+#: src/Admin/Page.php:203
 msgid "General"
 msgstr ""
 
 #. translators: 1: number of modules running, 2: number of modules.
-#: src/Admin/Page.php:166
+#: src/Admin/Page.php:167
 #, php-format
 msgid "%1$d of %2$d running"
 msgstr ""
 
-#: src/Admin/Page.php:174
+#: src/Admin/Page.php:175
 msgid "Settings are locked by WPHOUSE_LOCK_SETTINGS in wp-config.php. Change them in code."
 msgstr ""
 
-#: src/Admin/Page.php:177
+#: src/Admin/Page.php:178
 msgid "WPHOUSE_IGNORE_OVERLAPS is on: features run even where another plugin already provides them."
 msgstr ""
 
-#: src/Admin/Page.php:186
+#: src/Admin/Page.php:187
 msgid "Small, audited replacements for single-purpose plugins. Every module is a switch. Features that Wordfence or wp-config already handle are skipped automatically."
 msgstr ""
 
-#: src/Admin/Page.php:205
+#: src/Admin/Page.php:206
 msgid "Alert recipients"
 msgstr ""
 
-#: src/Admin/Page.php:208
+#: src/Admin/Page.php:209
 msgid "Comma-separated. Empty means the site admin address."
 msgstr ""
 
-#: src/Admin/Page.php:242
+#: src/Admin/Page.php:243
 msgid "Unavailable"
 msgstr ""
 
-#: src/Admin/Page.php:244
+#: src/Admin/Page.php:245
 msgid "Running"
 msgstr ""
 
-#: src/Admin/Page.php:246
+#: src/Admin/Page.php:247
 msgid "Enabled, not running"
 msgstr ""
 
-#: src/Admin/Page.php:248
+#: src/Admin/Page.php:249
 msgid "Off"
 msgstr ""
 
-#: src/Admin/Page.php:260
+#: src/Admin/Page.php:261
 #: src/Modules/Vulnerabilities.php:422
 msgid "Details"
 msgstr ""
 
-#: src/Admin/Page.php:265
+#: src/Admin/Page.php:266
 msgid "Pinned by WPHOUSE_MODULES in wp-config.php."
 msgstr ""
 
 #. translators: %s: plugin or setting name, e.g. Wordfence.
-#: src/Admin/Page.php:360
+#: src/Admin/Page.php:361
 #, php-format
 msgid "Handled by %s, skipped here."
 msgstr ""
 
-#: src/Admin/Page.php:375
+#: src/Admin/Page.php:376
 msgid "WPHouse skips what Wordfence already does (for example username discovery and login error masking) and leaves the firewall, two-factor login and malware scans to it. Vulnerability alerts stand down, because Wordfence warns about vulnerable plugins itself."
 msgstr ""
 
-#: src/Admin/Page.php:376
+#: src/Admin/Page.php:377
 msgid "Compatible with HPOS and the block checkout. Generic login errors also cover the My Account form, maintenance mode lets the Store API and payment callbacks through, and product reviews survive \"disable comments\"."
 msgstr ""
 
-#: src/Admin/Page.php:377
+#: src/Admin/Page.php:378
 msgid "Payment gateways"
 msgstr ""
 
-#: src/Admin/Page.php:377
+#: src/Admin/Page.php:378
 msgid "Autopay, Przelewy24, PayU, imoje, Paynow, Stripe, PayPal and WooPayments. Their callbacks (?wc-api= and the REST API) pass maintenance mode, and XML-RPC stays on for WooPayments."
 msgstr ""
 
-#: src/Admin/Page.php:378
+#: src/Admin/Page.php:379
 msgid "WPHouse has no object cache of its own: on servers with Redis, this is the plugin we recommend. The status shows whether its drop-in is connected."
 msgstr ""
 
-#: src/Admin/Page.php:379
+#: src/Admin/Page.php:380
 msgid "Elementor and Elementor Pro. Watched for new vulnerabilities like everything on this list."
 msgstr ""
 
-#: src/Admin/Page.php:385
+#: src/Admin/Page.php:386
 msgid "WPHouse is built to run alongside these plugins. Design House watches all of them for new vulnerabilities (CVE) and tells you when an update cannot wait."
 msgstr ""
 
-#: src/Admin/Page.php:388
+#: src/Admin/Page.php:389
 msgid "Integration"
 msgstr ""
 
-#: src/Admin/Page.php:389
+#: src/Admin/Page.php:390
 msgid "On this site"
 msgstr ""
 
-#: src/Admin/Page.php:390
+#: src/Admin/Page.php:391
 msgid "What WPHouse does"
 msgstr ""
 
-#: src/Admin/Page.php:400
+#: src/Admin/Page.php:401
 msgid "not installed"
 msgstr ""
 
-#: src/Admin/Page.php:404
+#: src/Admin/Page.php:405
 msgid "WPHouse vulnerability alerts cover this site. For a firewall and two-factor login, install Wordfence."
 msgstr ""
 
-#: src/Admin/Page.php:405
+#: src/Admin/Page.php:406
 msgid "Nothing warns about vulnerable plugins on this site: switch on WPHouse vulnerability alerts below, or install Wordfence."
 msgstr ""
 
-#: src/Admin/Page.php:410
+#: src/Admin/Page.php:411
 msgid "active"
 msgstr ""
 
-#: src/Admin/Page.php:410
+#: src/Admin/Page.php:411
 #: src/Modules/PluginHealth.php:382
 msgid "inactive"
 msgstr ""
 
-#: src/Admin/Page.php:414
+#: src/Admin/Page.php:415
 msgid "Another persistent object cache is in use."
 msgstr ""
 
-#: src/Admin/Page.php:416
+#: src/Admin/Page.php:417
 msgid "Object cache connected to Redis."
 msgstr ""
 
-#: src/Admin/Page.php:418
+#: src/Admin/Page.php:419
 msgid "Object cache drop-in installed, but Redis is not reachable."
 msgstr ""
 
-#: src/Admin/Page.php:438
+#: src/Admin/Page.php:439
 msgid "Activity log"
 msgstr ""
 
-#: src/Admin/Page.php:444
+#: src/Admin/Page.php:445
 msgid "No events yet."
 msgstr ""
 
 #. translators: %s: time since the event, e.g. "5 mins".
-#: src/Admin/Page.php:462
+#: src/Admin/Page.php:463
 #, php-format
 msgid "%s ago"
 msgstr ""
@@ -301,6 +301,86 @@ msgstr ""
 
 #: src/Modules/Hardening.php:208
 msgid "<strong>Error:</strong> The username, email address or password is incorrect."
+msgstr ""
+
+#: src/Modules/LiteSpeed.php:56
+msgid "LiteSpeed page cache"
+msgstr ""
+
+#: src/Modules/LiteSpeed.php:60
+msgid "On LiteSpeed servers, pages for visitors who are not logged in and have no cart are served from the server cache without running WordPress. WPHouse only sends cache headers and clears the cache after changes; it writes no files. Logged-in users, the cart, checkout and account pages are never cached."
+msgstr ""
+
+#: src/Modules/LiteSpeed.php:67
+msgid "Keep pages for (minutes)"
+msgstr ""
+
+#: src/Modules/LiteSpeed.php:68
+msgid "At most 8 hours, so forms on cached pages still carry a valid security token. Changes clear the cache anyway."
+msgstr ""
+
+#: src/Modules/LiteSpeed.php:74
+msgid "Never cache these paths"
+msgstr ""
+
+#: src/Modules/LiteSpeed.php:75
+msgid "One per line, for example /contact/. A line matches every address that starts with it."
+msgstr ""
+
+#: src/Modules/LiteSpeed.php:86
+msgid "The LiteSpeed Cache plugin is active and manages the server cache itself."
+msgstr ""
+
+#: src/Modules/LiteSpeed.php:210
+msgid "Clear the cache"
+msgstr ""
+
+#: src/Modules/LiteSpeed.php:216
+msgid "LiteSpeed was asked to clear the cache."
+msgstr ""
+
+#: src/Modules/LiteSpeed.php:224
+msgid "This server is LiteSpeed. Tools → Site Health checks whether it actually serves pages from its cache."
+msgstr ""
+
+#: src/Modules/LiteSpeed.php:225
+msgid "This server does not look like LiteSpeed, so the cache headers have no effect here."
+msgstr ""
+
+#: src/Modules/LiteSpeed.php:236
+msgid "WPHouse LiteSpeed page cache"
+msgstr ""
+
+#: src/Modules/LiteSpeed.php:265
+msgid "LiteSpeed serves pages from its cache"
+msgstr ""
+
+#: src/Modules/LiteSpeed.php:266
+msgid "The home page came from the LiteSpeed cache for a visitor who is not logged in."
+msgstr ""
+
+#: src/Modules/LiteSpeed.php:269
+msgid "LiteSpeed does not serve pages from its cache yet"
+msgstr ""
+
+#: src/Modules/LiteSpeed.php:270
+msgid "The server is LiteSpeed, but the home page was not served from its cache. On LiteSpeed Enterprise add this to .htaccess, or ask your host to turn the cache on: <IfModule LiteSpeed> CacheLookup public on </IfModule>. A page that sets a cookie for every visitor is never cached either."
+msgstr ""
+
+#: src/Modules/LiteSpeed.php:273
+msgid "The server is not LiteSpeed"
+msgstr ""
+
+#: src/Modules/LiteSpeed.php:274
+msgid "The LiteSpeed page cache module has no effect on this server. Switch it off, or use the cache your host provides."
+msgstr ""
+
+#: src/Modules/LiteSpeed.php:278
+msgid "WooCommerce geolocates customers without page caching support, so cached pages may show one country's prices and taxes to everyone. In WooCommerce → Settings → General choose \"Geolocate (with page caching support)\"."
+msgstr ""
+
+#: src/Modules/LiteSpeed.php:284
+msgid "Performance"
 msgstr ""
 
 #: src/Modules/Lockdown.php:40
@@ -830,7 +910,7 @@ msgstr ""
 msgid "Watching %1$d administrators, %2$d plugins, %3$d must-use plugins, %4$d drop-ins and wp-config.php."
 msgstr ""
 
-#: src/Plugin.php:121
+#: src/Plugin.php:122
 msgid "WPHouse 0.x supports single sites only. Activate it per site instead of network-wide."
 msgstr ""
 

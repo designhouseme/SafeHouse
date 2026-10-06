@@ -34,6 +34,11 @@ final class Compat {
 		return class_exists( 'WooCommerce' );
 	}
 
+	/** The LiteSpeed Cache plugin, which manages the LiteSpeed server cache itself. */
+	public static function litespeed_cache_active(): bool {
+		return defined( 'LSCWP_V' );
+	}
+
 	/** True when a constant is defined and truthy. */
 	public static function constant_on( string $name ): bool {
 		return defined( $name ) && constant( $name );
