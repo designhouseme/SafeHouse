@@ -6,16 +6,16 @@
  * Deliberately absent: a CSP (it breaks payment iframes unless tuned per site), stripping
  * ?ver= from assets (breaks cache busting) and any .htaccess writes.
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Modules;
+namespace SafeHouse\Modules;
 
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Users_Controller;
-use WPHouse\Core\AbstractModule;
-use WPHouse\Core\Compat;
+use SafeHouse\Core\AbstractModule;
+use SafeHouse\Core\Compat;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -71,52 +71,52 @@ final class Hardening extends AbstractModule {
 	}
 
 	public function label(): string {
-		return __( 'Hardening', 'wphouse' );
+		return __( 'Hardening', 'shouse' );
 	}
 
 	public function description(): string {
-		return __( 'Safe defaults: no code editor in wp-admin, no username discovery, no admin-level role for new accounts, generic login errors, no version disclosure, XML-RPC off and basic security headers. Adds a registration check to Site Health.', 'wphouse' );
+		return __( 'Safe defaults: no code editor in wp-admin, no username discovery, no admin-level role for new accounts, generic login errors, no version disclosure, XML-RPC off and basic security headers. Adds a registration check to Site Health.', 'shouse' );
 	}
 
 	public function fields(): array {
 		return [
 			'file_editor'       => [
 				'type'  => 'toggle',
-				'label' => __( 'Disable the theme/plugin file editor', 'wphouse' ),
+				'label' => __( 'Disable the theme/plugin file editor', 'shouse' ),
 			],
 			'user_enumeration'  => [
 				'type'  => 'toggle',
-				'label' => __( 'Block username discovery', 'wphouse' ),
-				'help'  => __( 'For visitors who are not logged in: ?author=N scans, the REST users endpoint, the users sitemap and author data in oEmbed.', 'wphouse' ),
+				'label' => __( 'Block username discovery', 'shouse' ),
+				'help'  => __( 'For visitors who are not logged in: ?author=N scans, the REST users endpoint, the users sitemap and author data in oEmbed.', 'shouse' ),
 			],
 			'safe_default_role' => [
 				'type'  => 'toggle',
-				'label' => __( 'Keep new accounts out of admin-level roles', 'wphouse' ),
-				'help'  => __( 'If the default role for new accounts can manage users, plugins, options, the shop or raw HTML (for example after a database attack), new accounts get Subscriber instead.', 'wphouse' ),
+				'label' => __( 'Keep new accounts out of admin-level roles', 'shouse' ),
+				'help'  => __( 'If the default role for new accounts can manage users, plugins, options, the shop or raw HTML (for example after a database attack), new accounts get Subscriber instead.', 'shouse' ),
 			],
 			'login_errors'      => [
 				'type'  => 'toggle',
-				'label' => __( 'Generic login errors', 'wphouse' ),
-				'help'  => __( 'One message for a wrong username or a wrong password, on wp-login.php and the WooCommerce login form.', 'wphouse' ),
+				'label' => __( 'Generic login errors', 'shouse' ),
+				'help'  => __( 'One message for a wrong username or a wrong password, on wp-login.php and the WooCommerce login form.', 'shouse' ),
 			],
 			'hide_version'      => [
 				'type'  => 'toggle',
-				'label' => __( 'Hide the WordPress version', 'wphouse' ),
+				'label' => __( 'Hide the WordPress version', 'shouse' ),
 			],
 			'xmlrpc'            => [
 				'type'  => 'toggle',
-				'label' => __( 'Disable XML-RPC', 'wphouse' ),
-				'help'  => __( 'xmlrpc.php answers 403. The WordPress mobile app and old desktop editors stop working with this site. Skipped automatically when Jetpack or WooPayments is active.', 'wphouse' ),
+				'label' => __( 'Disable XML-RPC', 'shouse' ),
+				'help'  => __( 'xmlrpc.php answers 403. The WordPress mobile app and old desktop editors stop working with this site. Skipped automatically when Jetpack or WooPayments is active.', 'shouse' ),
 			],
 			'headers'           => [
 				'type'  => 'toggle',
-				'label' => __( 'Basic security headers', 'wphouse' ),
-				'help'  => __( 'X-Content-Type-Options, Referrer-Policy and X-Frame-Options (same origin). Pages served from a full-page cache may not get them.', 'wphouse' ),
+				'label' => __( 'Basic security headers', 'shouse' ),
+				'help'  => __( 'X-Content-Type-Options, Referrer-Policy and X-Frame-Options (same origin). Pages served from a full-page cache may not get them.', 'shouse' ),
 			],
 			'hsts'              => [
 				'type'  => 'toggle',
-				'label' => __( 'HSTS (1 year, this domain only)', 'wphouse' ),
-				'help'  => __( 'Only on HTTPS. Browsers will refuse plain HTTP for a year, so turn it on only when HTTPS works everywhere on this domain.', 'wphouse' ),
+				'label' => __( 'HSTS (1 year, this domain only)', 'shouse' ),
+				'help'  => __( 'Only on HTTPS. Browsers will refuse plain HTTP for a year, so turn it on only when HTTPS works everywhere on this domain.', 'shouse' ),
 			],
 		];
 	}
@@ -186,7 +186,7 @@ final class Hardening extends AbstractModule {
 	public function block_rest_users( mixed $response, array $handler, WP_REST_Request $request ): mixed {
 		$callback = $handler['callback'] ?? null;
 		if ( ! is_user_logged_in() && is_array( $callback ) && ( $callback[0] ?? null ) instanceof WP_REST_Users_Controller ) {
-			return new WP_Error( 'rest_user_cannot_view', __( 'Sorry, you are not allowed to list users.', 'wphouse' ), [ 'status' => 401 ] );
+			return new WP_Error( 'rest_user_cannot_view', __( 'Sorry, you are not allowed to list users.', 'shouse' ), [ 'status' => 401 ] );
 		}
 		return $response;
 	}
@@ -222,8 +222,8 @@ final class Hardening extends AbstractModule {
 	 * @return array<string, mixed>
 	 */
 	public function site_health_test( array $tests ): array {
-		$tests['direct']['wphouse_registration'] = [
-			'label' => __( 'WPHouse registration check', 'wphouse' ),
+		$tests['direct']['shouse_registration'] = [
+			'label' => __( 'SafeHouse registration check', 'shouse' ),
 			'test'  => [ $this, 'site_health_result' ],
 		];
 		return $tests;
@@ -241,38 +241,38 @@ final class Hardening extends AbstractModule {
 
 		if ( self::is_admin_role( $role ) ) {
 			$status      = 'critical';
-			$label       = __( 'New accounts are set to get a role that can manage the site', 'wphouse' );
+			$label       = __( 'New accounts are set to get a role that can manage the site', 'shouse' );
 			$description = sprintf(
 				/* translators: %s: role name, e.g. Administrator. */
-				__( 'The default role for new accounts is %s, which can manage users, plugins, settings or the shop, or post raw HTML. Attackers set this so that they can register their own administrator. Change it in Settings → General and check who changed it.', 'wphouse' ),
+				__( 'The default role for new accounts is %s, which can manage users, plugins, settings or the shop, or post raw HTML. Attackers set this so that they can register their own administrator. Change it in Settings → General and check who changed it.', 'shouse' ),
 				$name
 			);
 			if ( $this->feature_on( 'safe_default_role' ) ) {
-				$description .= ' ' . __( 'Until then WPHouse gives new accounts the Subscriber role.', 'wphouse' );
+				$description .= ' ' . __( 'Until then SafeHouse gives new accounts the Subscriber role.', 'shouse' );
 			}
 		} elseif ( get_option( 'users_can_register' ) ) {
 			$status      = 'recommended';
-			$label       = __( 'Anyone can register an account', 'wphouse' );
+			$label       = __( 'Anyone can register an account', 'shouse' );
 			$description = sprintf(
 				/* translators: %s: role name, e.g. Subscriber. */
-				__( 'The "Anyone can register" setting is on, with %s as the role for new accounts. Bots use open registration for spam accounts and to probe plugins that trust any logged-in user. If the site does not need WordPress accounts, turn it off in Settings → General. WooCommerce customer accounts have their own setting and keep working.', 'wphouse' ),
+				__( 'The "Anyone can register" setting is on, with %s as the role for new accounts. Bots use open registration for spam accounts and to probe plugins that trust any logged-in user. If the site does not need WordPress accounts, turn it off in Settings → General. WooCommerce customer accounts have their own setting and keep working.', 'shouse' ),
 				$name
 			);
 		} else {
 			$status      = 'good';
-			$label       = __( 'Registration is closed', 'wphouse' );
-			$description = __( 'Only administrators can create WordPress accounts.', 'wphouse' );
+			$label       = __( 'Registration is closed', 'shouse' );
+			$description = __( 'Only administrators can create WordPress accounts.', 'shouse' );
 		}
 		return [
 			'label'       => $label,
 			'status'      => $status,
 			'badge'       => [
-				'label' => __( 'Security', 'wphouse' ),
+				'label' => __( 'Security', 'shouse' ),
 				'color' => 'blue',
 			],
 			'description' => '<p>' . esc_html( $description ) . '</p>',
-			'actions'     => 'good' === $status ? '' : '<a href="' . esc_url( admin_url( 'options-general.php' ) ) . '">' . esc_html__( 'Open general settings', 'wphouse' ) . '</a>',
-			'test'        => 'wphouse_registration',
+			'actions'     => 'good' === $status ? '' : '<a href="' . esc_url( admin_url( 'options-general.php' ) ) . '">' . esc_html__( 'Open general settings', 'shouse' ) . '</a>',
+			'test'        => 'shouse_registration',
 		];
 	}
 
@@ -303,7 +303,7 @@ final class Hardening extends AbstractModule {
 		}
 		return new WP_Error(
 			'incorrect_password',
-			__( '<strong>Error:</strong> The username, email address or password is incorrect.', 'wphouse' )
+			__( '<strong>Error:</strong> The username, email address or password is incorrect.', 'shouse' )
 		);
 	}
 

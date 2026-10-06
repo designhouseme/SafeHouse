@@ -7,23 +7,23 @@
  * Role and option changes made through WordPress are alerted immediately. Everything else is an
  * hourly inventory diff, which
  * also catches changes made straight in the database or over FTP. The first run (and
- * `wp wphouse watch accept`, meant for the end of deploy scripts) records a baseline silently.
+ * `wp shouse watch accept`, meant for the end of deploy scripts) records a baseline silently.
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Modules;
+namespace SafeHouse\Modules;
 
 use WP_CLI;
-use WPHouse\Core\AbstractModule;
-use WPHouse\Core\Log;
-use WPHouse\Core\Notify;
+use SafeHouse\Core\AbstractModule;
+use SafeHouse\Core\Log;
+use SafeHouse\Core\Notify;
 
 defined( 'ABSPATH' ) || exit;
 
 final class Watch extends AbstractModule {
 
-	private const STATE_OPTION = 'wphouse_watch_state';
+	private const STATE_OPTION = 'shouse_watch_state';
 	private const OPTIONS      = [ 'users_can_register', 'default_role', 'admin_email', 'siteurl', 'home' ];
 	private const DROPINS      = [ 'advanced-cache.php', 'object-cache.php', 'db.php', 'db-error.php', 'maintenance.php', 'install.php', 'sunrise.php', 'fatal-error-handler.php', 'php-error.php' ];
 
@@ -40,11 +40,11 @@ final class Watch extends AbstractModule {
 	}
 
 	public function label(): string {
-		return __( 'Change alerts', 'wphouse' );
+		return __( 'Change alerts', 'shouse' );
 	}
 
 	public function description(): string {
-		return __( 'E-mails the alert recipients when an administrator is added, a plugin or theme appears or is activated, a mu-plugin or drop-in shows up, wp-config.php changes, or someone opens registration or changes the default role, admin e-mail or site address. Changes are also written to the activity log.', 'wphouse' );
+		return __( 'E-mails the alert recipients when an administrator is added, a plugin or theme appears or is activated, a mu-plugin or drop-in shows up, wp-config.php changes, or someone opens registration or changes the default role, admin e-mail or site address. Changes are also written to the activity log.', 'shouse' );
 	}
 
 	public function fields(): array {
@@ -58,9 +58,9 @@ final class Watch extends AbstractModule {
 		foreach ( self::OPTIONS as $option ) {
 			add_action( 'update_option_' . $option, [ $this, 'on_option_update' ], 10, 3 );
 		}
-		add_action( 'wphouse_hourly', [ $this, 'cron_check' ] );
+		add_action( 'shouse_hourly', [ $this, 'cron_check' ] );
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
-			WP_CLI::add_command( 'wphouse watch', [ $this, 'cli' ] );
+			WP_CLI::add_command( 'shouse watch', [ $this, 'cli' ] );
 		}
 	}
 
@@ -223,7 +223,7 @@ final class Watch extends AbstractModule {
 		if ( $changes ) {
 			$critical = (bool) preg_grep( '/^(Administrator added|Must-use plugin added|Drop-in added|wp-config|Setting )/', $changes );
 			Log::add( 'inventory_changed', implode( '; ', $changes ), [], $critical ? 'critical' : 'warning' );
-			Notify::send( 'changes detected', array_merge( [ 'WPHouse noticed these changes since the last check (up to an hour ago):', '' ], array_map( static fn( $c ) => '- ' . $c, $changes ) ), $old_admin_email );
+			Notify::send( 'changes detected', array_merge( [ 'SafeHouse noticed these changes since the last check (up to an hour ago):', '' ], array_map( static fn( $c ) => '- ' . $c, $changes ) ), $old_admin_email );
 		}
 		return $changes;
 	}
@@ -235,31 +235,31 @@ final class Watch extends AbstractModule {
 
 	public function tasks(): array {
 		return [
-			'check'  => __( 'Check now', 'wphouse' ),
-			'accept' => __( 'Accept current state', 'wphouse' ),
+			'check'  => __( 'Check now', 'shouse' ),
+			'accept' => __( 'Accept current state', 'shouse' ),
 		];
 	}
 
 	public function handle_task( string $task ): string {
 		if ( 'accept' === $task ) {
 			$this->accept();
-			return __( 'The current state is the new baseline.', 'wphouse' );
+			return __( 'The current state is the new baseline.', 'shouse' );
 		}
 		$changes = $this->check();
 		/* translators: %d: number of changes. */
-		return $changes ? sprintf( _n( '%d change found and reported.', '%d changes found and reported.', count( $changes ), 'wphouse' ), count( $changes ) ) : __( 'No changes since the last check.', 'wphouse' );
+		return $changes ? sprintf( _n( '%d change found and reported.', '%d changes found and reported.', count( $changes ), 'shouse' ), count( $changes ) ) : __( 'No changes since the last check.', 'shouse' );
 	}
 
 	public function render_panel(): void {
 		$state = $this->stored_state();
-		echo '<p class="wphouse-panel">';
+		echo '<p class="shouse-panel">';
 		if ( ! $state ) {
-			esc_html_e( 'No baseline yet. It is recorded on the first hourly check.', 'wphouse' );
+			esc_html_e( 'No baseline yet. It is recorded on the first hourly check.', 'shouse' );
 		} else {
 			echo esc_html(
 				sprintf(
 					/* translators: 1: number of administrators, 2: number of plugins, 3: number of mu-plugins, 4: number of drop-ins, 5: number of site settings. */
-					__( 'Watching %1$d administrators, %2$d plugins, %3$d must-use plugins, %4$d drop-ins, wp-config.php and %5$d site settings.', 'wphouse' ),
+					__( 'Watching %1$d administrators, %2$d plugins, %3$d must-use plugins, %4$d drop-ins, wp-config.php and %5$d site settings.', 'shouse' ),
 					count( (array) $state['admins'] ),
 					count( (array) $state['plugins'] ),
 					count( (array) $state['mu_plugins'] ),

@@ -1,14 +1,14 @@
 /**
- * WPHouse settings page. Without this script every view and every module's settings are shown;
+ * SafeHouse settings page. Without this script every view and every module's settings are shown;
  * with it, views switch in place and module settings fold away until asked for.
  */
 ( () => {
-	const root = document.querySelector( '.wphouse' );
+	const root = document.querySelector( '.shouse' );
 	if ( ! root ) {
 		return;
 	}
-	const form = root.querySelector( '.wphouse-form' );
-	const links = root.querySelectorAll( '.wphouse-tabs a[data-view]' );
+	const form = root.querySelector( '.shouse-form' );
+	const links = root.querySelectorAll( '.shouse-tabs a[data-view]' );
 
 	// Keep ?tab= in the address and in the form's referer, so saving brings the user back here.
 	const remember = ( view ) => {
@@ -34,7 +34,7 @@
 			} else {
 				link.removeAttribute( 'aria-current' );
 			}
-			const panel = document.getElementById( 'wphouse-view-' + link.dataset.view );
+			const panel = document.getElementById( 'shouse-view-' + link.dataset.view );
 			if ( panel ) {
 				panel.hidden = ! on;
 			}
@@ -50,9 +50,9 @@
 	} );
 
 	const modules = new Map();
-	root.querySelectorAll( '.wphouse-module' ).forEach( ( module ) => {
-		const button = module.querySelector( '.wphouse-module__more' );
-		const body = module.querySelector( '.wphouse-module__body' );
+	root.querySelectorAll( '.shouse-module' ).forEach( ( module ) => {
+		const button = module.querySelector( '.shouse-module__more' );
+		const body = module.querySelector( '.shouse-module__body' );
 		if ( ! button || ! body ) {
 			return;
 		}
@@ -64,7 +64,7 @@
 		open( false );
 		button.addEventListener( 'click', () => open( 'true' !== button.getAttribute( 'aria-expanded' ) ) );
 		// Switching a module on shows the settings it now uses.
-		const toggle = module.querySelector( '.wphouse-switch input' );
+		const toggle = module.querySelector( '.shouse-switch input' );
 		if ( toggle ) {
 			toggle.addEventListener( 'change', () => toggle.checked && open( true ) );
 		}
@@ -73,17 +73,17 @@
 
 	// Bring an element into view: its view, and its module's settings if it sits inside them.
 	const reveal = ( element ) => {
-		const view = element.closest( '.wphouse-view' );
+		const view = element.closest( '.shouse-view' );
 		if ( view && view.hidden ) {
-			show( view.id.replace( 'wphouse-view-', '' ) );
+			show( view.id.replace( 'shouse-view-', '' ) );
 		}
-		const module = element.closest( '.wphouse-module' );
+		const module = element.closest( '.shouse-module' );
 		if ( module && modules.has( module ) ) {
 			modules.get( module )( true );
 		}
 	};
 
-	// Links such as Site Health's "Open WPHouse" point at #wphouse-<module>.
+	// Links such as Site Health's "Open SafeHouse" point at #shouse-<module>.
 	const target = window.location.hash ? document.getElementById( window.location.hash.slice( 1 ) ) : null;
 	if ( target && root.contains( target ) ) {
 		reveal( target );

@@ -2,13 +2,13 @@
 /**
  * Everyday switches that usually come as one plugin each.
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Modules;
+namespace SafeHouse\Modules;
 
 use WP_Query;
-use WPHouse\Core\AbstractModule;
+use SafeHouse\Core\AbstractModule;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -32,52 +32,52 @@ final class Tweaks extends AbstractModule {
 	}
 
 	public function label(): string {
-		return __( 'Tweaks', 'wphouse' );
+		return __( 'Tweaks', 'shouse' );
 	}
 
 	public function description(): string {
-		return __( 'Small switches that are usually a plugin each: comments, search, emojis, embeds, head clean-up, Heartbeat, self-pingbacks and revision limits.', 'wphouse' );
+		return __( 'Small switches that are usually a plugin each: comments, search, emojis, embeds, head clean-up, Heartbeat, self-pingbacks and revision limits.', 'shouse' );
 	}
 
 	public function fields(): array {
 		return [
 			'disable_comments' => [
 				'type'  => 'toggle',
-				'label' => __( 'Disable comments', 'wphouse' ),
-				'help'  => __( 'Closes comments and pingbacks everywhere and hides existing ones. WooCommerce product reviews keep working when reviews are enabled in WooCommerce.', 'wphouse' ),
+				'label' => __( 'Disable comments', 'shouse' ),
+				'help'  => __( 'Closes comments and pingbacks everywhere and hides existing ones. WooCommerce product reviews keep working when reviews are enabled in WooCommerce.', 'shouse' ),
 			],
 			'disable_search'   => [
 				'type'  => 'toggle',
-				'label' => __( 'Disable front-end search', 'wphouse' ),
-				'help'  => __( 'Search URLs redirect to the home page (stops search-spam pages). Also disables WooCommerce product search.', 'wphouse' ),
+				'label' => __( 'Disable front-end search', 'shouse' ),
+				'help'  => __( 'Search URLs redirect to the home page (stops search-spam pages). Also disables WooCommerce product search.', 'shouse' ),
 			],
 			'disable_emojis'   => [
 				'type'  => 'toggle',
-				'label' => __( 'Disable emoji scripts', 'wphouse' ),
+				'label' => __( 'Disable emoji scripts', 'shouse' ),
 			],
 			'disable_embeds'   => [
 				'type'  => 'toggle',
-				'label' => __( 'Disable embedding of this site', 'wphouse' ),
-				'help'  => __( 'Removes oEmbed discovery and wp-embed.js. Embedding YouTube and others in your posts still works.', 'wphouse' ),
+				'label' => __( 'Disable embedding of this site', 'shouse' ),
+				'help'  => __( 'Removes oEmbed discovery and wp-embed.js. Embedding YouTube and others in your posts still works.', 'shouse' ),
 			],
 			'clean_head'       => [
 				'type'  => 'toggle',
-				'label' => __( 'Clean up <head>', 'wphouse' ),
-				'help'  => __( 'Removes RSD, Windows Live Writer, shortlink and adjacent-post links.', 'wphouse' ),
+				'label' => __( 'Clean up <head>', 'shouse' ),
+				'help'  => __( 'Removes RSD, Windows Live Writer, shortlink and adjacent-post links.', 'shouse' ),
 			],
 			'heartbeat'        => [
 				'type'  => 'toggle',
-				'label' => __( 'Slow down Heartbeat', 'wphouse' ),
-				'help'  => __( 'Every 60 seconds instead of 15–60, and not loaded on the front end for visitors.', 'wphouse' ),
+				'label' => __( 'Slow down Heartbeat', 'shouse' ),
+				'help'  => __( 'Every 60 seconds instead of 15–60, and not loaded on the front end for visitors.', 'shouse' ),
 			],
 			'self_pings'       => [
 				'type'  => 'toggle',
-				'label' => __( 'Disable self-pingbacks', 'wphouse' ),
+				'label' => __( 'Disable self-pingbacks', 'shouse' ),
 			],
 			'revisions'        => [
 				'type'        => 'number',
-				'label'       => __( 'Revisions to keep', 'wphouse' ),
-				'help'        => __( 'Empty keeps the WordPress default (unlimited).', 'wphouse' ),
+				'label'       => __( 'Revisions to keep', 'shouse' ),
+				'help'        => __( 'Empty keeps the WordPress default (unlimited).', 'shouse' ),
 				'min'         => 0,
 				'max'         => 100,
 				'allow_empty' => true,

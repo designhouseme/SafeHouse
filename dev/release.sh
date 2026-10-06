@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# WPHouse release flow. Signed manifest + checksummed zip; see src/Core/Updater.php.
+# SafeHouse release flow. Signed manifest + checksummed zip; see src/Core/Updater.php.
 #
 #   ./dev/release.sh keygen                         create the signing key once, print the public key
 #   ./dev/release.sh <x.y.z>                        bump version, lint, commit "Release x.y.z", tag vx.y.z,
@@ -8,13 +8,13 @@
 #   ./dev/release.sh pubkey                         print the public key of the signing key
 #
 # Env:
-#   WPHOUSE_SIGNING_KEY  private key file (default ~/.config/wphouse/signing.key). Never commit it.
-#   WPHOUSE_RELEASE_URL  public base URL of the files (default https://updates.designhouse.me/wphouse)
+#   SHOUSE_SIGNING_KEY  private key file (default ~/.config/wphouse/signing.key). Never commit it.
+#   SHOUSE_RELEASE_URL  public base URL of the files (default https://updates.designhouse.me/shouse)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT=$PWD
-KEY=${WPHOUSE_SIGNING_KEY:-$HOME/.config/wphouse/signing.key}
-RELEASE_URL=${WPHOUSE_RELEASE_URL:-https://updates.designhouse.me/wphouse}
+KEY=${SHOUSE_SIGNING_KEY:-$HOME/.config/wphouse/signing.key}
+RELEASE_URL=${SHOUSE_RELEASE_URL:-https://updates.designhouse.me/shouse}
 
 die() { echo "release: $*" >&2; exit 1; }
 
@@ -28,10 +28,10 @@ tool() {
 
 set_version() { # <plugin dir> <version>
 	# -i.bak works with both GNU and BSD (macOS) sed; plain -i does not.
-	sed -i.bak -E "s/^( \* Version:[[:space:]]+).*/\1$2/; s/^const WPHOUSE_VERSION = '[^']*';/const WPHOUSE_VERSION = '$2';/" "$1/wphouse.php"
+	sed -i.bak -E "s/^( \* Version:[[:space:]]+).*/\1$2/; s/^const SHOUSE_VERSION = '[^']*';/const SHOUSE_VERSION = '$2';/" "$1/shouse.php"
 	sed -i.bak -E "s/^Stable tag: .*/Stable tag: $2/" "$1/readme.txt"
-	rm -f "$1/wphouse.php.bak" "$1/readme.txt.bak"
-	grep -q "const WPHOUSE_VERSION = '$2';" "$1/wphouse.php" || die "could not set version in $1"
+	rm -f "$1/shouse.php.bak" "$1/readme.txt.bak"
+	grep -q "const SHOUSE_VERSION = '$2';" "$1/shouse.php" || die "could not set version in $1"
 }
 
 build() { # <git-ref> <version> <outdir>
@@ -43,15 +43,15 @@ build() { # <git-ref> <version> <outdir>
 	mkdir "$work/src"
 	git archive --format=tar "$ref" | tar -x -C "$work/src"   # honours export-ignore in .gitattributes
 	set_version "$work/src" "$version"
-	grep -q "__WPHOUSE_PUBLIC_KEY__" "$work/src/src/Core/Updater.php" && die "Updater.php still has the placeholder public key"
+	grep -q "__SHOUSE_PUBLIC_KEY__" "$work/src/src/Core/Updater.php" && die "Updater.php still has the placeholder public key"
 
-	local zip="$out/wphouse-$version.zip" keydir
+	local zip="$out/shouse-$version.zip" keydir
 	keydir=$(dirname "$KEY")
 	tool "$work" "$out" "$keydir" -- package "$work/src" "$zip"
-	tool "$out" "$keydir" -- manifest "$zip" "$out/manifest.json" "$version" "$RELEASE_URL/wphouse-$version.zip" "$ROOT/CHANGELOG.md"
+	tool "$out" "$keydir" -- manifest "$zip" "$out/manifest.json" "$version" "$RELEASE_URL/shouse-$version.zip" "$ROOT/CHANGELOG.md"
 	tool "$out" "$keydir" -- sign "$KEY" "$out/manifest.json"
 	tool "$out" "$keydir" -- verify "$(tool "$keydir" -- pubkey "$KEY")" "$out/manifest.json"
-	cp "$zip" "$out/wphouse-latest.zip"
+	cp "$zip" "$out/shouse-latest.zip"
 	rm -rf "$work"
 	echo
 	echo "Built $version in $out:"
@@ -85,7 +85,7 @@ case "${1:-}" in
 		set_version . "$version"
 		./dev/lint.sh
 		git commit -q -am "Release $version"
-		git tag -a "v$version" -m "WPHouse $version"
+		git tag -a "v$version" -m "SafeHouse $version"
 		build "v$version" "$version" "build/$version"
 		echo
 		echo "Next: upload build/$version/* to $RELEASE_URL/ (manifest.json and manifest.json.sig last),"

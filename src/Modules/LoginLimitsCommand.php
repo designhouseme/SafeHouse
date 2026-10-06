@@ -1,14 +1,14 @@
 <?php
 /**
- * `wp wphouse login`: inspect and lift login lockouts.
+ * `wp shouse login`: inspect and lift login lockouts.
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Modules;
+namespace SafeHouse\Modules;
 
 use WP_CLI;
-use WPHouse\Core\Log;
+use SafeHouse\Core\Log;
 
 defined( 'ABSPATH' ) || exit;
 

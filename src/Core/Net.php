@@ -4,17 +4,17 @@
  *
  * REMOTE_ADDR is used unless the request comes from a proxy we were told about:
  *   - Cloudflare: "Proxy in front of the site" on the settings page, or
- *     define( 'WPHOUSE_TRUSTED_PROXIES', 'cloudflare' ). CF-Connecting-IP is believed only when the
+ *     define( 'SHOUSE_TRUSTED_PROXIES', 'cloudflare' ). CF-Connecting-IP is believed only when the
  *     connection itself comes from a Cloudflare address (the TCP peer cannot be forged); a request
  *     that reaches the server directly is judged by REMOTE_ADDR alone.
  *   - Other proxies, in wp-config:
- *     define( 'WPHOUSE_TRUSTED_PROXIES', [ '10.0.0.0/8' ] );
- *     define( 'WPHOUSE_PROXY_HEADER', 'HTTP_X_REAL_IP' ); // default HTTP_X_FORWARDED_FOR
+ *     define( 'SHOUSE_TRUSTED_PROXIES', [ '10.0.0.0/8' ] );
+ *     define( 'SHOUSE_PROXY_HEADER', 'HTTP_X_REAL_IP' ); // default HTTP_X_FORWARDED_FOR
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Core;
+namespace SafeHouse\Core;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -59,7 +59,7 @@ final class Net {
 		if ( self::behind_cloudflare() ) {
 			return ! self::from_cloudflare() || '' !== self::cloudflare_visitor();
 		}
-		if ( defined( 'WPHOUSE_TRUSTED_PROXIES' ) && is_array( WPHOUSE_TRUSTED_PROXIES ) && WPHOUSE_TRUSTED_PROXIES ) {
+		if ( defined( 'SHOUSE_TRUSTED_PROXIES' ) && is_array( SHOUSE_TRUSTED_PROXIES ) && SHOUSE_TRUSTED_PROXIES ) {
 			return true;
 		}
 		foreach ( self::FORWARD_HEADERS as $header ) {
@@ -80,7 +80,7 @@ final class Net {
 			return $remote;
 		}
 
-		$header = defined( 'WPHOUSE_PROXY_HEADER' ) ? (string) WPHOUSE_PROXY_HEADER : 'HTTP_X_FORWARDED_FOR';
+		$header = defined( 'SHOUSE_PROXY_HEADER' ) ? (string) SHOUSE_PROXY_HEADER : 'HTTP_X_FORWARDED_FOR';
 		if ( empty( $_SERVER[ $header ] ) ) {
 			return $remote;
 		}
@@ -99,10 +99,10 @@ final class Net {
 		return $remote;
 	}
 
-	/** The site sits behind Cloudflare: the settings page says so, or WPHOUSE_TRUSTED_PROXIES is 'cloudflare'. */
+	/** The site sits behind Cloudflare: the settings page says so, or SHOUSE_TRUSTED_PROXIES is 'cloudflare'. */
 	public static function behind_cloudflare(): bool {
-		if ( defined( 'WPHOUSE_TRUSTED_PROXIES' ) ) {
-			return 'cloudflare' === WPHOUSE_TRUSTED_PROXIES;
+		if ( defined( 'SHOUSE_TRUSTED_PROXIES' ) ) {
+			return 'cloudflare' === SHOUSE_TRUSTED_PROXIES;
 		}
 		$settings = get_option( Settings::OPTION );
 		return is_array( $settings ) && 'cloudflare' === ( $settings['general']['proxy'] ?? '' );
@@ -125,8 +125,8 @@ final class Net {
 	 */
 	public static function site_health_test( array $tests ): array {
 		if ( self::from_cloudflare() || self::behind_cloudflare() ) {
-			$tests['direct']['wphouse_proxy'] = [
-				'label' => __( 'WPHouse and Cloudflare', 'wphouse' ),
+			$tests['direct']['shouse_proxy'] = [
+				'label' => __( 'SafeHouse and Cloudflare', 'shouse' ),
 				'test'  => [ self::class, 'site_health_result' ],
 			];
 		}
@@ -137,26 +137,26 @@ final class Net {
 	public static function site_health_result(): array {
 		if ( self::from_cloudflare() && ! self::behind_cloudflare() ) {
 			$status = 'critical';
-			$label  = __( 'Requests come through Cloudflare, but WPHouse is not set up for it', 'wphouse' );
-			$text   = __( 'Every visitor looks like a Cloudflare server: the activity log shows Cloudflare addresses and login limits cannot block by address. In WPHouse → General, set "Proxy in front of the site" to Cloudflare.', 'wphouse' );
+			$label  = __( 'Requests come through Cloudflare, but SafeHouse is not set up for it', 'shouse' );
+			$text   = __( 'Every visitor looks like a Cloudflare server: the activity log shows Cloudflare addresses and login limits cannot block by address. In SafeHouse → General, set "Proxy in front of the site" to Cloudflare.', 'shouse' );
 		} elseif ( self::from_cloudflare() ) {
 			$status = 'good';
-			$label  = __( 'WPHouse sees visitors\' real addresses behind Cloudflare', 'wphouse' );
-			$text   = __( 'The visitor address comes from Cloudflare\'s CF-Connecting-IP header, which is trusted only on connections from Cloudflare\'s own servers.', 'wphouse' );
+			$label  = __( 'SafeHouse sees visitors\' real addresses behind Cloudflare', 'shouse' );
+			$text   = __( 'The visitor address comes from Cloudflare\'s CF-Connecting-IP header, which is trusted only on connections from Cloudflare\'s own servers.', 'shouse' );
 		} else {
 			$status = 'recommended';
-			$label  = __( 'WPHouse is set up for Cloudflare, but this request did not come through it', 'wphouse' );
-			$text   = __( 'That is fine when you reach the server directly. If the site no longer uses Cloudflare, set "Proxy in front of the site" back to none.', 'wphouse' );
+			$label  = __( 'SafeHouse is set up for Cloudflare, but this request did not come through it', 'shouse' );
+			$text   = __( 'That is fine when you reach the server directly. If the site no longer uses Cloudflare, set "Proxy in front of the site" back to none.', 'shouse' );
 		}
 		return [
 			'label'       => $label,
 			'status'      => $status,
 			'badge'       => [
-				'label' => __( 'Security', 'wphouse' ),
+				'label' => __( 'Security', 'shouse' ),
 				'color' => 'blue',
 			],
 			'description' => '<p>' . esc_html( $text ) . '</p>',
-			'test'        => 'wphouse_proxy',
+			'test'        => 'shouse_proxy',
 		];
 	}
 
@@ -169,10 +169,10 @@ final class Net {
 	}
 
 	private static function is_trusted_proxy( string $ip ): bool {
-		if ( ! defined( 'WPHOUSE_TRUSTED_PROXIES' ) || ! is_array( WPHOUSE_TRUSTED_PROXIES ) ) {
+		if ( ! defined( 'SHOUSE_TRUSTED_PROXIES' ) || ! is_array( SHOUSE_TRUSTED_PROXIES ) ) {
 			return false;
 		}
-		foreach ( WPHOUSE_TRUSTED_PROXIES as $range ) {
+		foreach ( SHOUSE_TRUSTED_PROXIES as $range ) {
 			if ( self::in_range( $ip, (string) $range ) ) {
 				return true;
 			}

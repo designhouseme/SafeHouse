@@ -1,6 +1,6 @@
 <?php
 /**
- * LiteSpeed page cache without the LiteSpeed Cache plugin. The server keeps the pages; WPHouse only
+ * LiteSpeed page cache without the LiteSpeed Cache plugin. The server keeps the pages; SafeHouse only
  * marks which responses may be cached and asks the server to drop them after changes. No files, no
  * .htaccess writes. On servers that are not LiteSpeed the headers do nothing.
  *
@@ -14,29 +14,29 @@
  * and with the WooCommerce cart cookies, and those visitors always reach PHP, which never lets their
  * pages be cached.
  *
- * Purges: after content changes the next response carries `X-LiteSpeed-Purge: tag=wphouse`. Changes
+ * Purges: after content changes the next response carries `X-LiteSpeed-Purge: tag=shouse`. Changes
  * made where no response can carry it (WP-CLI, cron after the response) are queued and sent with the
  * next request WordPress handles; WP-CLI also requests admin-ajax.php to make that happen at once.
  * (Not wp-cron.php: it finishes its response before WordPress loads.)
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Modules;
+namespace SafeHouse\Modules;
 
 use WP_CLI;
-use WPHouse\Core\AbstractModule;
-use WPHouse\Core\Compat;
-use WPHouse\Core\ContentChanges;
-use WPHouse\Core\Log;
+use SafeHouse\Core\AbstractModule;
+use SafeHouse\Core\Compat;
+use SafeHouse\Core\ContentChanges;
+use SafeHouse\Core\Log;
 
 defined( 'ABSPATH' ) || exit;
 
 final class LiteSpeed extends AbstractModule {
 
-	private const QUEUE = 'wphouse_litespeed_purge';
+	private const QUEUE = 'shouse_litespeed_purge';
 	private const VARY  = '_lscache_vary';
-	private const TAG   = 'wphouse';
+	private const TAG   = 'shouse';
 
 	/** Request cookies (name prefixes) that mean the page is personal and must not come from or go to the cache. */
 	private const PRIVATE_COOKIES = [ self::VARY, 'wordpress_logged_in_', 'wp-postpass_', 'comment_author_', 'woocommerce_items_in_cart', 'woocommerce_cart_hash', 'wp_woocommerce_session_' ];
@@ -53,26 +53,26 @@ final class LiteSpeed extends AbstractModule {
 	}
 
 	public function label(): string {
-		return __( 'LiteSpeed page cache', 'wphouse' );
+		return __( 'LiteSpeed page cache', 'shouse' );
 	}
 
 	public function description(): string {
-		return __( 'On LiteSpeed servers, pages for visitors who are not logged in and have no cart are served from the server cache without running WordPress. WPHouse only sends cache headers and clears the cache after changes; it writes no files. Logged-in users, the cart, checkout and account pages are never cached.', 'wphouse' );
+		return __( 'On LiteSpeed servers, pages for visitors who are not logged in and have no cart are served from the server cache without running WordPress. SafeHouse only sends cache headers and clears the cache after changes; it writes no files. Logged-in users, the cart, checkout and account pages are never cached.', 'shouse' );
 	}
 
 	public function fields(): array {
 		return [
 			'ttl'         => [
 				'type'  => 'number',
-				'label' => __( 'Keep pages for (minutes)', 'wphouse' ),
-				'help'  => __( 'At most 8 hours, so forms on cached pages still carry a valid security token. Changes clear the cache anyway.', 'wphouse' ),
+				'label' => __( 'Keep pages for (minutes)', 'shouse' ),
+				'help'  => __( 'At most 8 hours, so forms on cached pages still carry a valid security token. Changes clear the cache anyway.', 'shouse' ),
 				'min'   => 5,
 				'max'   => 480,
 			],
 			'never_cache' => [
 				'type'       => 'textarea',
-				'label'      => __( 'Never cache these paths', 'wphouse' ),
-				'help'       => __( 'One per line, for example /contact/. A line matches every address that starts with it.', 'wphouse' ),
+				'label'      => __( 'Never cache these paths', 'shouse' ),
+				'help'       => __( 'One per line, for example /contact/. A line matches every address that starts with it.', 'shouse' ),
 				'max_length' => 2000,
 			],
 		];
@@ -83,7 +83,7 @@ final class LiteSpeed extends AbstractModule {
 	}
 
 	public function unavailable_reason(): string {
-		return __( 'The LiteSpeed Cache plugin is active and manages the server cache itself.', 'wphouse' );
+		return __( 'The LiteSpeed Cache plugin is active and manages the server cache itself.', 'shouse' );
 	}
 
 	public function boot(): void {
@@ -100,7 +100,7 @@ final class LiteSpeed extends AbstractModule {
 
 		add_filter( 'site_status_tests', [ $this, 'site_health_test' ] );
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
-			WP_CLI::add_command( 'wphouse cache purge', [ $this, 'cli_purge' ] );
+			WP_CLI::add_command( 'shouse cache purge', [ $this, 'cli_purge' ] );
 		}
 	}
 
@@ -174,7 +174,7 @@ final class LiteSpeed extends AbstractModule {
 		}
 	}
 
-	/** Clear every page WPHouse marked: in this response when possible, otherwise with the next request. */
+	/** Clear every page SafeHouse marked: in this response when possible, otherwise with the next request. */
 	public function purge(): void {
 		if ( self::web_request() && ! headers_sent() ) {
 			header( 'X-LiteSpeed-Purge: tag=' . self::TAG );
@@ -192,22 +192,22 @@ final class LiteSpeed extends AbstractModule {
 	}
 
 	public function tasks(): array {
-		return [ 'purge' => __( 'Clear the cache', 'wphouse' ) ];
+		return [ 'purge' => __( 'Clear the cache', 'shouse' ) ];
 	}
 
 	public function handle_task( string $task ): string {
 		$this->purge();
 		Log::add( 'cache_purged', 'LiteSpeed cache cleared from the settings page' );
-		return __( 'LiteSpeed was asked to clear the cache.', 'wphouse' );
+		return __( 'LiteSpeed was asked to clear the cache.', 'shouse' );
 	}
 
 	public function render_panel(): void {
 		$software = isset( $_SERVER['SERVER_SOFTWARE'] ) ? sanitize_text_field( wp_unslash( $_SERVER['SERVER_SOFTWARE'] ) ) : '';
-		echo '<div class="wphouse-panel"><p>';
+		echo '<div class="shouse-panel"><p>';
 		echo esc_html(
 			str_contains( strtolower( $software ), 'litespeed' )
-				? __( 'This server is LiteSpeed. Tools → Site Health checks whether it actually serves pages from its cache.', 'wphouse' )
-				: __( 'This server does not look like LiteSpeed, so the cache headers have no effect here.', 'wphouse' )
+				? __( 'This server is LiteSpeed. Tools → Site Health checks whether it actually serves pages from its cache.', 'shouse' )
+				: __( 'This server does not look like LiteSpeed, so the cache headers have no effect here.', 'shouse' )
 		);
 		echo '</p></div>';
 	}
@@ -217,8 +217,8 @@ final class LiteSpeed extends AbstractModule {
 	 * @return array<string, mixed>
 	 */
 	public function site_health_test( array $tests ): array {
-		$tests['direct']['wphouse_litespeed'] = [
-			'label' => __( 'WPHouse LiteSpeed page cache', 'wphouse' ),
+		$tests['direct']['shouse_litespeed'] = [
+			'label' => __( 'SafeHouse LiteSpeed page cache', 'shouse' ),
 			'test'  => [ $this, 'site_health_result' ],
 		];
 		return $tests;
@@ -247,30 +247,30 @@ final class LiteSpeed extends AbstractModule {
 
 		if ( 'hit' === $cache ) {
 			$status = 'good';
-			$label  = __( 'LiteSpeed serves pages from its cache', 'wphouse' );
-			$text   = __( 'The home page came from the LiteSpeed cache for a visitor who is not logged in.', 'wphouse' );
+			$label  = __( 'LiteSpeed serves pages from its cache', 'shouse' );
+			$text   = __( 'The home page came from the LiteSpeed cache for a visitor who is not logged in.', 'shouse' );
 		} elseif ( str_contains( $server, 'litespeed' ) ) {
 			$status = 'recommended';
-			$label  = __( 'LiteSpeed does not serve pages from its cache yet', 'wphouse' );
-			$text   = __( 'The server is LiteSpeed, but the home page was not served from its cache. On LiteSpeed Enterprise add this to .htaccess, or ask your host to turn the cache on: <IfModule LiteSpeed> CacheLookup public on </IfModule>. A page that sets a cookie for every visitor is never cached either.', 'wphouse' );
+			$label  = __( 'LiteSpeed does not serve pages from its cache yet', 'shouse' );
+			$text   = __( 'The server is LiteSpeed, but the home page was not served from its cache. On LiteSpeed Enterprise add this to .htaccess, or ask your host to turn the cache on: <IfModule LiteSpeed> CacheLookup public on </IfModule>. A page that sets a cookie for every visitor is never cached either.', 'shouse' );
 		} else {
 			$status = 'recommended';
-			$label  = __( 'The server is not LiteSpeed', 'wphouse' );
-			$text   = __( 'The LiteSpeed page cache module has no effect on this server. Switch it off, or use the cache your host provides.', 'wphouse' );
+			$label  = __( 'The server is not LiteSpeed', 'shouse' );
+			$text   = __( 'The LiteSpeed page cache module has no effect on this server. Switch it off, or use the cache your host provides.', 'shouse' );
 		}
 		if ( Compat::woocommerce_active() && 'geolocation' === get_option( 'woocommerce_default_customer_address' ) ) {
 			$status = 'recommended';
-			$text  .= ' ' . __( 'WooCommerce geolocates customers without page caching support, so cached pages may show one country\'s prices and taxes to everyone. In WooCommerce → Settings → General choose "Geolocate (with page caching support)".', 'wphouse' );
+			$text  .= ' ' . __( 'WooCommerce geolocates customers without page caching support, so cached pages may show one country\'s prices and taxes to everyone. In WooCommerce → Settings → General choose "Geolocate (with page caching support)".', 'shouse' );
 		}
 		return [
 			'label'       => $label,
 			'status'      => $status,
 			'badge'       => [
-				'label' => __( 'Performance', 'wphouse' ),
+				'label' => __( 'Performance', 'shouse' ),
 				'color' => 'blue',
 			],
 			'description' => '<p>' . esc_html( $text ) . '</p>',
-			'test'        => 'wphouse_litespeed',
+			'test'        => 'shouse_litespeed',
 		];
 	}
 

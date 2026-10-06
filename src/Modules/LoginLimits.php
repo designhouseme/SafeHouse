@@ -16,33 +16,34 @@
  *
  * Stands down while Wordfence's brute-force protection is on.
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Modules;
+namespace SafeHouse\Modules;
 
 use WP_CLI;
 use WP_Error;
 use WP_User;
-use WPHouse\Core\AbstractModule;
-use WPHouse\Core\Compat;
-use WPHouse\Core\Log;
-use WPHouse\Core\Net;
-use WPHouse\Core\Notify;
+use SafeHouse\Core\AbstractModule;
+use SafeHouse\Core\Compat;
+use SafeHouse\Core\Log;
+use SafeHouse\Core\Net;
+use SafeHouse\Core\Notify;
 
 defined( 'ABSPATH' ) || exit;
 
 final class LoginLimits extends AbstractModule {
 
 	/** The address is locked out. Refusals with this code are not counted again (that would never end). */
-	public const ERROR_CODE = 'wphouse_locked';
+	public const ERROR_CODE = 'shouse_locked';
 
 	/** The account is paused for new devices. Refusals with this code still count against the address. */
-	public const PAUSED_CODE = 'wphouse_paused';
+	public const PAUSED_CODE = 'shouse_paused';
 
 	private const DB_VERSION     = '1';
-	private const DB_OPTION      = 'wphouse_login_db_version';
-	private const COOKIE         = 'wphouse_device_';
+	private const DB_OPTION      = 'shouse_login_db_version';
+	private const COOKIE         = 'shouse_device_';
+	private const LEGACY_COOKIE  = 'wphouse_device_'; // Issued before the rename to SafeHouse; still accepted until it expires.
 	private const COOKIE_DAYS    = 180;
 	private const ACCOUNT_WINDOW = HOUR_IN_SECONDS;
 	private const ACCOUNT_PAUSE  = HOUR_IN_SECONDS;
@@ -69,49 +70,49 @@ final class LoginLimits extends AbstractModule {
 	}
 
 	public function label(): string {
-		return __( 'Login limits', 'wphouse' );
+		return __( 'Login limits', 'shouse' );
 	}
 
 	public function description(): string {
-		return __( 'Stops password guessing on the login forms, XML-RPC and application passwords. Too many failures from one address lock it out, longer each time. An account under attack is paused only for devices that never logged into it; devices that did keep working, so nobody can lock the owner out.', 'wphouse' );
+		return __( 'Stops password guessing on the login forms, XML-RPC and application passwords. Too many failures from one address lock it out, longer each time. An account under attack is paused only for devices that never logged into it; devices that did keep working, so nobody can lock the owner out.', 'shouse' );
 	}
 
 	public function fields(): array {
 		return [
 			'ip_attempts'      => [
 				'type'  => 'number',
-				'label' => __( 'Failures before an address is locked out', 'wphouse' ),
+				'label' => __( 'Failures before an address is locked out', 'shouse' ),
 				'min'   => 2,
 				'max'   => 50,
 			],
 			'ip_window'        => [
 				'type'  => 'number',
-				'label' => __( 'Counted over (minutes)', 'wphouse' ),
+				'label' => __( 'Counted over (minutes)', 'shouse' ),
 				'min'   => 1,
 				'max'   => 1440,
 			],
 			'ip_lockout'       => [
 				'type'  => 'number',
-				'label' => __( 'First lockout (minutes)', 'wphouse' ),
-				'help'  => __( 'Each further lockout of the same address lasts four times longer, up to 24 hours.', 'wphouse' ),
+				'label' => __( 'First lockout (minutes)', 'shouse' ),
+				'help'  => __( 'Each further lockout of the same address lasts four times longer, up to 24 hours.', 'shouse' ),
 				'min'   => 1,
 				'max'   => 1440,
 			],
 			'account_attempts' => [
 				'type'  => 'number',
-				'label' => __( 'Failures per account in an hour before new devices are paused', 'wphouse' ),
+				'label' => __( 'Failures per account in an hour before new devices are paused', 'shouse' ),
 				'min'   => 3,
 				'max'   => 100,
 			],
 			'allowlist'        => [
 				'type'       => 'textarea',
-				'label'      => __( 'Never lock out these addresses', 'wphouse' ),
-				'help'       => __( 'One IP address or range per line, for example 203.0.113.7 or 198.51.100.0/24.', 'wphouse' ),
+				'label'      => __( 'Never lock out these addresses', 'shouse' ),
+				'help'       => __( 'One IP address or range per line, for example 203.0.113.7 or 198.51.100.0/24.', 'shouse' ),
 				'max_length' => 2000,
 			],
 			'notify'           => [
 				'type'  => 'toggle',
-				'label' => __( 'E-mail when an account is paused', 'wphouse' ),
+				'label' => __( 'E-mail when an account is paused', 'shouse' ),
 			],
 		];
 	}
@@ -121,7 +122,7 @@ final class LoginLimits extends AbstractModule {
 	}
 
 	public function unavailable_reason(): string {
-		return __( 'Wordfence brute force protection is on and already limits login attempts.', 'wphouse' );
+		return __( 'Wordfence brute force protection is on and already limits login attempts.', 'shouse' );
 	}
 
 	public function boot(): void {
@@ -132,10 +133,10 @@ final class LoginLimits extends AbstractModule {
 		// REST Basic auth checks application passwords without the authenticate filter; this is its hook.
 		add_action( 'wp_authenticate_application_password_errors', [ $this, 'refuse_locked_application_password' ] );
 		add_action( 'wp_login', [ $this, 'login_succeeded' ], 10, 2 );
-		add_action( 'wphouse_daily', [ $this, 'purge' ] );
+		add_action( 'shouse_daily', [ $this, 'purge' ] );
 		add_filter( 'site_status_tests', [ $this, 'site_health_test' ] );
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
-			WP_CLI::add_command( 'wphouse login', LoginLimitsCommand::class );
+			WP_CLI::add_command( 'shouse login', LoginLimitsCommand::class );
 		}
 	}
 
@@ -156,11 +157,11 @@ final class LoginLimits extends AbstractModule {
 			$left = $this->locked_for( 'ip', $ip );
 			if ( $left > 0 ) {
 				/* translators: %d: minutes. */
-				return new WP_Error( self::ERROR_CODE, sprintf( _n( 'Too many failed login attempts from your address. Try again in %d minute.', 'Too many failed login attempts from your address. Try again in %d minutes.', (int) ceil( $left / 60 ), 'wphouse' ), (int) ceil( $left / 60 ) ) );
+				return new WP_Error( self::ERROR_CODE, sprintf( _n( 'Too many failed login attempts from your address. Try again in %d minute.', 'Too many failed login attempts from your address. Try again in %d minutes.', (int) ceil( $left / 60 ), 'shouse' ), (int) ceil( $left / 60 ) ) );
 			}
 		}
 		if ( ! $this->has_device_cookie( $username ) && $this->locked_for( 'user', self::account_key( $username ) ) > 0 ) {
-			return new WP_Error( self::PAUSED_CODE, __( 'This account is paused for new devices after many failed attempts. Log in from a device you used before, or try again in an hour.', 'wphouse' ) );
+			return new WP_Error( self::PAUSED_CODE, __( 'This account is paused for new devices after many failed attempts. Log in from a device you used before, or try again in an hour.', 'shouse' ) );
 		}
 		return $user;
 	}
@@ -189,7 +190,7 @@ final class LoginLimits extends AbstractModule {
 	public function refuse_locked_application_password( WP_Error $error ): void {
 		$ip = $this->allowlisted() ? null : $this->ip_subject();
 		if ( null !== $ip && $this->locked_for( 'ip', $ip ) > 0 ) {
-			$error->add( self::ERROR_CODE, __( 'Too many failed login attempts from your address. Try again later.', 'wphouse' ), [ 'status' => 429 ] );
+			$error->add( self::ERROR_CODE, __( 'Too many failed login attempts from your address. Try again later.', 'shouse' ), [ 'status' => 429 ] );
 		}
 	}
 
@@ -238,7 +239,7 @@ final class LoginLimits extends AbstractModule {
 
 	public static function table(): string {
 		global $wpdb;
-		return $wpdb->prefix . 'wphouse_login';
+		return $wpdb->prefix . 'shouse_login';
 	}
 
 	public static function maybe_install(): void {
@@ -305,28 +306,28 @@ final class LoginLimits extends AbstractModule {
 	}
 
 	public function tasks(): array {
-		return [ 'unlock' => __( 'Lift all lockouts', 'wphouse' ) ];
+		return [ 'unlock' => __( 'Lift all lockouts', 'shouse' ) ];
 	}
 
 	public function handle_task( string $task ): string {
 		$count = self::unlock();
 		Log::add( 'login_unlocked', 'All login lockouts lifted from the settings page', [ 'rows' => $count ], 'warning' );
-		return __( 'All lockouts lifted.', 'wphouse' );
+		return __( 'All lockouts lifted.', 'shouse' );
 	}
 
 	public function render_panel(): void {
-		echo '<div class="wphouse-panel">';
+		echo '<div class="shouse-panel">';
 		if ( null === $this->ip_subject() && $this->unsafe_peer() ) {
-			echo '<p class="wphouse-note">' . esc_html( $this->unsafe_reason() ) . '</p>';
+			echo '<p class="shouse-note">' . esc_html( $this->unsafe_reason() ) . '</p>';
 		}
 		$active = self::active();
 		if ( ! $active ) {
-			echo '<p>' . esc_html__( 'Nothing is locked out right now.', 'wphouse' ) . '</p></div>';
+			echo '<p>' . esc_html__( 'Nothing is locked out right now.', 'shouse' ) . '</p></div>';
 			return;
 		}
-		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Address or account', 'wphouse' ) . '</th><th>' . esc_html__( 'Until (UTC)', 'wphouse' ) . '</th></tr></thead><tbody>';
+		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Address or account', 'shouse' ) . '</th><th>' . esc_html__( 'Until (UTC)', 'shouse' ) . '</th></tr></thead><tbody>';
 		foreach ( $active as $row ) {
-			$what = 'ip' === $row['kind'] ? $row['subject'] : __( 'account (new devices)', 'wphouse' );
+			$what = 'ip' === $row['kind'] ? $row['subject'] : __( 'account (new devices)', 'shouse' );
 			echo '<tr><td>' . esc_html( $what ) . '</td><td>' . esc_html( $row['until'] ) . '</td></tr>';
 		}
 		echo '</tbody></table></div>';
@@ -337,8 +338,8 @@ final class LoginLimits extends AbstractModule {
 	 * @return array<string, mixed>
 	 */
 	public function site_health_test( array $tests ): array {
-		$tests['direct']['wphouse_login_limits'] = [
-			'label' => __( 'WPHouse login limits', 'wphouse' ),
+		$tests['direct']['shouse_login_limits'] = [
+			'label' => __( 'SafeHouse login limits', 'shouse' ),
 			'test'  => [ $this, 'site_health_result' ],
 		];
 		return $tests;
@@ -348,14 +349,14 @@ final class LoginLimits extends AbstractModule {
 	public function site_health_result(): array {
 		$unsafe = $this->unsafe_peer();
 		return [
-			'label'       => $unsafe ? __( 'Login limits cannot block by address on this server', 'wphouse' ) : __( 'Login limits block password guessing', 'wphouse' ),
+			'label'       => $unsafe ? __( 'Login limits cannot block by address on this server', 'shouse' ) : __( 'Login limits block password guessing', 'shouse' ),
 			'status'      => $unsafe ? 'critical' : 'good',
 			'badge'       => [
-				'label' => __( 'Security', 'wphouse' ),
+				'label' => __( 'Security', 'shouse' ),
 				'color' => 'blue',
 			],
-			'description' => '<p>' . esc_html( $unsafe ? $this->unsafe_reason() : __( 'Failed logins are counted per address and per account; addresses are locked out and accounts are paused for new devices.', 'wphouse' ) ) . '</p>',
-			'test'        => 'wphouse_login_limits',
+			'description' => '<p>' . esc_html( $unsafe ? $this->unsafe_reason() : __( 'Failed logins are counted per address and per account; addresses are locked out and accounts are paused for new devices.', 'shouse' ) ) . '</p>',
+			'test'        => 'shouse_login_limits',
 		];
 	}
 
@@ -384,7 +385,7 @@ final class LoginLimits extends AbstractModule {
 			Log::add( 'login_paused', 'Account paused for new devices after failed logins', [ 'user' => $user ? $user->user_login : '(no such account)' ], 'warning' );
 			if ( $user && $this->opt( 'notify' ) ) {
 				/* translators: %s: user login. */
-				Notify::send( sprintf( __( 'Account %s paused for new devices', 'wphouse' ), $user->user_login ), [ __( 'Many failed logins for this account came from devices that never logged into it. For an hour only devices that did can log in.', 'wphouse' ) ] );
+				Notify::send( sprintf( __( 'Account %s paused for new devices', 'shouse' ), $user->user_login ), [ __( 'Many failed logins for this account came from devices that never logged into it. For an hour only devices that did can log in.', 'shouse' ) ] );
 			}
 		}
 	}
@@ -444,14 +445,14 @@ final class LoginLimits extends AbstractModule {
 			return ! Net::behind_cloudflare();
 		}
 		$public = false !== filter_var( $peer, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE );
-		return ! $public && Net::client_ip() === $peer && ! defined( 'WPHOUSE_TRUSTED_PROXIES' );
+		return ! $public && Net::client_ip() === $peer && ! defined( 'SHOUSE_TRUSTED_PROXIES' );
 	}
 
 	private function unsafe_reason(): string {
 		$peer = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
 		return Net::from_cloudflare( $peer )
-			? __( 'Requests come through Cloudflare, but WPHouse is not set up for it, so every visitor has a Cloudflare address. Locking one out would lock out everyone; only the per-account rule works. In WPHouse → General, set "Proxy in front of the site" to Cloudflare.', 'wphouse' )
-			: __( 'Requests come from a private address, so a proxy or load balancer sits in front of the site and every visitor has its address. Locking one out would lock out everyone; only the per-account rule works. Name the proxy in wp-config.php with WPHOUSE_TRUSTED_PROXIES.', 'wphouse' );
+			? __( 'Requests come through Cloudflare, but SafeHouse is not set up for it, so every visitor has a Cloudflare address. Locking one out would lock out everyone; only the per-account rule works. In SafeHouse → General, set "Proxy in front of the site" to Cloudflare.', 'shouse' )
+			: __( 'Requests come from a private address, so a proxy or load balancer sits in front of the site and every visitor has its address. Locking one out would lock out everyone; only the per-account rule works. Name the proxy in wp-config.php with SHOUSE_TRUSTED_PROXIES.', 'shouse' );
 	}
 
 	private function allowlisted(): bool {
@@ -460,8 +461,8 @@ final class LoginLimits extends AbstractModule {
 			return false;
 		}
 		$lines = (array) preg_split( '/\R/', (string) $this->opt( 'allowlist' ) );
-		if ( defined( 'WPHOUSE_LOGIN_ALLOWLIST' ) && is_array( WPHOUSE_LOGIN_ALLOWLIST ) ) {
-			$lines = array_merge( $lines, WPHOUSE_LOGIN_ALLOWLIST );
+		if ( defined( 'SHOUSE_LOGIN_ALLOWLIST' ) && is_array( SHOUSE_LOGIN_ALLOWLIST ) ) {
+			$lines = array_merge( $lines, SHOUSE_LOGIN_ALLOWLIST );
 		}
 		foreach ( $lines as $range ) {
 			$range = trim( (string) $range );
@@ -473,17 +474,19 @@ final class LoginLimits extends AbstractModule {
 	}
 
 	private function has_device_cookie( string $username ): bool {
-		$cookie = self::cookie_name( $username );
-		$value  = isset( $_COOKIE[ $cookie ] ) ? sanitize_text_field( wp_unslash( $_COOKIE[ $cookie ] ) ) : '';
-		if ( ! preg_match( '/^(\d+)\.([a-f0-9]{64})$/', $value, $m ) || (int) $m[1] < time() ) {
-			return false;
+		foreach ( [ self::COOKIE, self::LEGACY_COOKIE ] as $prefix ) {
+			$cookie = self::cookie_name( $username, $prefix );
+			$value  = isset( $_COOKIE[ $cookie ] ) ? sanitize_text_field( wp_unslash( $_COOKIE[ $cookie ] ) ) : '';
+			if ( preg_match( '/^(\d+)\.([a-f0-9]{64})$/', $value, $m ) && (int) $m[1] >= time() && hash_equals( self::sign( $cookie . '|' . $m[1] ), $m[2] ) ) {
+				return true;
+			}
 		}
-		return hash_equals( self::sign( $cookie . '|' . $m[1] ), $m[2] );
+		return false;
 	}
 
 	/** Cookie name per account, keyed so it does not reveal the account. */
-	private static function cookie_name( string $username ): string {
-		return self::COOKIE . substr( self::sign( 'name|' . strtolower( trim( $username ) ) ), 0, 20 );
+	private static function cookie_name( string $username, string $prefix = self::COOKIE ): string {
+		return $prefix . substr( self::sign( 'name|' . strtolower( trim( $username ) ) ), 0, 20 );
 	}
 
 	private static function sign( string $data ): string {

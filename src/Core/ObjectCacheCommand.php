@@ -1,18 +1,18 @@
 <?php
 /**
- * `wp wphouse object-cache`: install, remove and inspect the WPHouse Redis object cache.
+ * `wp shouse object-cache`: install, remove and inspect the SafeHouse Redis object cache.
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Core;
+namespace SafeHouse\Core;
 
 use WP_CLI;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Install, remove and inspect the WPHouse Redis object cache.
+ * Install, remove and inspect the SafeHouse Redis object cache.
  */
 final class ObjectCacheCommand {
 
@@ -41,7 +41,7 @@ final class ObjectCacheCommand {
 		if ( '' !== $error ) {
 			WP_CLI::error( $error );
 		}
-		Log::add( 'object_cache', 'WPHouse object cache enabled from WP-CLI', [], 'warning' );
+		Log::add( 'object_cache', 'SafeHouse object cache enabled from WP-CLI', [], 'warning' );
 		WP_CLI::success( 'Object cache enabled. Change alerts will report the new object-cache.php drop-in; that is expected.' );
 	}
 
@@ -50,13 +50,13 @@ final class ObjectCacheCommand {
 	 */
 	public function disable(): void {
 		if ( 'ours' !== ObjectCache::dropin_state() ) {
-			WP_CLI::warning( 'The WPHouse object cache is not installed.' );
+			WP_CLI::warning( 'The SafeHouse object cache is not installed.' );
 			return;
 		}
 		$error = ObjectCache::shut_down();
-		Log::add( 'object_cache', 'WPHouse object cache disabled from WP-CLI', [], 'warning' );
+		Log::add( 'object_cache', 'SafeHouse object cache disabled from WP-CLI', [], 'warning' );
 		if ( '' !== $error ) {
-			WP_CLI::warning( 'Drop-in removed, but old keys could not be cleared: ' . $error . '. Run `wp wphouse object-cache enable` later only after Redis is back.' );
+			WP_CLI::warning( 'Drop-in removed, but old keys could not be cleared: ' . $error . '. Run `wp shouse object-cache enable` later only after Redis is back.' );
 			return;
 		}
 		WP_CLI::success( 'Object cache disabled and its keys removed from Redis.' );
@@ -106,7 +106,7 @@ final class ObjectCacheCommand {
 	 */
 	public function flush(): void {
 		if ( null === ObjectCache::active() ) {
-			WP_CLI::error( 'The WPHouse object cache is not running in this process.' );
+			WP_CLI::error( 'The SafeHouse object cache is not running in this process.' );
 		}
 		wp_cache_flush();
 		WP_CLI::success( 'Object cache flushed.' );

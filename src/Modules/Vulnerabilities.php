@@ -1,7 +1,7 @@
 <?php
 /**
  * Vulnerability alerts for sites without Wordfence: the installed WordPress, plugin and theme
- * versions are matched against signed advisory data from the WPHouse update host, built from
+ * versions are matched against signed advisory data from the SafeHouse update host, built from
  * Wordfence Intelligence by dev/cve-watch.php. Wordfence does this itself, so the module stands
  * down while Wordfence is active.
  *
@@ -10,30 +10,30 @@
  * for what is installed, each checked against the SHA-256 in the signed index. Matching runs on
  * every view from the stored data, so updating a plugin clears its warning at once.
  *
- * Constants, honoured only on local/development sites: WPHOUSE_ADVISORY_URL, WPHOUSE_ADVISORY_PUBLIC_KEYS.
+ * Constants, honoured only on local/development sites: SHOUSE_ADVISORY_URL, SHOUSE_ADVISORY_PUBLIC_KEYS.
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Modules;
+namespace SafeHouse\Modules;
 
 use WP_CLI;
 use WP_Error;
-use WPHouse\Core\AbstractModule;
-use WPHouse\Core\Compat;
-use WPHouse\Core\Log;
-use WPHouse\Core\Notify;
-use WPHouse\Core\Signature;
-use WPHouse\Core\Updater;
-use WPHouse\Plugin;
+use SafeHouse\Core\AbstractModule;
+use SafeHouse\Core\Compat;
+use SafeHouse\Core\Log;
+use SafeHouse\Core\Notify;
+use SafeHouse\Core\Signature;
+use SafeHouse\Core\Updater;
+use SafeHouse\Plugin;
 
 defined( 'ABSPATH' ) || exit;
 
 final class Vulnerabilities extends AbstractModule {
 
-	private const OPTION    = 'wphouse_vulnerabilities';
-	private const FINDINGS  = 'wphouse_vulnerabilities_findings';
-	private const INDEX_URL = 'https://updates.designhouse.me/wphouse/advisories/index.json';
+	private const OPTION    = 'shouse_vulnerabilities';
+	private const FINDINGS  = 'shouse_vulnerabilities_findings';
+	private const INDEX_URL = 'https://updates.designhouse.me/shouse/advisories/index.json';
 
 	/** Base64 Ed25519 keys for advisory data only. The updater never trusts these. */
 	private const PUBLIC_KEYS = [
@@ -60,11 +60,11 @@ final class Vulnerabilities extends AbstractModule {
 	}
 
 	public function label(): string {
-		return __( 'Vulnerability alerts', 'wphouse' );
+		return __( 'Vulnerability alerts', 'shouse' );
 	}
 
 	public function description(): string {
-		return __( 'Warns when the installed WordPress, a plugin or a theme has a known security vulnerability, and names the version that fixes it. Meant for sites without Wordfence, which does this itself. Data from Wordfence Intelligence, signed and served by the WPHouse update host, checked every 6 hours.', 'wphouse' );
+		return __( 'Warns when the installed WordPress, a plugin or a theme has a known security vulnerability, and names the version that fixes it. Meant for sites without Wordfence, which does this itself. Data from Wordfence Intelligence, signed and served by the SafeHouse update host, checked every 6 hours.', 'shouse' );
 	}
 
 	public function fields(): array {
@@ -76,11 +76,11 @@ final class Vulnerabilities extends AbstractModule {
 	}
 
 	public function unavailable_reason(): string {
-		return __( 'Wordfence is active and already warns about vulnerable plugins, themes and WordPress versions.', 'wphouse' );
+		return __( 'Wordfence is active and already warns about vulnerable plugins, themes and WordPress versions.', 'shouse' );
 	}
 
 	public function boot(): void {
-		add_action( 'wphouse_hourly', [ $this, 'maybe_refresh' ] );
+		add_action( 'shouse_hourly', [ $this, 'maybe_refresh' ] );
 		add_action( 'admin_notices', [ $this, 'admin_notice' ] );
 		foreach ( [ 'upgrader_process_complete', 'activated_plugin', 'deactivated_plugin', 'deleted_plugin', 'switch_theme', '_core_updated_successfully' ] as $hook ) {
 			add_action( $hook, [ $this, 'forget' ] );
@@ -90,7 +90,7 @@ final class Vulnerabilities extends AbstractModule {
 			add_filter( 'http_request_host_is_external', [ $this, 'allow_local_host' ], 10, 2 );
 		}
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
-			WP_CLI::add_command( 'wphouse vulnerabilities', [ $this, 'cli' ] );
+			WP_CLI::add_command( 'shouse vulnerabilities', [ $this, 'cli' ] );
 		}
 	}
 
@@ -245,7 +245,7 @@ final class Vulnerabilities extends AbstractModule {
 		$lines[] = (string) ( $this->state()['attribution'] ?? '' );
 		Log::add( 'vulnerability_found', sprintf( '%d known vulnerabilities in installed software', count( $new ) ), [ 'items' => array_keys( $new ) ], 'critical' );
 		/* translators: %d: number of vulnerabilities. */
-		Notify::send( sprintf( _n( '%d known vulnerability in installed software', '%d known vulnerabilities in installed software', count( $new ), 'wphouse' ), count( $new ) ), $lines );
+		Notify::send( sprintf( _n( '%d known vulnerability in installed software', '%d known vulnerabilities in installed software', count( $new ), 'shouse' ), count( $new ) ), $lines );
 	}
 
 	public function admin_notice(): void {
@@ -256,12 +256,12 @@ final class Vulnerabilities extends AbstractModule {
 		if ( ! $urgent ) {
 			return;
 		}
-		echo '<div class="notice notice-error"><p><strong>' . esc_html__( 'Security vulnerability in installed software', 'wphouse' ) . '</strong></p><ul>';
+		echo '<div class="notice notice-error"><p><strong>' . esc_html__( 'Security vulnerability in installed software', 'shouse' ) . '</strong></p><ul>';
 		foreach ( array_slice( $urgent, 0, 5 ) as $finding ) {
 			echo '<li>' . esc_html( $this->sentence( $finding ) ) . $this->details_link( $finding ) . '</li>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- details_link() escapes.
 		}
-		echo '</ul><p><a class="button button-primary" href="' . esc_url( admin_url( 'update-core.php' ) ) . '">' . esc_html__( 'Go to updates', 'wphouse' ) . '</a> ';
-		echo '<a href="' . esc_url( Plugin::settings_url( 'vulnerabilities' ) ) . '">' . esc_html__( 'All findings', 'wphouse' ) . '</a></p></div>';
+		echo '</ul><p><a class="button button-primary" href="' . esc_url( admin_url( 'update-core.php' ) ) . '">' . esc_html__( 'Go to updates', 'shouse' ) . '</a> ';
+		echo '<a href="' . esc_url( Plugin::settings_url( 'vulnerabilities' ) ) . '">' . esc_html__( 'All findings', 'shouse' ) . '</a></p></div>';
 	}
 
 	/**
@@ -269,8 +269,8 @@ final class Vulnerabilities extends AbstractModule {
 	 * @return array<string, mixed>
 	 */
 	public function site_health_test( array $tests ): array {
-		$tests['direct']['wphouse_vulnerabilities'] = [
-			'label' => __( 'WPHouse vulnerability alerts', 'wphouse' ),
+		$tests['direct']['shouse_vulnerabilities'] = [
+			'label' => __( 'SafeHouse vulnerability alerts', 'shouse' ),
 			'test'  => [ $this, 'site_health_result' ],
 		];
 		return $tests;
@@ -283,32 +283,32 @@ final class Vulnerabilities extends AbstractModule {
 		$urgent   = count( array_filter( $findings, static fn( $f ) => $f['urgent'] ) );
 		if ( $findings ) {
 			$status = $urgent ? 'critical' : 'recommended';
-			$label  = __( 'Installed software has known vulnerabilities', 'wphouse' );
+			$label  = __( 'Installed software has known vulnerabilities', 'shouse' );
 			$items  = '<ul>' . implode( '', array_map( fn( $f ) => '<li>' . esc_html( $this->sentence( $f ) ) . '</li>', $findings ) ) . '</ul>';
 		} elseif ( empty( $state['generated'] ) ) {
 			$status = 'recommended';
-			$label  = __( 'Vulnerability data has not been downloaded yet', 'wphouse' );
+			$label  = __( 'Vulnerability data has not been downloaded yet', 'shouse' );
 			$items  = '' !== ( $state['error'] ?? '' ) ? '<p>' . esc_html( (string) $state['error'] ) . '</p>' : '';
 		} else {
 			$status = 'good';
-			$label  = __( 'No known vulnerabilities in installed software', 'wphouse' );
+			$label  = __( 'No known vulnerabilities in installed software', 'shouse' );
 			$items  = '';
 		}
 		return [
 			'label'       => $label,
 			'status'      => $status,
 			'badge'       => [
-				'label' => __( 'Security', 'wphouse' ),
+				'label' => __( 'Security', 'shouse' ),
 				'color' => 'blue',
 			],
 			'description' => $items . '<p>' . esc_html( (string) ( $state['attribution'] ?? '' ) ) . '</p>',
-			'actions'     => '<a href="' . esc_url( admin_url( 'update-core.php' ) ) . '">' . esc_html__( 'Go to updates', 'wphouse' ) . '</a>',
-			'test'        => 'wphouse_vulnerabilities',
+			'actions'     => '<a href="' . esc_url( admin_url( 'update-core.php' ) ) . '">' . esc_html__( 'Go to updates', 'shouse' ) . '</a>',
+			'test'        => 'shouse_vulnerabilities',
 		];
 	}
 
 	public function tasks(): array {
-		return [ 'refresh' => __( 'Check now', 'wphouse' ) ];
+		return [ 'refresh' => __( 'Check now', 'shouse' ) ];
 	}
 
 	public function handle_task( string $task ): string {
@@ -316,35 +316,35 @@ final class Vulnerabilities extends AbstractModule {
 		$this->notify_new();
 		return '' !== ( $state['error'] ?? '' )
 			/* translators: %s: error message. */
-			? sprintf( __( 'Could not download vulnerability data: %s', 'wphouse' ), (string) $state['error'] )
-			: __( 'Vulnerability data updated.', 'wphouse' );
+			? sprintf( __( 'Could not download vulnerability data: %s', 'shouse' ), (string) $state['error'] )
+			: __( 'Vulnerability data updated.', 'shouse' );
 	}
 
 	public function render_panel(): void {
 		$state = $this->state();
-		echo '<div class="wphouse-panel"><p>';
+		echo '<div class="shouse-panel"><p>';
 		if ( empty( $state['checked_at'] ) ) {
-			echo esc_html__( 'Not checked yet. Use "Check now" or wait for the next hourly run.', 'wphouse' );
+			echo esc_html__( 'Not checked yet. Use "Check now" or wait for the next hourly run.', 'shouse' );
 		} else {
 			/* translators: %s: date and time. */
-			echo esc_html( sprintf( __( 'Last check: %s.', 'wphouse' ), wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), (int) $state['checked_at'] ) ) );
+			echo esc_html( sprintf( __( 'Last check: %s.', 'shouse' ), wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), (int) $state['checked_at'] ) ) );
 			if ( '' !== ( $state['error'] ?? '' ) ) {
 				/* translators: %s: error message. */
-				echo ' ' . esc_html( sprintf( __( 'The last download failed: %s', 'wphouse' ), (string) $state['error'] ) );
+				echo ' ' . esc_html( sprintf( __( 'The last download failed: %s', 'shouse' ), (string) $state['error'] ) );
 			}
 		}
 		echo '</p>';
 		$findings = $this->findings( true );
 		if ( ! empty( $state['generated'] ) && ! $findings ) {
-			echo '<p>' . esc_html__( 'No known vulnerabilities in installed software.', 'wphouse' ) . '</p>';
+			echo '<p>' . esc_html__( 'No known vulnerabilities in installed software.', 'shouse' ) . '</p>';
 		}
 		if ( $findings ) {
-			echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Software', 'wphouse' ) . '</th><th>' . esc_html__( 'Vulnerability', 'wphouse' ) . '</th><th>' . esc_html__( 'Fixed in', 'wphouse' ) . '</th></tr></thead><tbody>';
+			echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Software', 'shouse' ) . '</th><th>' . esc_html__( 'Vulnerability', 'shouse' ) . '</th><th>' . esc_html__( 'Fixed in', 'shouse' ) . '</th></tr></thead><tbody>';
 			foreach ( $findings as $finding ) {
 				$severity = $finding['urgent'] ? 'critical' : 'warning';
 				echo '<tr><td><strong>' . esc_html( $finding['name'] ) . '</strong> ' . esc_html( $finding['version'] ) . '</td>';
-				echo '<td><span class="wphouse-badge wphouse-badge--' . esc_attr( $severity ) . '">' . esc_html( null !== $finding['cvss'] ? 'CVSS ' . number_format_i18n( $finding['cvss'], 1 ) : $severity ) . '</span> ' . esc_html( $finding['title'] ) . $this->details_link( $finding ) . '</td>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- details_link() escapes.
-				echo '<td>' . esc_html( $finding['fixed'] ? implode( ', ', $finding['fixed'] ) : __( 'no fix yet', 'wphouse' ) ) . '</td></tr>';
+				echo '<td><span class="shouse-badge shouse-badge--' . esc_attr( $severity ) . '">' . esc_html( null !== $finding['cvss'] ? 'CVSS ' . number_format_i18n( $finding['cvss'], 1 ) : $severity ) . '</span> ' . esc_html( $finding['title'] ) . $this->details_link( $finding ) . '</td>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- details_link() escapes.
+				echo '<td>' . esc_html( $finding['fixed'] ? implode( ', ', $finding['fixed'] ) : __( 'no fix yet', 'shouse' ) ) . '</td></tr>';
 			}
 			echo '</tbody></table>';
 		}
@@ -405,9 +405,9 @@ final class Vulnerabilities extends AbstractModule {
 		$cvss = null !== $finding['cvss'] ? ' (CVSS ' . number_format_i18n( $finding['cvss'], 1 ) . ')' : '';
 		return $finding['fixed']
 			/* translators: 1: software name, 2: installed version, 3: CVSS score in brackets or empty, 4: vulnerability title, 5: fixed version(s). */
-			? sprintf( __( '%1$s %2$s%3$s: %4$s. Update to %5$s or later.', 'wphouse' ), $finding['name'], $finding['version'], $cvss, $finding['title'], implode( ' / ', $finding['fixed'] ) )
+			? sprintf( __( '%1$s %2$s%3$s: %4$s. Update to %5$s or later.', 'shouse' ), $finding['name'], $finding['version'], $cvss, $finding['title'], implode( ' / ', $finding['fixed'] ) )
 			/* translators: 1: software name, 2: installed version, 3: CVSS score in brackets or empty, 4: vulnerability title. */
-			: sprintf( __( '%1$s %2$s%3$s: %4$s. No fixed version yet: deactivate it if you can do without it.', 'wphouse' ), $finding['name'], $finding['version'], $cvss, $finding['title'] );
+			: sprintf( __( '%1$s %2$s%3$s: %4$s. No fixed version yet: deactivate it if you can do without it.', 'shouse' ), $finding['name'], $finding['version'], $cvss, $finding['title'] );
 	}
 
 	/**
@@ -419,7 +419,7 @@ final class Vulnerabilities extends AbstractModule {
 		if ( ! preg_match( self::ID_FORMAT, $finding['id'] ) ) {
 			return '';
 		}
-		return ' <a href="' . esc_url( 'https://www.wordfence.com/threat-intel/vulnerabilities/id/' . $finding['id'] ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Details', 'wphouse' ) . '</a>';
+		return ' <a href="' . esc_url( 'https://www.wordfence.com/threat-intel/vulnerabilities/id/' . $finding['id'] ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Details', 'shouse' ) . '</a>';
 	}
 
 	/**
@@ -439,16 +439,16 @@ final class Vulnerabilities extends AbstractModule {
 		}
 		if ( ! Signature::verify( $body, $sig, $this->public_keys() ) ) {
 			Log::add( 'advisories_rejected', 'Vulnerability data has an invalid signature', [ 'url' => $url ], 'critical' );
-			return new WP_Error( 'wphouse_bad_signature', 'Vulnerability data signature is invalid.' );
+			return new WP_Error( 'shouse_bad_signature', 'Vulnerability data signature is invalid.' );
 		}
 		$data   = json_decode( $body, true );
 		$shards = is_array( $data ) ? (array) ( $data['shards'] ?? [] ) : [];
 		if ( 1 !== ( $data['format'] ?? null ) || 256 !== count( $shards ) ) {
-			return new WP_Error( 'wphouse_bad_advisories', 'Vulnerability data has an unknown format.' );
+			return new WP_Error( 'shouse_bad_advisories', 'Vulnerability data has an unknown format.' );
 		}
 		foreach ( $shards as $name => $hash ) {
 			if ( ! preg_match( '/^[0-9a-f]{2}$/', (string) $name ) || ! preg_match( '/^[0-9a-f]{64}$/', (string) $hash ) ) {
-				return new WP_Error( 'wphouse_bad_advisories', 'Vulnerability data has an unknown format.' );
+				return new WP_Error( 'shouse_bad_advisories', 'Vulnerability data has an unknown format.' );
 			}
 		}
 		return [
@@ -471,11 +471,11 @@ final class Vulnerabilities extends AbstractModule {
 		}
 		if ( ! hash_equals( $hash, hash( 'sha256', $body ) ) ) {
 			Log::add( 'advisories_rejected', 'Vulnerability data shard does not match the signed index', [ 'shard' => $name ], 'critical' );
-			return new WP_Error( 'wphouse_bad_shard', 'Vulnerability data does not match its signed checksum.' );
+			return new WP_Error( 'shouse_bad_shard', 'Vulnerability data does not match its signed checksum.' );
 		}
 		$data = json_decode( $body, true );
 		if ( ! is_array( $data ) ) {
-			return new WP_Error( 'wphouse_bad_shard', 'Vulnerability data has an unknown format.' );
+			return new WP_Error( 'shouse_bad_shard', 'Vulnerability data has an unknown format.' );
 		}
 		$out = [];
 		foreach ( $items as $item ) {
@@ -530,7 +530,7 @@ final class Vulnerabilities extends AbstractModule {
 			return $response;
 		}
 		if ( 200 !== wp_remote_retrieve_response_code( $response ) ) {
-			return new WP_Error( 'wphouse_advisories_http', sprintf( 'HTTP %d for %s', wp_remote_retrieve_response_code( $response ), $url ) );
+			return new WP_Error( 'shouse_advisories_http', sprintf( 'HTTP %d for %s', wp_remote_retrieve_response_code( $response ), $url ) );
 		}
 		return wp_remote_retrieve_body( $response );
 	}
@@ -579,16 +579,16 @@ final class Vulnerabilities extends AbstractModule {
 	}
 
 	private function index_url(): string {
-		if ( Updater::is_local() && defined( 'WPHOUSE_ADVISORY_URL' ) ) {
-			return (string) WPHOUSE_ADVISORY_URL;
+		if ( Updater::is_local() && defined( 'SHOUSE_ADVISORY_URL' ) ) {
+			return (string) SHOUSE_ADVISORY_URL;
 		}
 		return self::INDEX_URL;
 	}
 
 	/** @return string[] */
 	private function public_keys(): array {
-		if ( Updater::is_local() && defined( 'WPHOUSE_ADVISORY_PUBLIC_KEYS' ) && is_array( WPHOUSE_ADVISORY_PUBLIC_KEYS ) ) {
-			return array_map( 'strval', WPHOUSE_ADVISORY_PUBLIC_KEYS );
+		if ( Updater::is_local() && defined( 'SHOUSE_ADVISORY_PUBLIC_KEYS' ) && is_array( SHOUSE_ADVISORY_PUBLIC_KEYS ) ) {
+			return array_map( 'strval', SHOUSE_ADVISORY_PUBLIC_KEYS );
 		}
 		return self::PUBLIC_KEYS;
 	}

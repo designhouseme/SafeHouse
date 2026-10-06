@@ -3,18 +3,18 @@
  * Module registry. Every module is instantiated (cheap, no hooks), but only enabled and
  * available modules get booted. Admin code loads only in wp-admin, CLI code only in WP-CLI.
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse;
+namespace SafeHouse;
 
-use WPHouse\Core\AbstractModule;
-use WPHouse\Core\Cli;
-use WPHouse\Core\Log;
-use WPHouse\Core\ObjectCache;
-use WPHouse\Core\SafeMode;
-use WPHouse\Core\Settings;
-use WPHouse\Core\Updater;
+use SafeHouse\Core\AbstractModule;
+use SafeHouse\Core\Cli;
+use SafeHouse\Core\Log;
+use SafeHouse\Core\ObjectCache;
+use SafeHouse\Core\SafeMode;
+use SafeHouse\Core\Settings;
+use SafeHouse\Core\Updater;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -64,14 +64,15 @@ final class Plugin {
 	}
 
 	public static function boot(): void {
+		Core\Migration::run(); // Before anything reads options or tables: installs from before the rename to SafeHouse.
 		$plugin = self::instance();
 
 		Log::maybe_install();
 		self::schedule_events();
-		add_action( 'wphouse_daily', [ Log::class, 'purge' ] );
+		add_action( 'shouse_daily', [ Log::class, 'purge' ] );
 		add_action( 'init', [ $plugin, 'load_textdomain' ] );
 		Updater::register(); // Also in safe mode: that is how a fix for a broken module arrives.
-		ObjectCache::register(); // Also in safe mode: status and `wp wphouse object-cache disable` must stay reachable.
+		ObjectCache::register(); // Also in safe mode: status and `wp shouse object-cache disable` must stay reachable.
 		add_filter( 'site_status_tests', [ Core\Net::class, 'site_health_test' ] );
 		Core\ContentChanges::register();
 
@@ -93,7 +94,7 @@ final class Plugin {
 	}
 
 	public function load_textdomain(): void {
-		load_plugin_textdomain( 'wphouse', false, dirname( plugin_basename( WPHOUSE_FILE ) ) . '/languages' );
+		load_plugin_textdomain( 'shouse', false, dirname( plugin_basename( SHOUSE_FILE ) ) . '/languages' );
 	}
 
 	/** @return array<string, AbstractModule> */
@@ -110,31 +111,32 @@ final class Plugin {
 		return isset( $this->booted[ $id ] );
 	}
 
-	/** The WPHouse admin page, optionally opened at a module (by id) or section. */
+	/** The SafeHouse admin page, optionally opened at a module (by id) or section. */
 	public static function settings_url( string $anchor = '' ): string {
-		return admin_url( 'admin.php?page=wphouse' ) . ( '' !== $anchor ? '#wphouse-' . $anchor : '' );
+		return admin_url( 'admin.php?page=shouse' ) . ( '' !== $anchor ? '#shouse-' . $anchor : '' );
 	}
 
 	private static function schedule_events(): void {
-		if ( ! wp_next_scheduled( 'wphouse_hourly' ) ) {
-			wp_schedule_event( time() + 300, 'hourly', 'wphouse_hourly' );
+		if ( ! wp_next_scheduled( 'shouse_hourly' ) ) {
+			wp_schedule_event( time() + 300, 'hourly', 'shouse_hourly' );
 		}
-		if ( ! wp_next_scheduled( 'wphouse_daily' ) ) {
-			wp_schedule_event( time() + 600, 'daily', 'wphouse_daily' );
+		if ( ! wp_next_scheduled( 'shouse_daily' ) ) {
+			wp_schedule_event( time() + 600, 'daily', 'shouse_daily' );
 		}
 	}
 
 	public static function activate( bool $network_wide = false ): void {
 		if ( is_multisite() && $network_wide ) {
-			wp_die( esc_html__( 'WPHouse 0.x supports single sites only. Activate it per site instead of network-wide.', 'wphouse' ), '', [ 'back_link' => true ] );
+			wp_die( esc_html__( 'SafeHouse 0.x supports single sites only. Activate it per site instead of network-wide.', 'shouse' ), '', [ 'back_link' => true ] );
 		}
+		Core\Migration::run();
 		Log::install();
 		self::schedule_events();
 	}
 
 	public static function deactivate(): void {
-		wp_clear_scheduled_hook( 'wphouse_hourly' );
-		wp_clear_scheduled_hook( 'wphouse_daily' );
+		wp_clear_scheduled_hook( 'shouse_hourly' );
+		wp_clear_scheduled_hook( 'shouse_daily' );
 		ObjectCache::deactivate();
 	}
 }

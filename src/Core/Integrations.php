@@ -1,12 +1,12 @@
 <?php
 /**
- * Plugins WPHouse is built to run alongside, shown in the Integrations card on the settings page.
+ * Plugins SafeHouse is built to run alongside, shown in the Integrations card on the settings page.
  * dev/cve-watch.php reads PLUGINS as well: every plugin listed here is watched for new vulnerabilities.
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Core;
+namespace SafeHouse\Core;
 
 defined( 'ABSPATH' ) || exit;
 

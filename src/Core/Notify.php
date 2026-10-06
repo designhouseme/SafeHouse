@@ -2,12 +2,12 @@
 /**
  * Plain-text alert e-mails to the recipients set in the General section.
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Core;
+namespace SafeHouse\Core;
 
-use WPHouse\Plugin;
+use SafeHouse\Plugin;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -27,7 +27,7 @@ final class Notify {
 			return false;
 		}
 		$site = wp_specialchars_decode( (string) get_option( 'blogname' ), ENT_QUOTES );
-		$body = implode( "\n", $lines ) . "\n\n" . home_url( '/' ) . "\n" . Plugin::settings_url() . "\n\n-- \nWPHouse, Design House\nhttps://designhouse.me/\n";
-		return wp_mail( $recipients, sprintf( '[WPHouse] %s: %s', $site, $subject ), $body );
+		$body = implode( "\n", $lines ) . "\n\n" . home_url( '/' ) . "\n" . Plugin::settings_url() . "\n\n-- \nSafeHouse, Design House\nhttps://designhouse.me/\n";
+		return wp_mail( $recipients, sprintf( '[SafeHouse] %s: %s', $site, $subject ), $body );
 	}
 }

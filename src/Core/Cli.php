@@ -1,24 +1,24 @@
 <?php
 /**
- * Core WP-CLI commands. Modules add their own subcommands (e.g. `wp wphouse unlock`) when they boot.
+ * Core WP-CLI commands. Modules add their own subcommands (e.g. `wp shouse unlock`) when they boot.
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Core;
+namespace SafeHouse\Core;
 
 use WP_CLI;
-use WPHouse\Plugin;
+use SafeHouse\Plugin;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Manage WPHouse modules, safe mode and the event log.
+ * Manage SafeHouse modules, safe mode and the event log.
  */
 final class Cli {
 
 	public static function register(): void {
-		WP_CLI::add_command( 'wphouse', self::class );
+		WP_CLI::add_command( 'shouse', self::class );
 	}
 
 	/**
@@ -44,7 +44,7 @@ final class Cli {
 				'module'   => $id,
 				'enabled'  => $plugin->settings->module_enabled( $module ) ? 'yes' : 'no',
 				'running'  => $plugin->is_running( $id ) ? 'yes' : 'no',
-				'source'   => null !== $forced ? 'WPHOUSE_MODULES' : 'settings',
+				'source'   => null !== $forced ? 'SHOUSE_MODULES' : 'settings',
 				'overlaps' => implode( ', ', array_map( static fn( $k, $v ) => "$k: $v", array_keys( $module->coverage() ), $module->coverage() ) ),
 			];
 		}
@@ -68,7 +68,7 @@ final class Cli {
 	 * ---
 	 *
 	 * <module>
-	 * : Module id, as shown by `wp wphouse status`.
+	 * : Module id, as shown by `wp shouse status`.
 	 *
 	 * @param string[] $args Positional arguments.
 	 */
@@ -79,7 +79,7 @@ final class Cli {
 			WP_CLI::error( "Unknown module: $id" );
 		}
 		if ( null !== $plugin->settings->forced( $id ) ) {
-			WP_CLI::warning( "$id is pinned by WPHOUSE_MODULES in wp-config.php; the saved setting has no effect." );
+			WP_CLI::warning( "$id is pinned by SHOUSE_MODULES in wp-config.php; the saved setting has no effect." );
 		}
 		$plugin->settings->set_module_enabled( $id, 'enable' === $action );
 		WP_CLI::success( "$id " . ( 'enable' === $action ? 'enabled' : 'disabled' ) . '.' );
@@ -111,12 +111,14 @@ final class Cli {
 			WP_CLI::success( 'Safe mode on.' );
 			return;
 		}
-		if ( file_exists( $file ) && ! unlink( $file ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink
-			WP_CLI::error( "Could not remove $file" );
+		foreach ( [ $file, SafeMode::legacy_flag_file() ] as $flag ) {
+			if ( file_exists( $flag ) && ! unlink( $flag ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink
+				WP_CLI::error( "Could not remove $flag" );
+			}
 		}
 		Log::add( 'safe_mode', 'Safe mode turned off from WP-CLI' );
-		if ( Compat::constant_on( 'WPHOUSE_SAFE_MODE' ) ) {
-			WP_CLI::warning( 'WPHOUSE_SAFE_MODE is still defined in wp-config.php.' );
+		if ( Compat::constant_on( 'SHOUSE_SAFE_MODE' ) ) {
+			WP_CLI::warning( 'SHOUSE_SAFE_MODE is still defined in wp-config.php.' );
 		}
 		WP_CLI::success( 'Safe mode off.' );
 	}
@@ -162,8 +164,8 @@ final class Cli {
 	 * @subcommand update-check
 	 */
 	public function update_check(): void {
-		if ( Compat::constant_on( 'WPHOUSE_DISABLE_UPDATES' ) ) {
-			WP_CLI::error( 'Updates are disabled by WPHOUSE_DISABLE_UPDATES.' );
+		if ( Compat::constant_on( 'SHOUSE_DISABLE_UPDATES' ) ) {
+			WP_CLI::error( 'Updates are disabled by SHOUSE_DISABLE_UPDATES.' );
 		}
 		if ( Updater::is_dev_checkout() ) {
 			WP_CLI::error( 'This is a git checkout; updates are disabled so they cannot overwrite it.' );
@@ -174,7 +176,7 @@ final class Cli {
 		}
 		$update = get_site_transient( 'update_plugins' );
 		$offer  = is_object( $update ) && isset( $update->response[ Updater::basename() ] ) ? $update->response[ Updater::basename() ] : null;
-		WP_CLI::log( 'Installed: ' . WPHOUSE_VERSION . ', latest signed release: ' . $result );
+		WP_CLI::log( 'Installed: ' . SHOUSE_VERSION . ', latest signed release: ' . $result );
 		WP_CLI::success( $offer ? 'Update available: ' . $offer->new_version : 'Up to date.' );
 	}
 }

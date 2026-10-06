@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # WordPress core's own PHPUnit tests for the object cache API (and options/transients, which lean on it
-# hardest), run with the WPHouse object cache as the drop-in. Uses the OLS harness's lsphp (PhpRedis),
+# hardest), run with the SafeHouse object cache as the drop-in. Uses the OLS harness's lsphp (PhpRedis),
 # MariaDB and Redis: run ./dev/ols/setup.sh first. ./dev/ols/object-cache-core-test.sh [extra phpunit args]
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -26,12 +26,12 @@ cat >> "$WD/wp-tests-config.php" <<'PHP'
 define( 'WP_REDIS_HOST', 'redis' );
 define( 'WP_CACHE_KEY_SALT', 'wptests:' );
 PHP
-sed 's/__WPHOUSE_FOLDER__/wphouse/' "$ROOT/src/ObjectCache/loader.php" > "$WD/src/wp-content/object-cache.php"
+sed 's/__SHOUSE_FOLDER__/shouse/' "$ROOT/src/ObjectCache/loader.php" > "$WD/src/wp-content/object-cache.php"
 
 commands() { docker compose exec -T redis redis-cli INFO stats | tr -d '\r' | awk -F: '$1 == "total_commands_processed" { print $2 }'; }
 before=$(commands)
-docker run --rm --network wphouse-ols_default --entrypoint /usr/local/lsws/lsphp83/bin/php \
-	-v "$WD":/wp -v "$ROOT":/wp/src/wp-content/plugins/wphouse:ro -v "$ROOT":/wp/tests/phpunit/data/plugins/wphouse:ro -w /wp \
+docker run --rm --network shouse-ols_default --entrypoint /usr/local/lsws/lsphp83/bin/php \
+	-v "$WD":/wp -v "$ROOT":/wp/src/wp-content/plugins/shouse:ro -v "$ROOT":/wp/tests/phpunit/data/plugins/shouse:ro -w /wp \
 	litespeedtech/openlitespeed:1.9.2-lsphp83 -d memory_limit=1G vendor/bin/phpunit --group cache,option "$@" | tee "$ROOT/build/core-cache-tests.txt" || true
 
 # One known difference: Tests_Cache::test_wp_cache_flush_group expects an external cache NOT to support
@@ -43,10 +43,10 @@ errors=$(echo "$summary" | grep -o 'Errors: [0-9]*' | grep -o '[0-9]*' || true)
 failures=$(echo "$summary" | grep -o 'Failures: [0-9]*' | grep -o '[0-9]*' || true)
 only_known=$(sed -n '/failure/,/^--$\|skipped/p' "$OUT" | grep -E '^[0-9]+\) ' | grep -v -c 'Tests_Cache::test_wp_cache_flush_group$' || true)
 
-# Proof the suite ran on the WPHouse cache, not on WordPress's own: only the drop-in talks to this Redis.
+# Proof the suite ran on the SafeHouse cache, not on WordPress's own: only the drop-in talks to this Redis.
 # (Counting keys proves nothing: the tests flush the cache after every test.)
 used=$(( $(commands) - before ))
 echo "Redis commands during the run: $used"
-[ "$used" -gt 1000 ] || { echo "FAIL: the tests did not use the WPHouse object cache"; exit 1; }
+[ "$used" -gt 1000 ] || { echo "FAIL: the tests did not use the SafeHouse object cache"; exit 1; }
 [ "${errors:-0}" -eq 0 ] && [ "${failures:-0}" -le 1 ] && [ "$only_known" -eq 0 ] || { echo "FAIL: unexpected errors or failures, see build/core-cache-tests.txt ($summary)"; exit 1; }
-echo "Core object cache tests passed on the WPHouse cache (one known, intended difference: group flush is supported)."
+echo "Core object cache tests passed on the SafeHouse cache (one known, intended difference: group flush is supported)."

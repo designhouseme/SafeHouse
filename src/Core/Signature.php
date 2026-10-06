@@ -3,10 +3,10 @@
  * Ed25519 detached-signature check shared by the updater and the vulnerability alerts.
  * Each caller passes its own public keys, so a key trusted for one channel is never trusted for the other.
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Core;
+namespace SafeHouse\Core;
 
 defined( 'ABSPATH' ) || exit;
 

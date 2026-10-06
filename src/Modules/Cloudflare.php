@@ -9,20 +9,20 @@
  *
  * The only outbound host is api.cloudflare.com. The token (a Cloudflare API token with only
  * Zone → Cache Purge on this zone) and the zone ID live in wp-config.php:
- *   define( 'WPHOUSE_CLOUDFLARE_TOKEN', '...' );
- *   define( 'WPHOUSE_CLOUDFLARE_ZONE', '0123456789abcdef0123456789abcdef' );
- * WPHOUSE_CLOUDFLARE_API (another API base) is honoured only on local/development sites, for tests.
+ *   define( 'SHOUSE_CLOUDFLARE_TOKEN', '...' );
+ *   define( 'SHOUSE_CLOUDFLARE_ZONE', '0123456789abcdef0123456789abcdef' );
+ * SHOUSE_CLOUDFLARE_API (another API base) is honoured only on local/development sites, for tests.
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Modules;
+namespace SafeHouse\Modules;
 
 use WP_CLI;
-use WPHouse\Core\AbstractModule;
-use WPHouse\Core\ContentChanges;
-use WPHouse\Core\Log;
-use WPHouse\Core\Updater;
+use SafeHouse\Core\AbstractModule;
+use SafeHouse\Core\ContentChanges;
+use SafeHouse\Core\Log;
+use SafeHouse\Core\Updater;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -31,10 +31,10 @@ final class Cloudflare extends AbstractModule {
 	private const API      = 'https://api.cloudflare.com/client/v4';
 	private const GAP      = 30;
 	private const MAX_URLS = 30;
-	private const CRON     = 'wphouse_cloudflare_purge';
-	private const PENDING  = 'wphouse_cloudflare_pending';
-	private const LAST     = 'wphouse_cloudflare_last';
-	private const RESULT   = 'wphouse_cloudflare_result';
+	private const CRON     = 'shouse_cloudflare_purge';
+	private const PENDING  = 'shouse_cloudflare_pending';
+	private const LAST     = 'shouse_cloudflare_last';
+	private const RESULT   = 'shouse_cloudflare_result';
 
 	/**
 	 * Addresses changed in this request; "*" means everything. Null when nothing changed.
@@ -52,11 +52,11 @@ final class Cloudflare extends AbstractModule {
 	}
 
 	public function label(): string {
-		return __( 'Cloudflare cache', 'wphouse' );
+		return __( 'Cloudflare cache', 'shouse' );
 	}
 
 	public function description(): string {
-		return __( 'Clears the Cloudflare cache after changes, for sites where Cloudflare caches whole pages (APO or a Cache Everything rule). A changed post clears its own page and the listings it appears on; menus, widgets, themes and plugins clear everything. The API token and zone ID live in wp-config.php.', 'wphouse' );
+		return __( 'Clears the Cloudflare cache after changes, for sites where Cloudflare caches whole pages (APO or a Cache Everything rule). A changed post clears its own page and the listings it appears on; menus, widgets, themes and plugins clear everything. The API token and zone ID live in wp-config.php.', 'shouse' );
 	}
 
 	public function fields(): array {
@@ -68,7 +68,7 @@ final class Cloudflare extends AbstractModule {
 	}
 
 	public function unavailable_reason(): string {
-		return __( 'Add WPHOUSE_CLOUDFLARE_TOKEN (an API token allowed only to purge this zone\'s cache) and WPHOUSE_CLOUDFLARE_ZONE (the zone ID from the Cloudflare dashboard) to wp-config.php.', 'wphouse' );
+		return __( 'Add SHOUSE_CLOUDFLARE_TOKEN (an API token allowed only to purge this zone\'s cache) and SHOUSE_CLOUDFLARE_ZONE (the zone ID from the Cloudflare dashboard) to wp-config.php.', 'shouse' );
 	}
 
 	public function boot(): void {
@@ -80,7 +80,7 @@ final class Cloudflare extends AbstractModule {
 			add_filter( 'http_request_host_is_external', [ $this, 'allow_local_api' ], 10, 2 );
 		}
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
-			WP_CLI::add_command( 'wphouse cloudflare purge', [ $this, 'cli_purge' ] );
+			WP_CLI::add_command( 'shouse cloudflare purge', [ $this, 'cli_purge' ] );
 		}
 	}
 
@@ -175,31 +175,31 @@ final class Cloudflare extends AbstractModule {
 	}
 
 	public function tasks(): array {
-		return [ 'purge' => __( 'Clear the whole Cloudflare cache', 'wphouse' ) ];
+		return [ 'purge' => __( 'Clear the whole Cloudflare cache', 'shouse' ) ];
 	}
 
 	public function handle_task( string $task ): string {
 		$error = $this->purge( [ '*' => true ] );
 		/* translators: %s: error message. */
-		return '' === $error ? __( 'Cloudflare cache cleared.', 'wphouse' ) : sprintf( __( 'Cloudflare refused: %s', 'wphouse' ), $error );
+		return '' === $error ? __( 'Cloudflare cache cleared.', 'shouse' ) : sprintf( __( 'Cloudflare refused: %s', 'shouse' ), $error );
 	}
 
 	public function render_panel(): void {
 		$result = get_option( self::RESULT );
-		echo '<div class="wphouse-panel"><p>';
+		echo '<div class="shouse-panel"><p>';
 		if ( ! is_array( $result ) ) {
-			echo esc_html__( 'Nothing cleared yet.', 'wphouse' );
+			echo esc_html__( 'Nothing cleared yet.', 'shouse' );
 		} else {
 			$when  = wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), (int) $result['time'] );
 			$count = (int) ( $result['count'] ?? 0 );
 			/* translators: %d: number of addresses. */
-			$what = $count ? sprintf( _n( '%d address', '%d addresses', $count, 'wphouse' ), $count ) : __( 'everything', 'wphouse' );
+			$what = $count ? sprintf( _n( '%d address', '%d addresses', $count, 'shouse' ), $count ) : __( 'everything', 'shouse' );
 			echo esc_html(
 				'' === $result['error']
 					/* translators: 1: date and time, 2: "everything" or "N addresses". */
-					? sprintf( __( 'Last cleared %1$s (%2$s).', 'wphouse' ), $when, $what )
+					? sprintf( __( 'Last cleared %1$s (%2$s).', 'shouse' ), $when, $what )
 					/* translators: 1: date and time, 2: error message. */
-					: sprintf( __( 'The last call on %1$s failed: %2$s', 'wphouse' ), $when, $result['error'] )
+					: sprintf( __( 'The last call on %1$s failed: %2$s', 'shouse' ), $when, $result['error'] )
 			);
 		}
 		echo '</p></div>';
@@ -212,8 +212,8 @@ final class Cloudflare extends AbstractModule {
 	public function site_health_test( array $tests ): array {
 		$result = get_option( self::RESULT );
 		if ( is_array( $result ) && '' !== $result['error'] ) {
-			$tests['direct']['wphouse_cloudflare'] = [
-				'label' => __( 'WPHouse Cloudflare cache', 'wphouse' ),
+			$tests['direct']['shouse_cloudflare'] = [
+				'label' => __( 'SafeHouse Cloudflare cache', 'shouse' ),
 				'test'  => [ $this, 'site_health_result' ],
 			];
 		}
@@ -224,15 +224,15 @@ final class Cloudflare extends AbstractModule {
 	public function site_health_result(): array {
 		$result = (array) get_option( self::RESULT );
 		return [
-			'label'       => __( 'Cloudflare refused to clear the cache', 'wphouse' ),
+			'label'       => __( 'Cloudflare refused to clear the cache', 'shouse' ),
 			'status'      => 'recommended',
 			'badge'       => [
-				'label' => __( 'Performance', 'wphouse' ),
+				'label' => __( 'Performance', 'shouse' ),
 				'color' => 'blue',
 			],
 			/* translators: %s: error message from Cloudflare. */
-			'description' => '<p>' . esc_html( sprintf( __( 'Visitors may see old pages until the cache expires. Check the token and zone ID in wp-config.php. Cloudflare said: %s', 'wphouse' ), (string) ( $result['error'] ?? '' ) ) ) . '</p>',
-			'test'        => 'wphouse_cloudflare',
+			'description' => '<p>' . esc_html( sprintf( __( 'Visitors may see old pages until the cache expires. Check the token and zone ID in wp-config.php. Cloudflare said: %s', 'shouse' ), (string) ( $result['error'] ?? '' ) ) ) . '</p>',
+			'test'        => 'shouse_cloudflare',
 		];
 	}
 
@@ -253,18 +253,18 @@ final class Cloudflare extends AbstractModule {
 	}
 
 	private static function api(): string {
-		if ( Updater::is_local() && defined( 'WPHOUSE_CLOUDFLARE_API' ) ) {
-			return rtrim( (string) WPHOUSE_CLOUDFLARE_API, '/' );
+		if ( Updater::is_local() && defined( 'SHOUSE_CLOUDFLARE_API' ) ) {
+			return rtrim( (string) SHOUSE_CLOUDFLARE_API, '/' );
 		}
 		return self::API;
 	}
 
 	private static function token(): string {
-		return defined( 'WPHOUSE_CLOUDFLARE_TOKEN' ) ? trim( (string) WPHOUSE_CLOUDFLARE_TOKEN ) : '';
+		return defined( 'SHOUSE_CLOUDFLARE_TOKEN' ) ? trim( (string) SHOUSE_CLOUDFLARE_TOKEN ) : '';
 	}
 
 	private static function zone(): string {
-		$zone = defined( 'WPHOUSE_CLOUDFLARE_ZONE' ) ? strtolower( trim( (string) WPHOUSE_CLOUDFLARE_ZONE ) ) : '';
+		$zone = defined( 'SHOUSE_CLOUDFLARE_ZONE' ) ? strtolower( trim( (string) SHOUSE_CLOUDFLARE_ZONE ) ) : '';
 		return preg_match( '/^[a-f0-9]{32}$/', $zone ) ? $zone : '';
 	}
 }

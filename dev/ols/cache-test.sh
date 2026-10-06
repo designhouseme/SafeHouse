@@ -14,13 +14,13 @@ cache() { curl -s -o /dev/null -D - "$@" | tr -d '\r' | awk 'tolower($1) == "x-l
 twice() { cache "$@" >/dev/null; cache "$@"; }
 purge_now() { curl -s -o /dev/null "$U/wp-admin/admin-ajax.php"; } # sends a queued purge (wp-cron.php answers before WordPress loads)
 
-wp wphouse module enable litespeed >/dev/null
+wp shouse module enable litespeed >/dev/null
 wp option update woocommerce_default_customer_address base >/dev/null
 product=$(wp wc product list --user=admin --field=id --per_page=1)
 [ -n "$product" ] || product=$(wp wc product create --user=admin --name="Cache test" --regular_price=10 --porcelain)
 product_url=$(wp eval "echo get_permalink( $product );")
 cart=$(wp option get woocommerce_cart_page_id); checkout=$(wp option get woocommerce_checkout_page_id); account=$(wp option get woocommerce_myaccount_page_id)
-wp wphouse cache purge >/dev/null; purge_now
+wp shouse cache purge >/dev/null; purge_now
 
 echo "== anonymous visitors"
 check "home: first view is a miss"          miss "$(cache "$U/")"
@@ -69,10 +69,10 @@ check "...and is applied by it"             miss "$(cache "$U/")"
 
 echo "== maintenance mode"
 cache "$U/" >/dev/null
-wp wphouse module enable maintenance >/dev/null; purge_now
+wp shouse module enable maintenance >/dev/null; purge_now
 check "maintenance page not served from cache" 503 "$(curl -s -o /dev/null -w '%{http_code}' "$U/")"
 check "503 never cached"                    - "$(twice "$U/")"
-wp wphouse module disable maintenance >/dev/null; purge_now
+wp shouse module disable maintenance >/dev/null; purge_now
 check "site back after maintenance"         200 "$(curl -s -o /dev/null -w '%{http_code}' "$U/")"
 
 echo

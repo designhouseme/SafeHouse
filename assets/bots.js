@@ -1,11 +1,11 @@
 /**
- * WPHouse bot protection in the browser: the honeypot proof and Cloudflare Turnstile widgets.
+ * SafeHouse bot protection in the browser: the honeypot proof and Cloudflare Turnstile widgets.
  * Loaded only where one of the forms is printed, and on the block checkout.
  */
 ( function () {
 	'use strict';
 
-	var config = window.wphouseBots || {};
+	var config = window.shouseBots || {};
 	var FIELD = 'cf-turnstile-response';
 	// Sent when the browser cannot reach Cloudflare. The server then asks Cloudflare itself and
 	// applies the "when unavailable" setting only if Cloudflare is down for the server too.
@@ -19,12 +19,12 @@
 	/* Honeypot: the proof goes in on the first keypress, tap or click inside the form. */
 	function armHoneypot( box ) {
 		var form = box.closest( 'form' );
-		if ( ! form || form.wphouseHoneypot ) {
+		if ( ! form || form.shouseHoneypot ) {
 			return;
 		}
-		form.wphouseHoneypot = true;
+		form.shouseHoneypot = true;
 		var write = function () {
-			var input = form.querySelector( 'input[name="wphouse_proof"]' );
+			var input = form.querySelector( 'input[name="shouse_proof"]' );
 			if ( input ) {
 				input.value = box.getAttribute( 'data-proof' ) || '';
 			}
@@ -59,18 +59,18 @@
 	}
 
 	function resume( el ) {
-		var go = el.wphouseResume;
-		el.wphouseResume = null;
+		var go = el.shouseResume;
+		el.shouseResume = null;
 		if ( go ) {
 			go();
 		}
 	}
 
 	function render( el ) {
-		if ( el.wphouseWidget !== undefined || ! window.turnstile ) {
+		if ( el.shouseWidget !== undefined || ! window.turnstile ) {
 			return;
 		}
-		el.wphouseWidget = window.turnstile.render( el, {
+		el.shouseWidget = window.turnstile.render( el, {
 			sitekey: el.getAttribute( 'data-sitekey' ),
 			action: el.getAttribute( 'data-action' ),
 			appearance: 'interaction-only',
@@ -86,14 +86,14 @@
 	}
 
 	function reset( el ) {
-		if ( el && el.wphouseWidget !== undefined && window.turnstile ) {
-			window.turnstile.reset( el.wphouseWidget );
+		if ( el && el.shouseWidget !== undefined && window.turnstile ) {
+			window.turnstile.reset( el.shouseWidget );
 		}
 	}
 
 	function scan() {
-		each( '.wphouse-hp', armHoneypot );
-		each( '.wphouse-turnstile', render );
+		each( '.shouse-hp', armHoneypot );
+		each( '.shouse-turnstile', render );
 		placeBlockCheckoutWidget();
 	}
 
@@ -102,8 +102,8 @@
 		'submit',
 		function ( event ) {
 			var form = event.target;
-			var el = form.querySelector ? form.querySelector( '.wphouse-turnstile' ) : null;
-			if ( ! el || token( el ) || form.wphouseSending ) {
+			var el = form.querySelector ? form.querySelector( '.shouse-turnstile' ) : null;
+			if ( ! el || token( el ) || form.shouseSending ) {
 				return;
 			}
 			if ( ! window.turnstile ) {
@@ -112,22 +112,22 @@
 			}
 			event.preventDefault();
 			event.stopImmediatePropagation();
-			if ( el.wphouseResume ) {
+			if ( el.shouseResume ) {
 				return;
 			}
 			var submitter = event.submitter && event.submitter.form === form ? event.submitter : null;
 			var timer = setTimeout( function () {
 				resume( el );
 			}, WAIT_MS );
-			el.wphouseResume = function () {
+			el.shouseResume = function () {
 				clearTimeout( timer );
-				form.wphouseSending = true;
+				form.shouseSending = true;
 				if ( form.requestSubmit ) {
 					form.requestSubmit( submitter || undefined );
 				} else {
 					form.submit();
 				}
-				form.wphouseSending = false;
+				form.shouseSending = false;
 			};
 		},
 		true
@@ -136,7 +136,7 @@
 	/* Classic checkout: the widget is re-rendered with the payment box, and a token is single-use. */
 	if ( window.jQuery ) {
 		window.jQuery( document.body ).on( 'checkout_error', function () {
-			each( 'form.checkout .wphouse-turnstile', reset );
+			each( 'form.checkout .shouse-turnstile', reset );
 		} );
 	}
 
@@ -154,9 +154,9 @@
 			return;
 		}
 		blockWidget = document.createElement( 'div' );
-		blockWidget.className = 'wphouse-turnstile';
+		blockWidget.className = 'shouse-turnstile';
 		blockWidget.setAttribute( 'data-sitekey', config.sitekey );
-		blockWidget.setAttribute( 'data-action', 'wphouse_checkout' );
+		blockWidget.setAttribute( 'data-action', 'shouse_checkout' );
 		actions.parentNode.insertBefore( blockWidget, actions );
 		render( blockWidget );
 	}
@@ -202,7 +202,7 @@
 		} );
 	}
 
-	window.wphouseTurnstileReady = scan;
+	window.shouseTurnstileReady = scan;
 	if ( 'loading' === document.readyState ) {
 		document.addEventListener( 'DOMContentLoaded', scan );
 	} else {

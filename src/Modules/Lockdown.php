@@ -6,26 +6,26 @@
  * through code paths which skip capability checks (the 2025–26 "unauthenticated plugin
  * install" bugs). Watch adds a third layer by alerting on any new plugin directory.
  *
- * Unlock for 30 minutes with `wp wphouse unlock` or, unless WPHOUSE_LOCKDOWN_UI_UNLOCK is false,
+ * Unlock for 30 minutes with `wp shouse unlock` or, unless SHOUSE_LOCKDOWN_UI_UNLOCK is false,
  * the button on the settings page. Every unlock is logged and e-mailed.
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Modules;
+namespace SafeHouse\Modules;
 
 use WP_CLI;
 use WP_Error;
-use WPHouse\Core\AbstractModule;
-use WPHouse\Core\Compat;
-use WPHouse\Core\Log;
-use WPHouse\Core\Notify;
+use SafeHouse\Core\AbstractModule;
+use SafeHouse\Core\Compat;
+use SafeHouse\Core\Log;
+use SafeHouse\Core\Notify;
 
 defined( 'ABSPATH' ) || exit;
 
 final class Lockdown extends AbstractModule {
 
-	private const UNLOCK_OPTION = 'wphouse_lockdown_until';
+	private const UNLOCK_OPTION = 'shouse_lockdown_until';
 	private const LOCKED_CAPS   = [ 'install_plugins', 'install_themes', 'upload_plugins', 'upload_themes', 'edit_plugins', 'edit_themes', 'edit_files' ];
 
 	public function id(): string {
@@ -37,11 +37,11 @@ final class Lockdown extends AbstractModule {
 	}
 
 	public function label(): string {
-		return __( 'Install lockdown', 'wphouse' );
+		return __( 'Install lockdown', 'shouse' );
 	}
 
 	public function description(): string {
-		return __( 'Nobody can install new plugins or themes or upload ZIP files, not even through a vulnerable plugin that skips permission checks. Updates keep working. Unlock for 30 minutes when you need to install something.', 'wphouse' );
+		return __( 'Nobody can install new plugins or themes or upload ZIP files, not even through a vulnerable plugin that skips permission checks. Updates keep working. Unlock for 30 minutes when you need to install something.', 'shouse' );
 	}
 
 	public function fields(): array {
@@ -53,15 +53,15 @@ final class Lockdown extends AbstractModule {
 	}
 
 	public function unavailable_reason(): string {
-		return __( 'DISALLOW_FILE_MODS in wp-config.php already blocks all installs and updates.', 'wphouse' );
+		return __( 'DISALLOW_FILE_MODS in wp-config.php already blocks all installs and updates.', 'shouse' );
 	}
 
 	public function boot(): void {
 		add_filter( 'map_meta_cap', [ $this, 'lock_caps' ], 10, 2 );
 		add_filter( 'upgrader_pre_install', [ $this, 'block_install' ], 10, 2 );
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
-			WP_CLI::add_command( 'wphouse unlock', [ $this, 'cli_unlock' ] );
-			WP_CLI::add_command( 'wphouse lock', [ $this, 'cli_lock' ] );
+			WP_CLI::add_command( 'shouse unlock', [ $this, 'cli_unlock' ] );
+			WP_CLI::add_command( 'shouse lock', [ $this, 'cli_lock' ] );
 		}
 	}
 
@@ -97,7 +97,7 @@ final class Lockdown extends AbstractModule {
 			return $response;
 		}
 		Log::add( 'install_blocked', sprintf( 'Blocked a %s install while locked', $type ), [], 'warning' );
-		return new WP_Error( 'wphouse_locked', __( 'Installing plugins and themes is locked by WPHouse. Unlock it first (WPHouse in the admin menu or `wp wphouse unlock`).', 'wphouse' ) );
+		return new WP_Error( 'shouse_locked', __( 'Installing plugins and themes is locked by SafeHouse. Unlock it first (SafeHouse in the admin menu or `wp shouse unlock`).', 'shouse' ) );
 	}
 
 	public function unlock( int $minutes, string $via ): void {
@@ -119,31 +119,31 @@ final class Lockdown extends AbstractModule {
 
 	public function tasks(): array {
 		if ( self::is_unlocked() ) {
-			return [ 'lock' => __( 'Lock now', 'wphouse' ) ];
+			return [ 'lock' => __( 'Lock now', 'shouse' ) ];
 		}
-		if ( defined( 'WPHOUSE_LOCKDOWN_UI_UNLOCK' ) && ! WPHOUSE_LOCKDOWN_UI_UNLOCK ) {
+		if ( defined( 'SHOUSE_LOCKDOWN_UI_UNLOCK' ) && ! SHOUSE_LOCKDOWN_UI_UNLOCK ) {
 			return [];
 		}
-		return [ 'unlock' => __( 'Unlock installs for 30 minutes', 'wphouse' ) ];
+		return [ 'unlock' => __( 'Unlock installs for 30 minutes', 'shouse' ) ];
 	}
 
 	public function handle_task( string $task ): string {
 		if ( 'unlock' === $task ) {
 			$this->unlock( 30, 'settings page' );
-			return __( 'Installs are unlocked for 30 minutes.', 'wphouse' );
+			return __( 'Installs are unlocked for 30 minutes.', 'shouse' );
 		}
 		$this->lock();
-		return __( 'Installs are locked.', 'wphouse' );
+		return __( 'Installs are locked.', 'shouse' );
 	}
 
 	public function render_panel(): void {
 		$until = self::unlocked_until();
-		echo '<p class="wphouse-panel">';
+		echo '<p class="shouse-panel">';
 		if ( $until > time() ) {
 			/* translators: %s: time, e.g. 14:35 */
-			echo esc_html( sprintf( __( 'Unlocked until %s.', 'wphouse' ), wp_date( get_option( 'time_format' ), $until ) ) );
+			echo esc_html( sprintf( __( 'Unlocked until %s.', 'shouse' ), wp_date( get_option( 'time_format' ), $until ) ) );
 		} else {
-			esc_html_e( 'Locked. Updates of installed plugins, themes and core still work.', 'wphouse' );
+			esc_html_e( 'Locked. Updates of installed plugins, themes and core still work.', 'shouse' );
 		}
 		echo '</p>';
 	}

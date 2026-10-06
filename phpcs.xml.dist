@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
-<ruleset name="WPHouse">
+<ruleset name="SafeHouse">
 	<description>WordPress coding standards with the security sniffs kept strict.</description>
 
-	<file>wphouse.php</file>
+	<file>shouse.php</file>
 	<file>uninstall.php</file>
 	<file>src</file>
 
@@ -28,12 +28,12 @@
 
 	<rule ref="WordPress.WP.I18n">
 		<properties>
-			<property name="text_domain" type="array"><element value="wphouse"/></property>
+			<property name="text_domain" type="array"><element value="shouse"/></property>
 		</properties>
 	</rule>
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
 		<properties>
-			<property name="prefixes" type="array"><element value="wphouse"/></property>
+			<property name="prefixes" type="array"><element value="shouse"/><element value="SafeHouse"/></property>
 		</properties>
 	</rule>
 </ruleset>

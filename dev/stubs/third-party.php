@@ -1,6 +1,6 @@
 <?php
 /**
- * Minimal stubs for third-party APIs WPHouse probes with class_exists()/function_exists().
+ * Minimal stubs for third-party APIs SafeHouse probes with class_exists()/function_exists().
  * Static analysis only; never loaded at runtime.
  */
 

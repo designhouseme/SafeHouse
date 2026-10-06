@@ -7,13 +7,13 @@
  * unfiltered_html cannot smuggle scripts in by duplicating an administrator's post.
  * WooCommerce products are skipped because WooCommerce has its own duplicate action.
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Modules;
+namespace SafeHouse\Modules;
 
 use WP_Post;
-use WPHouse\Core\AbstractModule;
+use SafeHouse\Core\AbstractModule;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -31,11 +31,11 @@ final class Duplicate extends AbstractModule {
 	}
 
 	public function label(): string {
-		return __( 'Duplicate posts and pages', 'wphouse' );
+		return __( 'Duplicate posts and pages', 'shouse' );
 	}
 
 	public function description(): string {
-		return __( 'Adds a "Duplicate" link to posts, pages and custom post types. The copy is a draft with the same content, taxonomies and custom fields. WooCommerce products use WooCommerce\'s own duplicate action.', 'wphouse' );
+		return __( 'Adds a "Duplicate" link to posts, pages and custom post types. The copy is a draft with the same content, taxonomies and custom fields. WooCommerce products use WooCommerce\'s own duplicate action.', 'shouse' );
 	}
 
 	public function fields(): array {
@@ -45,7 +45,7 @@ final class Duplicate extends AbstractModule {
 	public function boot(): void {
 		add_filter( 'post_row_actions', [ $this, 'row_action' ], 10, 2 );
 		add_filter( 'page_row_actions', [ $this, 'row_action' ], 10, 2 );
-		add_action( 'admin_post_wphouse_duplicate', [ $this, 'handle' ] );
+		add_action( 'admin_post_shouse_duplicate', [ $this, 'handle' ] );
 	}
 
 	/**
@@ -57,17 +57,17 @@ final class Duplicate extends AbstractModule {
 		if ( ! $this->allowed( $post ) ) {
 			return $actions;
 		}
-		$url                          = wp_nonce_url( admin_url( 'admin-post.php?action=wphouse_duplicate&post=' . $post->ID ), 'wphouse_duplicate_' . $post->ID );
-		$actions['wphouse_duplicate'] = '<a href="' . esc_url( $url ) . '">' . esc_html__( 'Duplicate', 'wphouse' ) . '</a>';
+		$url                         = wp_nonce_url( admin_url( 'admin-post.php?action=shouse_duplicate&post=' . $post->ID ), 'shouse_duplicate_' . $post->ID );
+		$actions['shouse_duplicate'] = '<a href="' . esc_url( $url ) . '">' . esc_html__( 'Duplicate', 'shouse' ) . '</a>';
 		return $actions;
 	}
 
 	public function handle(): void {
 		$post_id = isset( $_GET['post'] ) ? absint( $_GET['post'] ) : 0;
-		check_admin_referer( 'wphouse_duplicate_' . $post_id );
+		check_admin_referer( 'shouse_duplicate_' . $post_id );
 		$post = get_post( $post_id );
 		if ( ! $post instanceof WP_Post || ! $this->allowed( $post ) ) {
-			wp_die( esc_html__( 'You are not allowed to duplicate this item.', 'wphouse' ), 403 );
+			wp_die( esc_html__( 'You are not allowed to duplicate this item.', 'shouse' ), 403 );
 		}
 
 		$copy_id = wp_insert_post(
@@ -77,7 +77,7 @@ final class Duplicate extends AbstractModule {
 					'post_status'    => 'draft',
 					'post_author'    => get_current_user_id(),
 					/* translators: %s: original title. */
-					'post_title'     => sprintf( __( '%s (copy)', 'wphouse' ), $post->post_title ),
+					'post_title'     => sprintf( __( '%s (copy)', 'shouse' ), $post->post_title ),
 					'post_content'   => $post->post_content,
 					'post_excerpt'   => $post->post_excerpt,
 					'post_parent'    => $post->post_parent,

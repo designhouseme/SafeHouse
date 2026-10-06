@@ -2,24 +2,24 @@
 /**
  * Send mail through SMTP. Credentials live only in wp-config.php, never in the database:
  *
- *   define( 'WPHOUSE_SMTP_HOST', 'smtp.example.com' );
- *   define( 'WPHOUSE_SMTP_PORT', 587 );            // default 587
- *   define( 'WPHOUSE_SMTP_SECURE', 'tls' );        // tls (default), ssl or '' for none
- *   define( 'WPHOUSE_SMTP_USER', 'user' );         // optional
- *   define( 'WPHOUSE_SMTP_PASS', 'secret' );       // optional
+ *   define( 'SHOUSE_SMTP_HOST', 'smtp.example.com' );
+ *   define( 'SHOUSE_SMTP_PORT', 587 );            // default 587
+ *   define( 'SHOUSE_SMTP_SECURE', 'tls' );        // tls (default), ssl or '' for none
+ *   define( 'SHOUSE_SMTP_USER', 'user' );         // optional
+ *   define( 'SHOUSE_SMTP_PASS', 'secret' );       // optional
  *
  * There is no mail log: mail logs store password-reset links and have been the way into sites
  * (Post SMTP, CVE-2025-11833). Only delivery failures are logged, without content.
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Modules;
+namespace SafeHouse\Modules;
 
 use PHPMailer\PHPMailer\PHPMailer;
 use WP_Error;
-use WPHouse\Core\AbstractModule;
-use WPHouse\Core\Log;
+use SafeHouse\Core\AbstractModule;
+use SafeHouse\Core\Log;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -37,24 +37,24 @@ final class Smtp extends AbstractModule {
 	}
 
 	public function label(): string {
-		return __( 'SMTP mail', 'wphouse' );
+		return __( 'SMTP mail', 'shouse' );
 	}
 
 	public function description(): string {
-		return __( 'Sends all WordPress and WooCommerce mail through your SMTP server, with credentials kept in wp-config.php. No mail log, so password-reset links are never stored.', 'wphouse' );
+		return __( 'Sends all WordPress and WooCommerce mail through your SMTP server, with credentials kept in wp-config.php. No mail log, so password-reset links are never stored.', 'shouse' );
 	}
 
 	public function fields(): array {
 		return [
 			'from_email' => [
 				'type'       => 'text',
-				'label'      => __( 'From address', 'wphouse' ),
-				'help'       => __( 'Used when the sender is not set otherwise (WooCommerce sets its own). Should be on a domain your SMTP server may send for.', 'wphouse' ),
+				'label'      => __( 'From address', 'shouse' ),
+				'help'       => __( 'Used when the sender is not set otherwise (WooCommerce sets its own). Should be on a domain your SMTP server may send for.', 'shouse' ),
 				'max_length' => 190,
 			],
 			'from_name'  => [
 				'type'       => 'text',
-				'label'      => __( 'From name', 'wphouse' ),
+				'label'      => __( 'From name', 'shouse' ),
 				'max_length' => 190,
 			],
 		];
@@ -66,9 +66,9 @@ final class Smtp extends AbstractModule {
 		return $clean;
 	}
 
-	/** A WPHOUSE_SMTP_* constant from wp-config.php, as a string. */
+	/** A SHOUSE_SMTP_* constant from wp-config.php, as a string. */
 	private static function config( string $name, string $fallback = '' ): string {
-		$constant = 'WPHOUSE_SMTP_' . $name;
+		$constant = 'SHOUSE_SMTP_' . $name;
 		return defined( $constant ) ? (string) constant( $constant ) : $fallback;
 	}
 
@@ -118,15 +118,15 @@ final class Smtp extends AbstractModule {
 
 	/** At most one log entry per 10 minutes, so a flood of failing mails cannot flood the log. */
 	public function log_failure( WP_Error $error ): void {
-		if ( get_transient( 'wphouse_mail_failed_logged' ) ) {
+		if ( get_transient( 'shouse_mail_failed_logged' ) ) {
 			return;
 		}
-		set_transient( 'wphouse_mail_failed_logged', 1, 10 * MINUTE_IN_SECONDS );
+		set_transient( 'shouse_mail_failed_logged', 1, 10 * MINUTE_IN_SECONDS );
 		Log::add( 'mail_failed', 'Mail delivery failed: ' . $error->get_error_message(), [], 'warning' );
 	}
 
 	public function tasks(): array {
-		return [ 'test' => __( 'Send a test e-mail to me', 'wphouse' ) ];
+		return [ 'test' => __( 'Send a test e-mail to me', 'shouse' ) ];
 	}
 
 	public function handle_task( string $task ): string {
@@ -138,28 +138,28 @@ final class Smtp extends AbstractModule {
 		add_action( 'wp_mail_failed', $catch );
 		$sent = wp_mail(
 			$user->user_email,
-			__( 'WPHouse test e-mail', 'wphouse' ),
-			__( 'If you can read this, WordPress can send mail.', 'wphouse' )
+			__( 'SafeHouse test e-mail', 'shouse' ),
+			__( 'If you can read this, WordPress can send mail.', 'shouse' )
 		);
 		remove_action( 'wp_mail_failed', $catch );
 		Log::add( 'mail_test', $sent ? 'Test e-mail sent' : 'Test e-mail failed' );
 		if ( $sent ) {
 			/* translators: %s: e-mail address. */
-			return sprintf( __( 'Test e-mail sent to %s.', 'wphouse' ), $user->user_email );
+			return sprintf( __( 'Test e-mail sent to %s.', 'shouse' ), $user->user_email );
 		}
 		/* translators: %s: error message. */
-		return sprintf( __( 'Sending failed: %s', 'wphouse' ), $error instanceof WP_Error ? $error->get_error_message() : __( 'unknown error', 'wphouse' ) );
+		return sprintf( __( 'Sending failed: %s', 'shouse' ), $error instanceof WP_Error ? $error->get_error_message() : __( 'unknown error', 'shouse' ) );
 	}
 
 	public function render_panel(): void {
-		echo '<p class="wphouse-panel">';
+		echo '<p class="shouse-panel">';
 		if ( self::configured() ) {
-			$auth = '' !== self::config( 'USER' ) ? __( 'with login', 'wphouse' ) : __( 'without login', 'wphouse' );
+			$auth = '' !== self::config( 'USER' ) ? __( 'with login', 'shouse' ) : __( 'without login', 'shouse' );
 			$port = (int) self::config( 'PORT', '587' );
 			/* translators: 1: SMTP host, 2: port, 3: "with login" or "without login". */
-			echo esc_html( sprintf( __( 'SMTP: %1$s:%2$d, %3$s (from wp-config.php).', 'wphouse' ), self::config( 'HOST' ), $port, $auth ) );
+			echo esc_html( sprintf( __( 'SMTP: %1$s:%2$d, %3$s (from wp-config.php).', 'shouse' ), self::config( 'HOST' ), $port, $auth ) );
 		} else {
-			esc_html_e( 'SMTP is not configured: add WPHOUSE_SMTP_HOST (and port, user, password) to wp-config.php. Until then mail goes through PHP mail(); the From settings still apply.', 'wphouse' );
+			esc_html_e( 'SMTP is not configured: add SHOUSE_SMTP_HOST (and port, user, password) to wp-config.php. Until then mail goes through PHP mail(); the From settings still apply.', 'shouse' );
 		}
 		echo '</p>';
 	}

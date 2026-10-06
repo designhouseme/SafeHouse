@@ -1,5 +1,5 @@
 {
-    "name": "designhouse/wphouse",
+    "name": "designhouse/shouse",
     "description": "Lean, audited replacements for small WordPress utility plugins.",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",

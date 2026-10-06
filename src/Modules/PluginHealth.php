@@ -1,28 +1,28 @@
 <?php
 /**
  * Plugin health report: closed on wordpress.org, abandoned, not from wordpress.org, one-time
- * tools left active, inactive leftovers, and plugins a WPHouse module replaces.
+ * tools left active, inactive leftovers, and plugins a SafeHouse module replaces.
  *
  * WordPress shows closed plugins as "up to date", which is how abandoned and bought-and-
  * backdoored plugins stay installed for years. One bulk request to api.wordpress.org per check
  * (weekly, or when the plugin list changes). Known vulnerabilities are the vulnerability alerts
  * module's job (or Wordfence's, when it is active).
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Modules;
+namespace SafeHouse\Modules;
 
 use WP_CLI;
-use WPHouse\Core\AbstractModule;
-use WPHouse\Core\Updater;
-use WPHouse\Plugin;
+use SafeHouse\Core\AbstractModule;
+use SafeHouse\Core\Updater;
+use SafeHouse\Plugin;
 
 defined( 'ABSPATH' ) || exit;
 
 final class PluginHealth extends AbstractModule {
 
-	private const OPTION      = 'wphouse_plugin_health';
+	private const OPTION      = 'shouse_plugin_health';
 	private const API         = 'https://api.wordpress.org/plugins/info/1.2/';
 	private const MAX_AGE     = WEEK_IN_SECONDS;
 	private const STALE_AFTER = 2 * YEAR_IN_SECONDS;
@@ -51,7 +51,7 @@ final class PluginHealth extends AbstractModule {
 		'debug-bar',
 	];
 
-	/** Plugin slug => WPHouse module that covers its job. Only modules that exist are reported. */
+	/** Plugin slug => SafeHouse module that covers its job. Only modules that exist are reported. */
 	private const REPLACEABLE = [
 		'insert-headers-and-footers'    => 'scripts',
 		'header-and-footer-scripts'     => 'scripts',
@@ -108,11 +108,11 @@ final class PluginHealth extends AbstractModule {
 	}
 
 	public function label(): string {
-		return __( 'Plugin health', 'wphouse' );
+		return __( 'Plugin health', 'shouse' );
 	}
 
 	public function description(): string {
-		return __( 'Weekly check of installed plugins: closed on WordPress.org (often for security reasons), no update for two years, not from WordPress.org, one-time tools left active, inactive leftovers, and plugins a WPHouse module replaces. Results also appear in Tools → Site Health.', 'wphouse' );
+		return __( 'Weekly check of installed plugins: closed on WordPress.org (often for security reasons), no update for two years, not from WordPress.org, one-time tools left active, inactive leftovers, and plugins a SafeHouse module replaces. Results also appear in Tools → Site Health.', 'shouse' );
 	}
 
 	public function fields(): array {
@@ -120,10 +120,10 @@ final class PluginHealth extends AbstractModule {
 	}
 
 	public function boot(): void {
-		add_action( 'wphouse_daily', [ $this, 'maybe_refresh' ] );
+		add_action( 'shouse_daily', [ $this, 'maybe_refresh' ] );
 		add_filter( 'site_status_tests', [ $this, 'site_health_test' ] );
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
-			WP_CLI::add_command( 'wphouse plugin-health', [ $this, 'cli' ] );
+			WP_CLI::add_command( 'shouse plugin-health', [ $this, 'cli' ] );
 		}
 	}
 
@@ -236,7 +236,7 @@ final class PluginHealth extends AbstractModule {
 			if ( ! $is_active ) {
 				$list[] = [
 					'severity' => 'info',
-					'text'     => __( 'Inactive. Inactive plugins can still be attacked through their files; delete it if you do not need it.', 'wphouse' ),
+					'text'     => __( 'Inactive. Inactive plugins can still be attacked through their files; delete it if you do not need it.', 'shouse' ),
 				];
 			}
 			if ( $list ) {
@@ -263,35 +263,35 @@ final class PluginHealth extends AbstractModule {
 				return [
 					'severity' => 'critical',
 					/* translators: 1: date, 2: reason code from WordPress.org, e.g. security-issue. */
-					'text'     => sprintf( __( 'Closed on WordPress.org (%1$s, reason: %2$s). It gets no more updates; replace or remove it.', 'wphouse' ), ( '' !== $finding[1] ? $finding[1] : '?' ), ( '' !== $finding[2] ? $finding[2] : '?' ) ),
+					'text'     => sprintf( __( 'Closed on WordPress.org (%1$s, reason: %2$s). It gets no more updates; replace or remove it.', 'shouse' ), ( '' !== $finding[1] ? $finding[1] : '?' ), ( '' !== $finding[2] ? $finding[2] : '?' ) ),
 				];
 			case 'stale':
 				return [
 					'severity' => 'warning',
 					/* translators: %s: date of the last update. */
-					'text'     => sprintf( __( 'No update since %s. Probably abandoned.', 'wphouse' ), $finding[1] ),
+					'text'     => sprintf( __( 'No update since %s. Probably abandoned.', 'shouse' ), $finding[1] ),
 				];
 			case 'not_on_wporg':
 				return [
 					'severity' => 'info',
-					'text'     => __( 'Not on WordPress.org and no update source declared. Make sure you know where its updates come from.', 'wphouse' ),
+					'text'     => __( 'Not on WordPress.org and no update source declared. Make sure you know where its updates come from.', 'shouse' ),
 				];
 			case 'external':
 				return [
 					'severity' => 'info',
-					'text'     => __( 'Updates come from its vendor, not WordPress.org. Keep the licence active so security fixes arrive.', 'wphouse' ),
+					'text'     => __( 'Updates come from its vendor, not WordPress.org. Keep the licence active so security fixes arrive.', 'shouse' ),
 				];
 			case 'one_time_tool':
 				return $is_active ? [
 					'severity' => 'warning',
-					'text'     => __( 'One-time tool (migration, search-replace, import, file access or debugging) left active. Delete it when the job is done.', 'wphouse' ),
+					'text'     => __( 'One-time tool (migration, search-replace, import, file access or debugging) left active. Delete it when the job is done.', 'shouse' ),
 				] : null;
 			case 'replaceable':
 				$module = $modules[ (string) $finding[1] ] ?? null;
 				return $module ? [
 					'severity' => 'info',
-					/* translators: %s: WPHouse module name. */
-					'text'     => sprintf( __( 'WPHouse can do this: module "%s". Switch it on, then remove this plugin.', 'wphouse' ), $module->label() ),
+					/* translators: %s: SafeHouse module name. */
+					'text'     => sprintf( __( 'SafeHouse can do this: module "%s". Switch it on, then remove this plugin.', 'shouse' ), $module->label() ),
 				] : null;
 		}
 		return null;
@@ -314,8 +314,8 @@ final class PluginHealth extends AbstractModule {
 	 * @return array<string, mixed>
 	 */
 	public function site_health_test( array $tests ): array {
-		$tests['direct']['wphouse_plugin_health'] = [
-			'label' => __( 'WPHouse plugin health', 'wphouse' ),
+		$tests['direct']['shouse_plugin_health'] = [
+			'label' => __( 'SafeHouse plugin health', 'shouse' ),
 			'test'  => [ $this, 'site_health_result' ],
 		];
 		return $tests;
@@ -336,63 +336,63 @@ final class PluginHealth extends AbstractModule {
 		}
 		$status = $counts['critical'] ? 'critical' : ( $counts['warning'] ? 'recommended' : 'good' );
 		$label  = 'good' === $status
-			? __( 'No closed, abandoned or forgotten plugins found', 'wphouse' )
-			: __( 'Some plugins need attention', 'wphouse' );
+			? __( 'No closed, abandoned or forgotten plugins found', 'shouse' )
+			: __( 'Some plugins need attention', 'shouse' );
 		return [
 			'label'       => $label,
 			'status'      => $status,
 			'badge'       => [
-				'label' => __( 'Security', 'wphouse' ),
+				'label' => __( 'Security', 'shouse' ),
 				'color' => 'blue',
 			],
 			'description' => '<p>' . esc_html(
 				sprintf(
 					/* translators: 1: number of critical findings, 2: number of warnings. */
-					__( '%1$d critical, %2$d warnings. Details are on the WPHouse settings page.', 'wphouse' ),
+					__( '%1$d critical, %2$d warnings. Details are on the SafeHouse settings page.', 'shouse' ),
 					$counts['critical'],
 					$counts['warning']
 				)
 			) . '</p>',
-			'actions'     => '<a href="' . esc_url( Plugin::settings_url( 'plugin_health' ) ) . '">' . esc_html__( 'Open WPHouse', 'wphouse' ) . '</a>',
-			'test'        => 'wphouse_plugin_health',
+			'actions'     => '<a href="' . esc_url( Plugin::settings_url( 'plugin_health' ) ) . '">' . esc_html__( 'Open SafeHouse', 'shouse' ) . '</a>',
+			'test'        => 'shouse_plugin_health',
 		];
 	}
 
 	public function tasks(): array {
-		return [ 'refresh' => __( 'Check now', 'wphouse' ) ];
+		return [ 'refresh' => __( 'Check now', 'shouse' ) ];
 	}
 
 	public function handle_task( string $task ): string {
 		$report = $this->refresh();
 		return '' !== ( $report['error'] ?? '' )
 			/* translators: %s: error message. */
-			? sprintf( __( 'Could not reach WordPress.org: %s', 'wphouse' ), $report['error'] )
-			: __( 'Plugin health updated.', 'wphouse' );
+			? sprintf( __( 'Could not reach WordPress.org: %s', 'shouse' ), $report['error'] )
+			: __( 'Plugin health updated.', 'shouse' );
 	}
 
 	public function render_panel(): void {
 		$report = $this->report();
-		echo '<div class="wphouse-panel">';
+		echo '<div class="shouse-panel">';
 		if ( empty( $report['checked_at'] ) ) {
-			echo '<p>' . esc_html__( 'Not checked yet. Use "Check now" or wait for the daily run.', 'wphouse' ) . '</p></div>';
+			echo '<p>' . esc_html__( 'Not checked yet. Use "Check now" or wait for the daily run.', 'shouse' ) . '</p></div>';
 			return;
 		}
 		/* translators: %s: date and time. */
-		echo '<p>' . esc_html( sprintf( __( 'Last check: %s.', 'wphouse' ), wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), (int) $report['checked_at'] ) ) );
+		echo '<p>' . esc_html( sprintf( __( 'Last check: %s.', 'shouse' ), wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), (int) $report['checked_at'] ) ) );
 		if ( ! empty( $report['error'] ) ) {
-			echo ' ' . esc_html( sprintf( /* translators: %s: error message. */ __( 'The last refresh failed: %s', 'wphouse' ), (string) $report['error'] ) );
+			echo ' ' . esc_html( sprintf( /* translators: %s: error message. */ __( 'The last refresh failed: %s', 'shouse' ), (string) $report['error'] ) );
 		}
 		echo '</p>';
 		$findings = $this->findings();
 		if ( ! $findings ) {
-			echo '<p>' . esc_html__( 'Nothing to report.', 'wphouse' ) . '</p></div>';
+			echo '<p>' . esc_html__( 'Nothing to report.', 'shouse' ) . '</p></div>';
 			return;
 		}
-		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Plugin', 'wphouse' ) . '</th><th>' . esc_html__( 'Findings', 'wphouse' ) . '</th></tr></thead><tbody>';
+		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Plugin', 'shouse' ) . '</th><th>' . esc_html__( 'Findings', 'shouse' ) . '</th></tr></thead><tbody>';
 		foreach ( $findings as $item ) {
-			echo '<tr><td><strong>' . esc_html( $item['name'] ) . '</strong>' . ( $item['active'] ? '' : ' <span class="wphouse-badge">' . esc_html__( 'inactive', 'wphouse' ) . '</span>' ) . '</td><td>';
+			echo '<tr><td><strong>' . esc_html( $item['name'] ) . '</strong>' . ( $item['active'] ? '' : ' <span class="shouse-badge">' . esc_html__( 'inactive', 'shouse' ) . '</span>' ) . '</td><td>';
 			foreach ( $item['findings'] as $finding ) {
-				echo '<div><span class="wphouse-badge wphouse-badge--' . esc_attr( $finding['severity'] ) . '">' . esc_html( $finding['severity'] ) . '</span> ' . esc_html( $finding['text'] ) . '</div>';
+				echo '<div><span class="shouse-badge shouse-badge--' . esc_attr( $finding['severity'] ) . '">' . esc_html( $finding['severity'] ) . '</span> ' . esc_html( $finding['text'] ) . '</div>';
 			}
 			echo '</td></tr>';
 		}

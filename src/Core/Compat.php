@@ -1,21 +1,21 @@
 <?php
 /**
- * Detection of plugins and constants that already cover a WPHouse feature.
+ * Detection of plugins and constants that already cover a SafeHouse feature.
  *
  * Wordfence option keys were checked against Wordfence 8.1.4 and 9.0.2 (lib/wfConfig.php).
- * To run WPHouse features anyway, define( 'WPHOUSE_IGNORE_OVERLAPS', true ).
+ * To run SafeHouse features anyway, define( 'SHOUSE_IGNORE_OVERLAPS', true ).
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Core;
+namespace SafeHouse\Core;
 
 defined( 'ABSPATH' ) || exit;
 
 final class Compat {
 
 	public static function ignore_overlaps(): bool {
-		return defined( 'WPHOUSE_IGNORE_OVERLAPS' ) && WPHOUSE_IGNORE_OVERLAPS;
+		return defined( 'SHOUSE_IGNORE_OVERLAPS' ) && SHOUSE_IGNORE_OVERLAPS;
 	}
 
 	public static function wordfence_active(): bool {

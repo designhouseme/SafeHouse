@@ -1,30 +1,33 @@
 <?php
 /**
- * Management of the WPHouse Redis object cache (implementation in src/ObjectCache/).
+ * Management of the SafeHouse Redis object cache (implementation in src/ObjectCache/).
  *
- * The wp-content/object-cache.php loader is written only by `wp wphouse object-cache enable` and
+ * The wp-content/object-cache.php loader is written only by `wp shouse object-cache enable` and
  * removed by `disable`, plugin deactivation or uninstall: never by a web request. Enabling and
  * disabling also drop this site's keys from Redis, so a cache that was off for a while never
  * serves data from before.
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Core;
+namespace SafeHouse\Core;
 
 use WP_CLI;
-use WPHouse\ObjectCache\Cache;
+use SafeHouse\ObjectCache\Cache;
 
 defined( 'ABSPATH' ) || exit;
 
 final class ObjectCache {
 
-	public const MARKER = 'WPHouse object cache loader';
+	public const MARKER = 'SafeHouse object cache loader';
+
+	/** The marker of loaders installed before the rename to SafeHouse. They point at the old plugin folder. */
+	public const LEGACY_MARKER = 'WPHouse object cache loader';
 
 	public static function register(): void {
 		add_filter( 'site_status_tests', [ self::class, 'site_health_test' ] );
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
-			WP_CLI::add_command( 'wphouse object-cache', ObjectCacheCommand::class );
+			WP_CLI::add_command( 'shouse object-cache', ObjectCacheCommand::class );
 		}
 	}
 
@@ -32,17 +35,17 @@ final class ObjectCache {
 		return WP_CONTENT_DIR . '/object-cache.php';
 	}
 
-	/** "none", "ours" (the WPHouse loader) or "other" (another plugin's drop-in). */
+	/** "none", "ours" (the SafeHouse loader) or "other" (another plugin's drop-in). */
 	public static function dropin_state(): string {
 		$file = self::dropin();
 		if ( ! file_exists( $file ) ) {
 			return 'none';
 		}
 		$head = (string) file_get_contents( $file, false, null, 0, 1024 ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- local file.
-		return str_contains( $head, self::MARKER ) ? 'ours' : 'other';
+		return str_contains( $head, self::MARKER ) || str_contains( $head, self::LEGACY_MARKER ) ? 'ours' : 'other';
 	}
 
-	/** The running WPHouse cache, or null when WordPress uses another or its own. */
+	/** The running SafeHouse cache, or null when WordPress uses another or its own. */
 	public static function active(): ?Cache {
 		$cache = $GLOBALS['wp_object_cache'] ?? null;
 		return $cache instanceof Cache ? $cache : null;
@@ -50,17 +53,25 @@ final class ObjectCache {
 
 	/** Why the installed loader did not start the cache in this request, if it did not. */
 	public static function load_error(): string {
-		return (string) ( $GLOBALS['wphouse_object_cache_error'] ?? '' );
+		if ( self::legacy_loader() ) {
+			return __( 'The object-cache.php loader dates from before the rename to SafeHouse. Run `wp shouse object-cache enable` to install the current one.', 'shouse' );
+		}
+		return (string) ( $GLOBALS['shouse_object_cache_error'] ?? '' );
+	}
+
+	private static function legacy_loader(): bool {
+		$file = self::dropin();
+		return file_exists( $file ) && str_contains( (string) file_get_contents( $file, false, null, 0, 1024 ), self::LEGACY_MARKER ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- local file.
 	}
 
 	/** Write the loader. Returns an error message, or '' on success. Operator commands only. */
 	public static function install(): string {
-		$folder = basename( dirname( WPHOUSE_FILE ) );
+		$folder = basename( dirname( SHOUSE_FILE ) );
 		if ( ! preg_match( '/^[A-Za-z0-9._-]+$/', $folder ) ) {
 			return 'Unexpected plugin folder name: ' . $folder;
 		}
-		$template = (string) file_get_contents( dirname( WPHOUSE_FILE ) . '/src/ObjectCache/loader.php' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- local file.
-		$loader   = str_replace( '__WPHOUSE_FOLDER__', $folder, $template );
+		$template = (string) file_get_contents( dirname( SHOUSE_FILE ) . '/src/ObjectCache/loader.php' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- local file.
+		$loader   = str_replace( '__SHOUSE_FOLDER__', $folder, $template );
 		if ( false === file_put_contents( self::dropin(), $loader ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- operator command.
 			return 'Could not write ' . self::dropin();
 		}
@@ -81,8 +92,8 @@ final class ObjectCache {
 
 	/** Version of the Redis server, '' when it cannot be read. */
 	public static function redis_version(): string {
-		require_once dirname( WPHOUSE_FILE ) . '/src/ObjectCache/connect.php';
-		[ $redis ] = wphouse_object_cache_connect();
+		require_once dirname( SHOUSE_FILE ) . '/src/ObjectCache/connect.php';
+		[ $redis ] = shouse_object_cache_connect();
 		if ( null === $redis ) {
 			return '';
 		}
@@ -102,13 +113,13 @@ final class ObjectCache {
 		if ( null !== $active && $active->redis_status() ) {
 			return $active->flush() ? '' : $active->last_error();
 		}
-		require_once dirname( WPHOUSE_FILE ) . '/src/ObjectCache/connect.php';
-		[ $redis, $error ] = wphouse_object_cache_connect();
+		require_once dirname( SHOUSE_FILE ) . '/src/ObjectCache/connect.php';
+		[ $redis, $error ] = shouse_object_cache_connect();
 		if ( null === $redis ) {
 			return $error;
 		}
-		require_once dirname( WPHOUSE_FILE ) . '/src/ObjectCache/Cache.php';
-		$cache = new Cache( $redis, wphouse_object_cache_prefix(), wphouse_object_cache_secret() );
+		require_once dirname( SHOUSE_FILE ) . '/src/ObjectCache/Cache.php';
+		$cache = new Cache( $redis, shouse_object_cache_prefix(), shouse_object_cache_secret() );
 		return $cache->flush() ? '' : $cache->last_error();
 	}
 
@@ -136,8 +147,8 @@ final class ObjectCache {
 	 */
 	public static function site_health_test( array $tests ): array {
 		if ( 'ours' === self::dropin_state() ) {
-			$tests['direct']['wphouse_object_cache'] = [
-				'label' => __( 'WPHouse object cache', 'wphouse' ),
+			$tests['direct']['shouse_object_cache'] = [
+				'label' => __( 'SafeHouse object cache', 'shouse' ),
 				'test'  => [ self::class, 'site_health_result' ],
 			];
 		}
@@ -149,23 +160,23 @@ final class ObjectCache {
 		$cache = self::active();
 		if ( null !== $cache && $cache->redis_status() ) {
 			$status = 'good';
-			$label  = __( 'The WPHouse object cache is connected to Redis', 'wphouse' );
-			$text   = __( 'Database results are kept in Redis between requests. Every cached value is signed, so other sites on a shared Redis cannot plant data.', 'wphouse' );
+			$label  = __( 'The SafeHouse object cache is connected to Redis', 'shouse' );
+			$text   = __( 'Database results are kept in Redis between requests. Every cached value is signed, so other sites on a shared Redis cannot plant data.', 'shouse' );
 		} else {
 			$status = 'critical';
-			$label  = __( 'The WPHouse object cache cannot reach Redis', 'wphouse' );
+			$label  = __( 'The SafeHouse object cache cannot reach Redis', 'shouse' );
 			/* translators: %s: error message. */
-			$text = sprintf( __( 'WordPress is using its own cache for now, so the site works but is slower. Reason: %s', 'wphouse' ), '' !== self::load_error() ? self::load_error() : ( null !== $cache ? $cache->last_error() : '?' ) );
+			$text = sprintf( __( 'WordPress is using its own cache for now, so the site works but is slower. Reason: %s', 'shouse' ), '' !== self::load_error() ? self::load_error() : ( null !== $cache ? $cache->last_error() : '?' ) );
 		}
 		return [
 			'label'       => $label,
 			'status'      => $status,
 			'badge'       => [
-				'label' => __( 'Performance', 'wphouse' ),
+				'label' => __( 'Performance', 'shouse' ),
 				'color' => 'blue',
 			],
 			'description' => '<p>' . esc_html( $text ) . '</p>',
-			'test'        => 'wphouse_object_cache',
+			'test'        => 'shouse_object_cache',
 		];
 	}
 }

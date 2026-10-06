@@ -1,4 +1,4 @@
-name: wphouse-updtest
+name: shouse-updtest
 
 # Isolated site installed from a release zip: self-update, uninstall and Plugin Check tests. No bind mount of the repo: an update replaces the
 # plugin directory, which must never be the git working tree. "updates" plays the update host.
@@ -12,10 +12,10 @@ x-wp-env: &wp-env
     define( 'WP_DEBUG_LOG', '/var/www/html/wp-content/debug.log' );
     define( 'WP_DEBUG_DISPLAY', false );
     define( 'WP_ENVIRONMENT_TYPE', 'local' );
-    define( 'WPHOUSE_UPDATE_URL', 'http://updates/wphouse/manifest.json' );
-    define( 'WPHOUSE_UPDATE_PUBLIC_KEYS', [ '${WPHOUSE_TEST_PUBKEY:-}' ] );
-    define( 'WPHOUSE_ADVISORY_URL', 'http://updates/wphouse/advisories/index.json' );
-    define( 'WPHOUSE_ADVISORY_PUBLIC_KEYS', [ '${WPHOUSE_TEST_ADVISORY_PUBKEY:-}' ] );
+    define( 'SHOUSE_UPDATE_URL', 'http://updates/shouse/manifest.json' );
+    define( 'SHOUSE_UPDATE_PUBLIC_KEYS', [ '${SHOUSE_TEST_PUBKEY:-}' ] );
+    define( 'SHOUSE_ADVISORY_URL', 'http://updates/shouse/advisories/index.json' );
+    define( 'SHOUSE_ADVISORY_PUBLIC_KEYS', [ '${SHOUSE_TEST_ADVISORY_PUBKEY:-}' ] );
 
 services:
   updates:

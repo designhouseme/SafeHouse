@@ -11,24 +11,24 @@
  * Deliberately absent: the honeypot on login forms (password managers submit at once) and on
  * checkout (browser autofill fills hidden fields, and the Store API cannot carry the field).
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Modules;
+namespace SafeHouse\Modules;
 
 use WP_Error;
 use WP_REST_Request;
-use WPHouse\Core\AbstractModule;
-use WPHouse\Core\Compat;
-use WPHouse\Core\Log;
-use WPHouse\Core\Turnstile;
+use SafeHouse\Core\AbstractModule;
+use SafeHouse\Core\Compat;
+use SafeHouse\Core\Log;
+use SafeHouse\Core\Turnstile;
 
 defined( 'ABSPATH' ) || exit;
 
 final class Bots extends AbstractModule {
 
-	private const TRAP           = 'wphouse_url';
-	private const PROOF          = 'wphouse_proof';
+	private const TRAP           = 'shouse_url';
+	private const PROOF          = 'shouse_proof';
 	private const STORE_CHECKOUT = '#^/wc/store(?:/v\d+)?/checkout(?:/|$)#i';
 	private const FORMS          = [ 'login', 'register', 'lostpassword', 'comments', 'checkout' ];
 	private const WIDGET_HOOKS   = [
@@ -74,51 +74,51 @@ final class Bots extends AbstractModule {
 	}
 
 	public function label(): string {
-		return __( 'Bot protection', 'wphouse' );
+		return __( 'Bot protection', 'shouse' );
 	}
 
 	public function description(): string {
-		return __( 'Stops automated sign-ups, spam comments, password-reset floods, login attempts and fake orders. A honeypot works on its own; Cloudflare Turnstile is added when its keys are in wp-config.php.', 'wphouse' );
+		return __( 'Stops automated sign-ups, spam comments, password-reset floods, login attempts and fake orders. A honeypot works on its own; Cloudflare Turnstile is added when its keys are in wp-config.php.', 'shouse' );
 	}
 
 	public function fields(): array {
 		return [
 			'honeypot'               => [
 				'type'  => 'toggle',
-				'label' => __( 'Honeypot on registration, lost password and comments', 'wphouse' ),
-				'help'  => __( 'An invisible trap field plus proof that a person used the form in a browser. Needs no outside service. Visitors with JavaScript turned off cannot register, reset a password or comment.', 'wphouse' ),
+				'label' => __( 'Honeypot on registration, lost password and comments', 'shouse' ),
+				'help'  => __( 'An invisible trap field plus proof that a person used the form in a browser. Needs no outside service. Visitors with JavaScript turned off cannot register, reset a password or comment.', 'shouse' ),
 			],
 			'turnstile_login'        => [
 				'type'  => 'toggle',
-				'label' => __( 'Turnstile on login', 'wphouse' ),
-				'help'  => __( 'wp-login.php, login forms made with wp_login_form() and the WooCommerce login form.', 'wphouse' ),
+				'label' => __( 'Turnstile on login', 'shouse' ),
+				'help'  => __( 'wp-login.php, login forms made with wp_login_form() and the WooCommerce login form.', 'shouse' ),
 			],
 			'turnstile_register'     => [
 				'type'  => 'toggle',
-				'label' => __( 'Turnstile on registration', 'wphouse' ),
-				'help'  => __( 'WordPress and WooCommerce My Account registration.', 'wphouse' ),
+				'label' => __( 'Turnstile on registration', 'shouse' ),
+				'help'  => __( 'WordPress and WooCommerce My Account registration.', 'shouse' ),
 			],
 			'turnstile_lostpassword' => [
 				'type'  => 'toggle',
-				'label' => __( 'Turnstile on lost password', 'wphouse' ),
+				'label' => __( 'Turnstile on lost password', 'shouse' ),
 			],
 			'turnstile_comments'     => [
 				'type'  => 'toggle',
-				'label' => __( 'Turnstile on comments and reviews', 'wphouse' ),
-				'help'  => __( 'For visitors who are not logged in.', 'wphouse' ),
+				'label' => __( 'Turnstile on comments and reviews', 'shouse' ),
+				'help'  => __( 'For visitors who are not logged in.', 'shouse' ),
 			],
 			'turnstile_checkout'     => [
 				'type'  => 'toggle',
-				'label' => __( 'Turnstile on checkout', 'wphouse' ),
-				'help'  => __( 'Classic and block checkout, including orders sent straight to the Store API. Express payment buttons outside the checkout page (such as Apple Pay or Google Pay on product pages) cannot pass this check, so turn it off on sites that use them.', 'wphouse' ),
+				'label' => __( 'Turnstile on checkout', 'shouse' ),
+				'help'  => __( 'Classic and block checkout, including orders sent straight to the Store API. Express payment buttons outside the checkout page (such as Apple Pay or Google Pay on product pages) cannot pass this check, so turn it off on sites that use them.', 'shouse' ),
 			],
 			'when_unavailable'       => [
 				'type'    => 'select',
-				'label'   => __( 'When Cloudflare cannot be reached', 'wphouse' ),
-				'help'    => __( 'Applies only when this server cannot reach Cloudflare, or Cloudflare rejects the secret key. A visitor whose browser blocks Turnstile is still asked to try again.', 'wphouse' ),
+				'label'   => __( 'When Cloudflare cannot be reached', 'shouse' ),
+				'help'    => __( 'Applies only when this server cannot reach Cloudflare, or Cloudflare rejects the secret key. A visitor whose browser blocks Turnstile is still asked to try again.', 'shouse' ),
 				'options' => [
-					'allow' => __( 'Let the submission through and log it', 'wphouse' ),
-					'block' => __( 'Block the submission', 'wphouse' ),
+					'allow' => __( 'Let the submission through and log it', 'shouse' ),
+					'block' => __( 'Block the submission', 'shouse' ),
 				],
 			],
 		];
@@ -171,8 +171,8 @@ final class Bots extends AbstractModule {
 	public function print_honeypot(): void {
 		$this->enqueue();
 		// Off-screen rather than display:none, which simple bots skip. aria-hidden and tabindex keep it from people.
-		echo '<div class="wphouse-hp" data-proof="' . esc_attr( self::proof() ) . '" aria-hidden="true" style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden">'
-			. '<label>' . esc_html__( 'Leave this field empty', 'wphouse' ) . ' <input type="text" name="' . esc_attr( self::TRAP ) . '" value="" tabindex="-1" autocomplete="off"></label>'
+		echo '<div class="shouse-hp" data-proof="' . esc_attr( self::proof() ) . '" aria-hidden="true" style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden">'
+			. '<label>' . esc_html__( 'Leave this field empty', 'shouse' ) . ' <input type="text" name="' . esc_attr( self::TRAP ) . '" value="" tabindex="-1" autocomplete="off"></label>'
 			. '<input type="hidden" name="' . esc_attr( self::PROOF ) . '" value="">'
 			. '</div>';
 	}
@@ -181,14 +181,14 @@ final class Bots extends AbstractModule {
 		$form = self::WIDGET_HOOKS[ current_action() ] ?? '';
 		if ( isset( $this->turnstile[ $form ] ) ) {
 			$this->enqueue();
-			echo Turnstile::widget( 'wphouse_' . $form ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in Turnstile::widget().
+			echo Turnstile::widget( 'shouse_' . $form ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in Turnstile::widget().
 		}
 	}
 
 	/** Login forms built with wp_login_form() post to wp-login.php, so they need the widget too. */
 	public function login_form_middle( mixed $html ): string {
 		$this->enqueue();
-		return (string) $html . Turnstile::widget( 'wphouse_login' );
+		return (string) $html . Turnstile::widget( 'shouse_login' );
 	}
 
 	/**
@@ -202,7 +202,7 @@ final class Bots extends AbstractModule {
 			return $user;
 		}
 		$error = $this->verdict( 'login', false );
-		return '' === $error ? $user : new WP_Error( 'wphouse_bots', $error );
+		return '' === $error ? $user : new WP_Error( 'shouse_bots', $error );
 	}
 
 	public function check_woo_login( WP_Error $errors ): WP_Error {
@@ -231,7 +231,7 @@ final class Bots extends AbstractModule {
 			return $approved;
 		}
 		$error = $this->verdict( 'comments', true );
-		return '' === $error ? $approved : new WP_Error( 'wphouse_bots', $error, 403 );
+		return '' === $error ? $approved : new WP_Error( 'shouse_bots', $error, 403 );
 	}
 
 	/**
@@ -259,7 +259,7 @@ final class Bots extends AbstractModule {
 			return $response;
 		}
 		$error = $this->turnstile_verdict( 'checkout', sanitize_text_field( (string) $request->get_header( Turnstile::HEADER ) ) );
-		return '' === $error ? $response : new WP_Error( 'wphouse_bots', $error, [ 'status' => 403 ] );
+		return '' === $error ? $response : new WP_Error( 'shouse_bots', $error, [ 'status' => 403 ] );
 	}
 
 	/** The block checkout prints no PHP form hook, so its widget is placed by assets/bots.js. */
@@ -272,21 +272,21 @@ final class Bots extends AbstractModule {
 	}
 
 	private function enqueue( bool $checkout = false ): void {
-		if ( wp_script_is( 'wphouse-bots' ) ) {
+		if ( wp_script_is( 'shouse-bots' ) ) {
 			return;
 		}
-		wp_enqueue_script( 'wphouse-bots', plugins_url( 'assets/bots.js', WPHOUSE_FILE ), $checkout ? [ 'wp-api-fetch' ] : [], WPHOUSE_VERSION, [ 'in_footer' => true ] );
+		wp_enqueue_script( 'shouse-bots', plugins_url( 'assets/bots.js', SHOUSE_FILE ), $checkout ? [ 'wp-api-fetch' ] : [], SHOUSE_VERSION, [ 'in_footer' => true ] );
 		$config = [
 			'sitekey'  => $this->turnstile ? Turnstile::site_key() : '',
 			'checkout' => $checkout,
 			'header'   => Turnstile::HEADER,
 		];
-		wp_add_inline_script( 'wphouse-bots', 'window.wphouseBots = ' . wp_json_encode( $config ) . ';', 'before' );
+		wp_add_inline_script( 'shouse-bots', 'window.shouseBots = ' . wp_json_encode( $config ) . ';', 'before' );
 		if ( $this->turnstile ) {
 			wp_enqueue_script(
-				'wphouse-turnstile',
+				'shouse-turnstile',
 				Turnstile::SCRIPT_URL,
-				[ 'wphouse-bots' ],
+				[ 'shouse-bots' ],
 				null, // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- Cloudflare asks for the URL as is.
 				[
 					'in_footer' => true,
@@ -299,7 +299,7 @@ final class Bots extends AbstractModule {
 	private function add_verdict( WP_Error $errors, string $form, bool $honeypot ): WP_Error {
 		$error = $this->verdict( $form, $honeypot );
 		if ( '' !== $error ) {
-			$errors->add( 'wphouse_bots', $error );
+			$errors->add( 'shouse_bots', $error );
 		}
 		return $errors;
 	}
@@ -308,7 +308,7 @@ final class Bots extends AbstractModule {
 	private function verdict( string $form, bool $honeypot ): string {
 		if ( $honeypot && $this->honeypot && ! self::honeypot_passed() ) {
 			$this->note( $form, 'honeypot' );
-			return __( 'This looks like an automated submission. Please make sure JavaScript is on and try again.', 'wphouse' );
+			return __( 'This looks like an automated submission. Please make sure JavaScript is on and try again.', 'shouse' );
 		}
 		if ( ! isset( $this->turnstile[ $form ] ) ) {
 			return '';
@@ -319,16 +319,16 @@ final class Bots extends AbstractModule {
 	}
 
 	private function turnstile_verdict( string $form, string $token ): string {
-		$result = Turnstile::verify( $token, 'wphouse_' . $form );
+		$result = Turnstile::verify( $token, 'shouse_' . $form );
 		if ( Turnstile::PASSED === $result ) {
 			return '';
 		}
 		if ( Turnstile::UNAVAILABLE === $result ) {
 			$this->note( $form, 'cloudflare unavailable', 'warning' );
-			return 'allow' === $this->opt( 'when_unavailable' ) ? '' : __( 'The anti-bot check is unavailable right now. Please try again in a few minutes.', 'wphouse' );
+			return 'allow' === $this->opt( 'when_unavailable' ) ? '' : __( 'The anti-bot check is unavailable right now. Please try again in a few minutes.', 'shouse' );
 		}
 		$this->note( $form, 'turnstile' );
-		return __( 'The anti-bot check did not pass. Please wait for it to finish and try again.', 'wphouse' );
+		return __( 'The anti-bot check did not pass. Please wait for it to finish and try again.', 'shouse' );
 	}
 
 	/**
@@ -345,7 +345,7 @@ final class Bots extends AbstractModule {
 
 	/** Same for every visitor, so cached pages keep working. It only has to be absent from bare POSTs. */
 	private static function proof(): string {
-		return substr( wp_hash( 'wphouse-bots-proof' ), 0, 20 );
+		return substr( wp_hash( 'shouse-bots-proof' ), 0, 20 );
 	}
 
 	private static function posted_to_wp_login(): bool {
@@ -356,7 +356,7 @@ final class Bots extends AbstractModule {
 
 	/** One log line per form and reason every 10 minutes, so a flood of bots cannot flood the log. */
 	private function note( string $form, string $reason, string $severity = 'info' ): void {
-		$key = 'wphouse_bots_' . md5( $form . $reason );
+		$key = 'shouse_bots_' . md5( $form . $reason );
 		if ( get_transient( $key ) ) {
 			return;
 		}
@@ -367,12 +367,12 @@ final class Bots extends AbstractModule {
 	public function render_panel(): void {
 		$problem = Turnstile::problem();
 		if ( 'missing' === $problem ) {
-			$text = __( 'Turnstile is off: add WPHOUSE_TURNSTILE_SITE_KEY and WPHOUSE_TURNSTILE_SECRET_KEY to wp-config.php. The honeypot works without them.', 'wphouse' );
+			$text = __( 'Turnstile is off: add SHOUSE_TURNSTILE_SITE_KEY and SHOUSE_TURNSTILE_SECRET_KEY to wp-config.php. The honeypot works without them.', 'shouse' );
 		} elseif ( 'test_keys' === $problem ) {
-			$text = __( 'Turnstile is off: wp-config.php has Cloudflare test keys, which always give the same answer and are not allowed on a production site.', 'wphouse' );
+			$text = __( 'Turnstile is off: wp-config.php has Cloudflare test keys, which always give the same answer and are not allowed on a production site.', 'shouse' );
 		} else {
-			$text = __( 'Turnstile is on, with keys from wp-config.php.', 'wphouse' );
+			$text = __( 'Turnstile is on, with keys from wp-config.php.', 'shouse' );
 		}
-		echo '<p class="wphouse-panel">' . esc_html( $text ) . '</p>';
+		echo '<p class="shouse-panel">' . esc_html( $text ) . '</p>';
 	}
 }

@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: WPHouse 0.1.0\n"
+"Project-Id-Version: SafeHouse 0.1.0\n"
 "Report-Msgid-Bugs-To: https://designhouse.me/\n"
 "Last-Translator: Design House\n"
 "Language-Team: Design House\n"
@@ -12,111 +12,111 @@ msgstr ""
 "Language: pl_PL\n"
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
 "X-Generator: WP-CLI 2.12.0\n"
-"X-Domain: wphouse\n"
+"X-Domain: shouse\n"
 
 #. Plugin Name of the plugin
-#: wphouse.php
-msgid "WPHouse"
-msgstr "WPHouse"
+#: shouse.php
+msgid "SafeHouse"
+msgstr "SafeHouse"
 
 #. Plugin URI of the plugin
 #. Author URI of the plugin
-#: wphouse.php
+#: shouse.php
 msgid "https://designhouse.me/"
 msgstr "https://designhouse.me/"
 
 #. Author of the plugin
-#: wphouse.php
+#: shouse.php
 msgid "Design House"
 msgstr "Design House"
 
-#: src/Admin/Page.php:83
+#: src/Admin/Page.php:97
 msgid "Settings"
 msgstr "Ustawienia"
 
-#: src/Admin/Page.php:108
-msgid "WPHouse safe mode is on: every module is stopped. Remove wp-content/wphouse-safe-mode or the WPHOUSE_SAFE_MODE constant to resume."
-msgstr "Tryb awaryjny WPHouse jest włączony: wszystkie moduły są zatrzymane. Usuń plik wp-content/wphouse-safe-mode lub stałą WPHOUSE_SAFE_MODE, aby je wznowić."
+#: src/Admin/Page.php:122
+msgid "SafeHouse safe mode is on: every module is stopped. Remove wp-content/shouse-safe-mode or the SHOUSE_SAFE_MODE constant to resume."
+msgstr "Tryb awaryjny SafeHouse jest włączony: wszystkie moduły są zatrzymane. Usuń plik wp-content/shouse-safe-mode lub stałą SHOUSE_SAFE_MODE, aby je wznowić."
 
-#: src/Admin/Page.php:121
+#: src/Admin/Page.php:135
 msgid "You are not allowed to do this."
 msgstr "Nie masz uprawnień do tej operacji."
 
-#: src/Admin/Page.php:129
+#: src/Admin/Page.php:143
 msgid "Unknown task."
 msgstr "Nieznane zadanie."
 
-#: src/Admin/Page.php:188
+#: src/Admin/Page.php:202
 msgid "Small, audited replacements for single-purpose plugins. Every module is a switch. Features that Wordfence or wp-config already handle are skipped automatically."
 msgstr "Małe, sprawdzone zamienniki jednozadaniowych wtyczek. Każdy moduł włączasz osobno. Funkcje, które obsługuje już Wordfence lub wp-config.php, są automatycznie pomijane."
 
-#: src/Admin/Page.php:176
-msgid "Settings are locked by WPHOUSE_LOCK_SETTINGS in wp-config.php. Change them in code."
-msgstr "Ustawienia są zablokowane stałą WPHOUSE_LOCK_SETTINGS w wp-config.php. Zmieniaj je w kodzie."
+#: src/Admin/Page.php:190
+msgid "Settings are locked by SHOUSE_LOCK_SETTINGS in wp-config.php. Change them in code."
+msgstr "Ustawienia są zablokowane stałą SHOUSE_LOCK_SETTINGS w wp-config.php. Zmieniaj je w kodzie."
 
-#: src/Admin/Page.php:179
-msgid "WPHOUSE_IGNORE_OVERLAPS is on: features run even where another plugin already provides them."
-msgstr "Stała WPHOUSE_IGNORE_OVERLAPS jest włączona: funkcje działają nawet tam, gdzie zapewnia je już inna wtyczka."
+#: src/Admin/Page.php:193
+msgid "SHOUSE_IGNORE_OVERLAPS is on: features run even where another plugin already provides them."
+msgstr "Stała SHOUSE_IGNORE_OVERLAPS jest włączona: funkcje działają nawet tam, gdzie zapewnia je już inna wtyczka."
 
-#: src/Admin/Page.php:152
-#: src/Admin/Page.php:204
+#: src/Admin/Page.php:166
+#: src/Admin/Page.php:218
 msgid "General"
 msgstr "Ogólne"
 
-#: src/Admin/Page.php:207
+#: src/Admin/Page.php:221
 msgid "Alert recipients"
 msgstr "Odbiorcy alertów"
 
-#: src/Admin/Page.php:210
+#: src/Admin/Page.php:224
 msgid "Comma-separated. Empty means the site admin address."
 msgstr "Adresy oddzielone przecinkami. Puste pole oznacza adres administratora witryny."
 
-#: src/Admin/Page.php:263
+#: src/Admin/Page.php:277
 msgid "Unavailable"
 msgstr "Niedostępny"
 
-#: src/Admin/Page.php:265
+#: src/Admin/Page.php:279
 msgid "Running"
 msgstr "Działa"
 
-#: src/Admin/Page.php:267
+#: src/Admin/Page.php:281
 msgid "Enabled, not running"
 msgstr "Włączony, nie działa"
 
-#: src/Admin/Page.php:269
+#: src/Admin/Page.php:283
 msgid "Off"
 msgstr "Wyłączony"
 
-#: src/Admin/Page.php:286
-msgid "Pinned by WPHOUSE_MODULES in wp-config.php."
-msgstr "Ustawione na stałe przez WPHOUSE_MODULES w wp-config.php."
+#: src/Admin/Page.php:300
+msgid "Pinned by SHOUSE_MODULES in wp-config.php."
+msgstr "Ustawione na stałe przez SHOUSE_MODULES w wp-config.php."
 
 #. translators: %s: plugin or setting name, e.g. Wordfence.
-#: src/Admin/Page.php:381
+#: src/Admin/Page.php:395
 #, php-format
 msgid "Handled by %s, skipped here."
 msgstr "Obsługuje to %s, więc tutaj pominięte."
 
-#: src/Admin/Page.php:503
+#: src/Admin/Page.php:517
 msgid "Activity log"
 msgstr "Dziennik zdarzeń"
 
-#: src/Admin/Page.php:509
+#: src/Admin/Page.php:523
 msgid "No events yet."
 msgstr "Brak zdarzeń."
 
-#: src/Admin/Page.php:281
+#: src/Admin/Page.php:295
 #: src/Modules/Vulnerabilities.php:422
 msgid "Details"
 msgstr "Szczegóły"
 
 #: src/Core/Updater.php:156
-msgid "This WPHouse package is not listed in the signed release manifest. Update cancelled."
-msgstr "Tej paczki WPHouse nie ma w podpisanym manifeście wydania. Aktualizacja anulowana."
+msgid "This SafeHouse package is not listed in the signed release manifest. Update cancelled."
+msgstr "Tej paczki SafeHouse nie ma w podpisanym manifeście wydania. Aktualizacja anulowana."
 
 #: src/Core/Updater.php:169
-msgid "The downloaded WPHouse package does not match the signed checksum. Update cancelled."
-msgstr "Pobrana paczka WPHouse nie zgadza się z podpisaną sumą kontrolną. Aktualizacja anulowana."
+msgid "The downloaded SafeHouse package does not match the signed checksum. Update cancelled."
+msgstr "Pobrana paczka SafeHouse nie zgadza się z podpisaną sumą kontrolną. Aktualizacja anulowana."
 
 #: src/Modules/Duplicate.php:34
 msgid "Duplicate posts and pages"
@@ -213,8 +213,8 @@ msgid "DISALLOW_FILE_MODS in wp-config.php already blocks all installs and updat
 msgstr "Stała DISALLOW_FILE_MODS w wp-config.php już blokuje wszystkie instalacje i aktualizacje."
 
 #: src/Modules/Lockdown.php:100
-msgid "Installing plugins and themes is locked by WPHouse. Unlock it first (WPHouse in the admin menu or `wp wphouse unlock`)."
-msgstr "Instalowanie wtyczek i motywów jest zablokowane przez WPHouse. Najpierw je odblokuj (WPHouse w menu kokpitu lub `wp wphouse unlock`)."
+msgid "Installing plugins and themes is locked by SafeHouse. Unlock it first (SafeHouse in the admin menu or `wp shouse unlock`)."
+msgstr "Instalowanie wtyczek i motywów jest zablokowane przez SafeHouse. Najpierw je odblokuj (SafeHouse w menu kokpitu lub `wp shouse unlock`)."
 
 #: src/Modules/Lockdown.php:122
 msgid "Lock now"
@@ -303,8 +303,8 @@ msgid "Plugin health"
 msgstr "Kondycja wtyczek"
 
 #: src/Modules/PluginHealth.php:115
-msgid "Weekly check of installed plugins: closed on WordPress.org (often for security reasons), no update for two years, not from WordPress.org, one-time tools left active, inactive leftovers, and plugins a WPHouse module replaces. Results also appear in Tools → Site Health."
-msgstr "Cotygodniowy przegląd zainstalowanych wtyczek: zamknięte na WordPress.org (często z powodów bezpieczeństwa), bez aktualizacji od dwóch lat, spoza WordPress.org, jednorazowe narzędzia pozostawione jako aktywne, nieaktywne pozostałości oraz wtyczki, które zastępuje moduł WPHouse. Wyniki widać też w Narzędzia → Stan witryny."
+msgid "Weekly check of installed plugins: closed on WordPress.org (often for security reasons), no update for two years, not from WordPress.org, one-time tools left active, inactive leftovers, and plugins a SafeHouse module replaces. Results also appear in Tools → Site Health."
+msgstr "Cotygodniowy przegląd zainstalowanych wtyczek: zamknięte na WordPress.org (często z powodów bezpieczeństwa), bez aktualizacji od dwóch lat, spoza WordPress.org, jednorazowe narzędzia pozostawione jako aktywne, nieaktywne pozostałości oraz wtyczki, które zastępuje moduł SafeHouse. Wyniki widać też w Narzędzia → Stan witryny."
 
 #: src/Modules/PluginHealth.php:239
 msgid "Inactive. Inactive plugins can still be attacked through their files; delete it if you do not need it."
@@ -334,15 +334,15 @@ msgstr "Aktualizacje przychodzą od producenta, nie z WordPress.org. Utrzymuj ak
 msgid "One-time tool (migration, search-replace, import, file access or debugging) left active. Delete it when the job is done."
 msgstr "Jednorazowe narzędzie (migracja, wyszukaj-i-zamień, import, dostęp do plików lub debugowanie) pozostawione jako aktywne. Usuń je po zakończeniu pracy."
 
-#. translators: %s: WPHouse module name.
+#. translators: %s: SafeHouse module name.
 #: src/Modules/PluginHealth.php:294
 #, php-format
-msgid "WPHouse can do this: module \"%s\". Switch it on, then remove this plugin."
-msgstr "WPHouse to potrafi: moduł „%s”. Włącz go, a potem usuń tę wtyczkę."
+msgid "SafeHouse can do this: module \"%s\". Switch it on, then remove this plugin."
+msgstr "SafeHouse to potrafi: moduł „%s”. Włącz go, a potem usuń tę wtyczkę."
 
 #: src/Modules/PluginHealth.php:318
-msgid "WPHouse plugin health"
-msgstr "Kondycja wtyczek (WPHouse)"
+msgid "SafeHouse plugin health"
+msgstr "Kondycja wtyczek (SafeHouse)"
 
 #: src/Modules/PluginHealth.php:339
 msgid "No closed, abandoned or forgotten plugins found"
@@ -354,7 +354,7 @@ msgstr "Niektóre wtyczki wymagają uwagi"
 
 #: src/Core/Net.php:155
 #: src/Modules/Hardening.php:270
-#: src/Modules/LoginLimits.php:354
+#: src/Modules/LoginLimits.php:355
 #: src/Modules/PluginHealth.php:345
 #: src/Modules/Vulnerabilities.php:301
 msgid "Security"
@@ -363,12 +363,12 @@ msgstr "Bezpieczeństwo"
 #. translators: 1: number of critical findings, 2: number of warnings.
 #: src/Modules/PluginHealth.php:351
 #, php-format
-msgid "%1$d critical, %2$d warnings. Details are on the WPHouse settings page."
-msgstr "Krytyczne: %1$d, ostrzeżenia: %2$d. Szczegóły na stronie ustawień WPHouse."
+msgid "%1$d critical, %2$d warnings. Details are on the SafeHouse settings page."
+msgstr "Krytyczne: %1$d, ostrzeżenia: %2$d. Szczegóły na stronie ustawień SafeHouse."
 
 #: src/Modules/PluginHealth.php:356
-msgid "Open WPHouse"
-msgstr "Otwórz WPHouse"
+msgid "Open SafeHouse"
+msgstr "Otwórz SafeHouse"
 
 #: src/Modules/PluginHealth.php:362
 #: src/Modules/Vulnerabilities.php:311
@@ -415,7 +415,7 @@ msgstr "Wtyczka"
 msgid "Findings"
 msgstr "Wyniki"
 
-#: src/Admin/Page.php:454
+#: src/Admin/Page.php:468
 #: src/Modules/PluginHealth.php:393
 msgid "inactive"
 msgstr "nieaktywna"
@@ -489,8 +489,8 @@ msgid "Send a test e-mail to me"
 msgstr "Wyślij do mnie testowy e-mail"
 
 #: src/Modules/Smtp.php:141
-msgid "WPHouse test e-mail"
-msgstr "Testowy e-mail WPHouse"
+msgid "SafeHouse test e-mail"
+msgstr "Testowy e-mail SafeHouse"
 
 #: src/Modules/Smtp.php:142
 msgid "If you can read this, WordPress can send mail."
@@ -528,8 +528,8 @@ msgid "SMTP: %1$s:%2$d, %3$s (from wp-config.php)."
 msgstr "SMTP: %1$s:%2$d, %3$s (z wp-config.php)."
 
 #: src/Modules/Smtp.php:162
-msgid "SMTP is not configured: add WPHOUSE_SMTP_HOST (and port, user, password) to wp-config.php. Until then mail goes through PHP mail(); the From settings still apply."
-msgstr "SMTP nie jest skonfigurowany: dodaj WPHOUSE_SMTP_HOST (oraz port, użytkownika i hasło) do wp-config.php. Do tego czasu poczta idzie przez PHP mail(); ustawienia nadawcy nadal działają."
+msgid "SMTP is not configured: add SHOUSE_SMTP_HOST (and port, user, password) to wp-config.php. Until then mail goes through PHP mail(); the From settings still apply."
+msgstr "SMTP nie jest skonfigurowany: dodaj SHOUSE_SMTP_HOST (oraz port, użytkownika i hasło) do wp-config.php. Do tego czasu poczta idzie przez PHP mail(); ustawienia nadawcy nadal działają."
 
 #: src/Modules/Tweaks.php:35
 msgid "Tweaks"
@@ -625,21 +625,21 @@ msgstr "Brak zmian od ostatniego sprawdzenia."
 msgid "No baseline yet. It is recorded on the first hourly check."
 msgstr "Brak punktu odniesienia. Zostanie zapisany przy pierwszym cogodzinnym sprawdzeniu."
 
-#: src/Plugin.php:129
-msgid "WPHouse 0.x supports single sites only. Activate it per site instead of network-wide."
-msgstr "WPHouse 0.x obsługuje tylko pojedyncze witryny. Włącz wtyczkę na poszczególnych witrynach, a nie w całej sieci."
+#: src/Plugin.php:130
+msgid "SafeHouse 0.x supports single sites only. Activate it per site instead of network-wide."
+msgstr "SafeHouse 0.x obsługuje tylko pojedyncze witryny. Włącz wtyczkę na poszczególnych witrynach, a nie w całej sieci."
 
-#: wphouse.php:32
-msgid "WPHouse requires PHP 8.1 or newer. The plugin is inactive."
-msgstr "WPHouse wymaga PHP 8.1 lub nowszego. Wtyczka jest nieaktywna."
+#: shouse.php:34
+msgid "SafeHouse requires PHP 8.1 or newer. The plugin is inactive."
+msgstr "SafeHouse wymaga PHP 8.1 lub nowszego. Wtyczka jest nieaktywna."
 
 #: src/Modules/Vulnerabilities.php:63
 msgid "Vulnerability alerts"
 msgstr "Ostrzeżenia o lukach"
 
 #: src/Modules/Vulnerabilities.php:67
-msgid "Warns when the installed WordPress, a plugin or a theme has a known security vulnerability, and names the version that fixes it. Meant for sites without Wordfence, which does this itself. Data from Wordfence Intelligence, signed and served by the WPHouse update host, checked every 6 hours."
-msgstr "Ostrzega, gdy zainstalowany WordPress, wtyczka lub motyw ma znaną lukę bezpieczeństwa, i podaje wersję, która ją łata. Dla stron bez Wordfence, który robi to sam. Dane z Wordfence Intelligence, podpisane i udostępniane przez serwer aktualizacji WPHouse, sprawdzane co 6 godzin."
+msgid "Warns when the installed WordPress, a plugin or a theme has a known security vulnerability, and names the version that fixes it. Meant for sites without Wordfence, which does this itself. Data from Wordfence Intelligence, signed and served by the SafeHouse update host, checked every 6 hours."
+msgstr "Ostrzega, gdy zainstalowany WordPress, wtyczka lub motyw ma znaną lukę bezpieczeństwa, i podaje wersję, która ją łata. Dla stron bez Wordfence, który robi to sam. Dane z Wordfence Intelligence, podpisane i udostępniane przez serwer aktualizacji SafeHouse, sprawdzane co 6 godzin."
 
 #: src/Modules/Vulnerabilities.php:79
 msgid "Wordfence is active and already warns about vulnerable plugins, themes and WordPress versions."
@@ -668,8 +668,8 @@ msgid "All findings"
 msgstr "Wszystkie znaleziska"
 
 #: src/Modules/Vulnerabilities.php:273
-msgid "WPHouse vulnerability alerts"
-msgstr "Ostrzeżenia WPHouse o lukach"
+msgid "SafeHouse vulnerability alerts"
+msgstr "Ostrzeżenia SafeHouse o lukach"
 
 #: src/Modules/Vulnerabilities.php:286
 msgid "Installed software has known vulnerabilities"
@@ -735,93 +735,93 @@ msgstr "%1$s %2$s%3$s: %4$s. Zaktualizuj do wersji %5$s lub nowszej."
 msgid "%1$s %2$s%3$s: %4$s. No fixed version yet: deactivate it if you can do without it."
 msgstr "%1$s %2$s%3$s: %4$s. Nie ma jeszcze poprawionej wersji: wyłącz to oprogramowanie, jeśli możesz się bez niego obejść."
 
-#: src/Admin/Page.php:396
-msgid "WPHouse skips what Wordfence already does (for example username discovery and login error masking) and leaves the firewall, two-factor login and malware scans to it. Vulnerability alerts stand down, because Wordfence warns about vulnerable plugins itself."
-msgstr "WPHouse pomija to, co Wordfence już robi (na przykład blokadę wyliczania użytkowników i ogólne błędy logowania), a zaporę, logowanie dwuetapowe i skaner złośliwego kodu zostawia jemu. Ostrzeżenia o lukach się wyłączają, bo Wordfence sam ostrzega o podatnych wtyczkach."
+#: src/Admin/Page.php:410
+msgid "SafeHouse skips what Wordfence already does (for example username discovery and login error masking) and leaves the firewall, two-factor login and malware scans to it. Vulnerability alerts stand down, because Wordfence warns about vulnerable plugins itself."
+msgstr "SafeHouse pomija to, co Wordfence już robi (na przykład blokadę wyliczania użytkowników i ogólne błędy logowania), a zaporę, logowanie dwuetapowe i skaner złośliwego kodu zostawia jemu. Ostrzeżenia o lukach się wyłączają, bo Wordfence sam ostrzega o podatnych wtyczkach."
 
-#: src/Admin/Page.php:397
+#: src/Admin/Page.php:411
 msgid "Compatible with HPOS and the block checkout. Generic login errors also cover the My Account form, maintenance mode lets the Store API and payment callbacks through, and product reviews survive \"disable comments\"."
 msgstr "Zgodny z HPOS i blokowym checkoutem. Ogólne błędy logowania obejmują też formularz „Moje konto”, tryb serwisowy przepuszcza Store API i powiadomienia z płatności, a recenzje produktów zostają mimo wyłączenia komentarzy."
 
-#: src/Admin/Page.php:398
+#: src/Admin/Page.php:412
 msgid "Payment gateways"
 msgstr "Bramki płatności"
 
-#: src/Admin/Page.php:398
+#: src/Admin/Page.php:412
 msgid "Autopay, Przelewy24, PayU, imoje, Paynow, Stripe, PayPal and WooPayments. Their callbacks (?wc-api= and the REST API) pass maintenance mode, and XML-RPC stays on for WooPayments."
 msgstr "Autopay, Przelewy24, PayU, imoje, Paynow, Stripe, PayPal i WooPayments. Ich powiadomienia (?wc-api= i REST API) przechodzą przez tryb serwisowy, a dla WooPayments XML-RPC zostaje włączone."
 
-#: src/Admin/Page.php:401
+#: src/Admin/Page.php:415
 msgid "Elementor and Elementor Pro. Watched for new vulnerabilities like everything on this list."
 msgstr "Elementor i Elementor Pro. Pilnujemy ich nowych luk, jak wszystkiego na tej liście."
 
-#: src/Admin/Page.php:151
-#: src/Admin/Page.php:405
+#: src/Admin/Page.php:165
+#: src/Admin/Page.php:419
 msgid "Integrations"
 msgstr "Integracje"
 
-#: src/Admin/Page.php:406
-msgid "WPHouse is built to run alongside these plugins. Design House watches all of them for new vulnerabilities (CVE) and tells you when an update cannot wait."
-msgstr "WPHouse działa razem z tymi wtyczkami. Design House pilnuje nowych luk (CVE) we wszystkich z nich i daje znać, gdy aktualizacja nie może czekać."
+#: src/Admin/Page.php:420
+msgid "SafeHouse is built to run alongside these plugins. Design House watches all of them for new vulnerabilities (CVE) and tells you when an update cannot wait."
+msgstr "SafeHouse działa razem z tymi wtyczkami. Design House pilnuje nowych luk (CVE) we wszystkich z nich i daje znać, gdy aktualizacja nie może czekać."
 
-#: src/Admin/Page.php:409
+#: src/Admin/Page.php:423
 msgid "Integration"
 msgstr "Integracja"
 
-#: src/Admin/Page.php:410
+#: src/Admin/Page.php:424
 msgid "On this site"
 msgstr "Na tej stronie"
 
-#: src/Admin/Page.php:411
-msgid "What WPHouse does"
-msgstr "Co robi WPHouse"
-
 #: src/Admin/Page.php:425
-#: src/Admin/Page.php:490
+msgid "What SafeHouse does"
+msgstr "Co robi SafeHouse"
+
+#: src/Admin/Page.php:439
+#: src/Admin/Page.php:504
 msgid "not installed"
 msgstr "nie zainstalowano"
 
-#: src/Admin/Page.php:429
-msgid "WPHouse vulnerability alerts cover this site. For a firewall and two-factor login, install Wordfence."
-msgstr "Tę stronę chronią ostrzeżenia WPHouse o lukach. Zaporę i logowanie dwuetapowe da Wordfence."
+#: src/Admin/Page.php:443
+msgid "SafeHouse vulnerability alerts cover this site. For a firewall and two-factor login, install Wordfence."
+msgstr "Tę stronę chronią ostrzeżenia SafeHouse o lukach. Zaporę i logowanie dwuetapowe da Wordfence."
 
-#: src/Admin/Page.php:430
-msgid "Nothing warns about vulnerable plugins on this site: switch on WPHouse vulnerability alerts below, or install Wordfence."
-msgstr "Nic nie ostrzega na tej stronie o podatnych wtyczkach: włącz niżej ostrzeżenia WPHouse o lukach albo zainstaluj Wordfence."
+#: src/Admin/Page.php:444
+msgid "Nothing warns about vulnerable plugins on this site: switch on SafeHouse vulnerability alerts below, or install Wordfence."
+msgstr "Nic nie ostrzega na tej stronie o podatnych wtyczkach: włącz niżej ostrzeżenia SafeHouse o lukach albo zainstaluj Wordfence."
 
-#: src/Admin/Page.php:454
+#: src/Admin/Page.php:468
 msgid "active"
 msgstr "aktywna"
 
 #. Description of the plugin
-#: wphouse.php
+#: shouse.php
 msgid "One plugin instead of a dozen small ones: hardening, install lockdown, change and vulnerability alerts, plugin health and everyday tweaks. Works alongside Wordfence, WooCommerce and the usual payment gateways."
 msgstr "Jedna wtyczka zamiast kilkunastu małych: zabezpieczenia, blokada instalacji, alerty o zmianach i lukach, kondycja wtyczek i codzienne usprawnienia. Działa obok Wordfence, WooCommerce i popularnych bramek płatności."
 
-#: src/Admin/Page.php:150
+#: src/Admin/Page.php:164
 msgid "Modules"
 msgstr "Moduły"
 
 #. translators: 1: number of modules running, 2: number of modules.
-#: src/Admin/Page.php:168
+#: src/Admin/Page.php:182
 #, php-format
 msgid "%1$d of %2$d running"
 msgstr "Działa %1$d z %2$d"
 
-#: src/Admin/Page.php:488
+#: src/Admin/Page.php:502
 msgid "Another persistent object cache is in use."
 msgstr "Działa inna trwała pamięć podręczna obiektów."
 
-#: src/Admin/Page.php:486
+#: src/Admin/Page.php:500
 msgid "Object cache connected to Redis."
 msgstr "Pamięć podręczna obiektów jest połączona z Redisem."
 
-#: src/Admin/Page.php:486
+#: src/Admin/Page.php:500
 msgid "Object cache drop-in installed, but Redis is not reachable."
 msgstr "Drop-in pamięci podręcznej obiektów jest zainstalowany, ale Redis jest nieosiągalny."
 
 #. translators: %s: time since the event, e.g. "5 mins".
-#: src/Admin/Page.php:527
+#: src/Admin/Page.php:541
 #, php-format
 msgid "%s ago"
 msgstr "%s temu"
@@ -831,8 +831,8 @@ msgid "LiteSpeed page cache"
 msgstr "Cache stron LiteSpeed"
 
 #: src/Modules/LiteSpeed.php:60
-msgid "On LiteSpeed servers, pages for visitors who are not logged in and have no cart are served from the server cache without running WordPress. WPHouse only sends cache headers and clears the cache after changes; it writes no files. Logged-in users, the cart, checkout and account pages are never cached."
-msgstr "Na serwerach LiteSpeed strony dla niezalogowanych odwiedzających bez koszyka idą z cache serwera, bez uruchamiania WordPressa. WPHouse wysyła tylko nagłówki cache i czyści cache po zmianach; nie zapisuje żadnych plików. Zalogowani, koszyk, zamówienie i konto klienta nigdy nie trafiają do cache."
+msgid "On LiteSpeed servers, pages for visitors who are not logged in and have no cart are served from the server cache without running WordPress. SafeHouse only sends cache headers and clears the cache after changes; it writes no files. Logged-in users, the cart, checkout and account pages are never cached."
+msgstr "Na serwerach LiteSpeed strony dla niezalogowanych odwiedzających bez koszyka idą z cache serwera, bez uruchamiania WordPressa. SafeHouse wysyła tylko nagłówki cache i czyści cache po zmianach; nie zapisuje żadnych plików. Zalogowani, koszyk, zamówienie i konto klienta nigdy nie trafiają do cache."
 
 #: src/Modules/LiteSpeed.php:67
 msgid "Keep pages for (minutes)"
@@ -871,8 +871,8 @@ msgid "This server does not look like LiteSpeed, so the cache headers have no ef
 msgstr "Ten serwer nie wygląda na LiteSpeed, więc nagłówki cache nic tu nie dają."
 
 #: src/Modules/LiteSpeed.php:221
-msgid "WPHouse LiteSpeed page cache"
-msgstr "Cache stron LiteSpeed w WPHouse"
+msgid "SafeHouse LiteSpeed page cache"
+msgstr "Cache stron LiteSpeed w SafeHouse"
 
 #: src/Modules/LiteSpeed.php:250
 msgid "LiteSpeed serves pages from its cache"
@@ -902,47 +902,47 @@ msgstr "Moduł cache stron LiteSpeed nic nie daje na tym serwerze. Wyłącz go a
 msgid "WooCommerce geolocates customers without page caching support, so cached pages may show one country's prices and taxes to everyone. In WooCommerce → Settings → General choose \"Geolocate (with page caching support)\"."
 msgstr "WooCommerce geolokalizuje klientów bez obsługi cache stron, więc strony z cache mogą pokazywać wszystkim ceny i podatki jednego kraju. W WooCommerce → Ustawienia → Ogólne wybierz geolokalizację z obsługą cache stron (Geolocate with page caching support)."
 
-#: src/Core/ObjectCache.php:164
+#: src/Core/ObjectCache.php:175
 #: src/Modules/Cloudflare.php:230
 #: src/Modules/LiteSpeed.php:269
 msgid "Performance"
 msgstr "Wydajność"
 
-#: src/Admin/Page.php:399
+#: src/Admin/Page.php:413
 msgid "Redis object cache"
 msgstr "Cache obiektów Redis"
 
-#: src/Admin/Page.php:399
-msgid "WPHouse has its own Redis object cache: install it with \"wp wphouse object-cache enable\". Every cached value is signed, so other sites on a shared Redis cannot plant data. A site that uses the Redis Object Cache plugin instead shows its status here."
-msgstr "WPHouse ma własny cache obiektów w Redisie: instaluje go komenda „wp wphouse object-cache enable”. Każda wartość w cache jest podpisana, więc inne strony na współdzielonym Redisie nie podrzucą danych. Jeśli strona używa zamiast tego wtyczki Redis Object Cache, tu widać jej stan."
+#: src/Admin/Page.php:413
+msgid "SafeHouse has its own Redis object cache: install it with \"wp shouse object-cache enable\". Every cached value is signed, so other sites on a shared Redis cannot plant data. A site that uses the Redis Object Cache plugin instead shows its status here."
+msgstr "SafeHouse ma własny cache obiektów w Redisie: instaluje go komenda „wp shouse object-cache enable”. Każda wartość w cache jest podpisana, więc inne strony na współdzielonym Redisie nie podrzucą danych. Jeśli strona używa zamiast tego wtyczki Redis Object Cache, tu widać jej stan."
 
-#: src/Admin/Page.php:478
+#: src/Admin/Page.php:492
 msgid "connected"
 msgstr "połączony"
 
-#: src/Admin/Page.php:478
+#: src/Admin/Page.php:492
 msgid "Redis not reachable"
 msgstr "Redis nieosiągalny"
 
-#: src/Admin/Page.php:478
-#: src/Core/ObjectCache.php:140
-msgid "WPHouse object cache"
-msgstr "Cache obiektów WPHouse"
+#: src/Admin/Page.php:492
+#: src/Core/ObjectCache.php:151
+msgid "SafeHouse object cache"
+msgstr "Cache obiektów SafeHouse"
 
-#: src/Core/ObjectCache.php:152
-msgid "The WPHouse object cache is connected to Redis"
-msgstr "Cache obiektów WPHouse jest połączony z Redisem"
+#: src/Core/ObjectCache.php:163
+msgid "The SafeHouse object cache is connected to Redis"
+msgstr "Cache obiektów SafeHouse jest połączony z Redisem"
 
-#: src/Core/ObjectCache.php:153
+#: src/Core/ObjectCache.php:164
 msgid "Database results are kept in Redis between requests. Every cached value is signed, so other sites on a shared Redis cannot plant data."
 msgstr "Wyniki zapytań do bazy są trzymane w Redisie między żądaniami. Każda wartość jest podpisana, więc inne strony na współdzielonym Redisie nie podrzucą danych."
 
-#: src/Core/ObjectCache.php:156
-msgid "The WPHouse object cache cannot reach Redis"
-msgstr "Cache obiektów WPHouse nie może połączyć się z Redisem"
+#: src/Core/ObjectCache.php:167
+msgid "The SafeHouse object cache cannot reach Redis"
+msgstr "Cache obiektów SafeHouse nie może połączyć się z Redisem"
 
 #. translators: %s: error message.
-#: src/Core/ObjectCache.php:158
+#: src/Core/ObjectCache.php:169
 #, php-format
 msgid "WordPress is using its own cache for now, so the site works but is slower. Reason: %s"
 msgstr "WordPress używa na razie własnego cache, więc strona działa, ale wolniej. Powód: %s"
@@ -1032,8 +1032,8 @@ msgid "The anti-bot check did not pass. Please wait for it to finish and try aga
 msgstr "Weryfikacja antybotowa nie powiodła się. Poczekaj, aż się zakończy, i spróbuj ponownie."
 
 #: src/Modules/Bots.php:370
-msgid "Turnstile is off: add WPHOUSE_TURNSTILE_SITE_KEY and WPHOUSE_TURNSTILE_SECRET_KEY to wp-config.php. The honeypot works without them."
-msgstr "Turnstile jest wyłączony: dodaj WPHOUSE_TURNSTILE_SITE_KEY i WPHOUSE_TURNSTILE_SECRET_KEY do wp-config.php. Honeypot działa bez nich."
+msgid "Turnstile is off: add SHOUSE_TURNSTILE_SITE_KEY and SHOUSE_TURNSTILE_SECRET_KEY to wp-config.php. The honeypot works without them."
+msgstr "Turnstile jest wyłączony: dodaj SHOUSE_TURNSTILE_SITE_KEY i SHOUSE_TURNSTILE_SECRET_KEY do wp-config.php. Honeypot działa bez nich."
 
 #: src/Modules/Bots.php:372
 msgid "Turnstile is off: wp-config.php has Cloudflare test keys, which always give the same answer and are not allowed on a production site."
@@ -1056,12 +1056,12 @@ msgid "If the default role for new accounts can manage users, plugins, options, 
 msgstr "Jeśli domyślna rola nowych kont może zarządzać użytkownikami, wtyczkami, ustawieniami, sklepem albo surowym HTML (np. po ataku na bazę danych), nowe konta dostają zamiast niej rolę Subskrybent."
 
 #: src/Modules/Hardening.php:226
-msgid "WPHouse registration check"
-msgstr "Test rejestracji WPHouse"
+msgid "SafeHouse registration check"
+msgstr "Test rejestracji SafeHouse"
 
 #: src/Modules/Hardening.php:251
-msgid "Until then WPHouse gives new accounts the Subscriber role."
-msgstr "Do tego czasu WPHouse nadaje nowym kontom rolę Subskrybent."
+msgid "Until then SafeHouse gives new accounts the Subscriber role."
+msgstr "Do tego czasu SafeHouse nadaje nowym kontom rolę Subskrybent."
 
 #: src/Modules/Hardening.php:255
 msgid "Anyone can register an account"
@@ -1105,96 +1105,96 @@ msgstr "Nowe konta mają dostawać rolę, która może zarządzać stroną"
 msgid "The default role for new accounts is %s, which can manage users, plugins, settings or the shop, or post raw HTML. Attackers set this so that they can register their own administrator. Change it in Settings → General and check who changed it."
 msgstr "Domyślna rola nowych kont to %s, a ta rola może zarządzać użytkownikami, wtyczkami, ustawieniami albo sklepem lub publikować surowy HTML. Atakujący ustawiają to, żeby zarejestrować własnego administratora. Zmień to w Ustawienia → Ogólne i sprawdź, kto to zmienił."
 
-#: src/Admin/Page.php:214
+#: src/Admin/Page.php:228
 msgid "Proxy in front of the site"
 msgstr "Proxy przed stroną"
 
-#: src/Admin/Page.php:218
+#: src/Admin/Page.php:232
 msgid "None: visitors connect directly"
 msgstr "Brak: odwiedzający łączą się bezpośrednio"
 
-#: src/Admin/Page.php:225
-msgid "Set in wp-config.php with WPHOUSE_TRUSTED_PROXIES."
-msgstr "Ustawione w wp-config.php stałą WPHOUSE_TRUSTED_PROXIES."
+#: src/Admin/Page.php:239
+msgid "Set in wp-config.php with SHOUSE_TRUSTED_PROXIES."
+msgstr "Ustawione w wp-config.php stałą SHOUSE_TRUSTED_PROXIES."
 
-#: src/Admin/Page.php:226
-msgid "With Cloudflare, WPHouse takes the visitor address from Cloudflare's header, but only on connections that really come from Cloudflare. Login limits and the activity log depend on it."
-msgstr "Przy Cloudflare WPHouse bierze adres odwiedzającego z nagłówka Cloudflare, ale tylko z połączeń, które naprawdę przychodzą z Cloudflare. Zależą od tego limity logowania i dziennik zdarzeń."
+#: src/Admin/Page.php:240
+msgid "With Cloudflare, SafeHouse takes the visitor address from Cloudflare's header, but only on connections that really come from Cloudflare. Login limits and the activity log depend on it."
+msgstr "Przy Cloudflare SafeHouse bierze adres odwiedzającego z nagłówka Cloudflare, ale tylko z połączeń, które naprawdę przychodzą z Cloudflare. Zależą od tego limity logowania i dziennik zdarzeń."
 
 #: src/Core/Net.php:129
-msgid "WPHouse and Cloudflare"
-msgstr "WPHouse i Cloudflare"
+msgid "SafeHouse and Cloudflare"
+msgstr "SafeHouse i Cloudflare"
 
 #: src/Core/Net.php:140
-msgid "Requests come through Cloudflare, but WPHouse is not set up for it"
-msgstr "Ruch idzie przez Cloudflare, ale WPHouse nie jest na to ustawiony"
+msgid "Requests come through Cloudflare, but SafeHouse is not set up for it"
+msgstr "Ruch idzie przez Cloudflare, ale SafeHouse nie jest na to ustawiony"
 
 #: src/Core/Net.php:141
-msgid "Every visitor looks like a Cloudflare server: the activity log shows Cloudflare addresses and login limits cannot block by address. In WPHouse → General, set \"Proxy in front of the site\" to Cloudflare."
-msgstr "Każdy odwiedzający wygląda jak serwer Cloudflare: dziennik pokazuje adresy Cloudflare, a limity logowania nie mogą blokować po adresie. W WPHouse → Ogólne ustaw „Proxy przed stroną” na Cloudflare."
+msgid "Every visitor looks like a Cloudflare server: the activity log shows Cloudflare addresses and login limits cannot block by address. In SafeHouse → General, set \"Proxy in front of the site\" to Cloudflare."
+msgstr "Każdy odwiedzający wygląda jak serwer Cloudflare: dziennik pokazuje adresy Cloudflare, a limity logowania nie mogą blokować po adresie. W SafeHouse → Ogólne ustaw „Proxy przed stroną” na Cloudflare."
 
 #: src/Core/Net.php:144
-msgid "WPHouse sees visitors' real addresses behind Cloudflare"
-msgstr "WPHouse widzi prawdziwe adresy odwiedzających za Cloudflare"
+msgid "SafeHouse sees visitors' real addresses behind Cloudflare"
+msgstr "SafeHouse widzi prawdziwe adresy odwiedzających za Cloudflare"
 
 #: src/Core/Net.php:145
 msgid "The visitor address comes from Cloudflare's CF-Connecting-IP header, which is trusted only on connections from Cloudflare's own servers."
 msgstr "Adres odwiedzającego pochodzi z nagłówka CF-Connecting-IP, któremu ufamy tylko na połączeniach z serwerów Cloudflare."
 
 #: src/Core/Net.php:148
-msgid "WPHouse is set up for Cloudflare, but this request did not come through it"
-msgstr "WPHouse jest ustawiony na Cloudflare, ale to żądanie nie przeszło przez Cloudflare"
+msgid "SafeHouse is set up for Cloudflare, but this request did not come through it"
+msgstr "SafeHouse jest ustawiony na Cloudflare, ale to żądanie nie przeszło przez Cloudflare"
 
 #: src/Core/Net.php:149
 msgid "That is fine when you reach the server directly. If the site no longer uses Cloudflare, set \"Proxy in front of the site\" back to none."
 msgstr "To normalne, gdy łączysz się z serwerem bezpośrednio. Jeśli strona nie korzysta już z Cloudflare, ustaw „Proxy przed stroną” z powrotem na brak."
 
-#: src/Modules/LoginLimits.php:72
+#: src/Modules/LoginLimits.php:73
 msgid "Login limits"
 msgstr "Limity logowania"
 
-#: src/Modules/LoginLimits.php:76
+#: src/Modules/LoginLimits.php:77
 msgid "Stops password guessing on the login forms, XML-RPC and application passwords. Too many failures from one address lock it out, longer each time. An account under attack is paused only for devices that never logged into it; devices that did keep working, so nobody can lock the owner out."
 msgstr "Zatrzymuje zgadywanie haseł w formularzach logowania, XML-RPC i hasłach aplikacji. Zbyt wiele pomyłek z jednego adresu blokuje go, za każdym razem dłużej. Atakowane konto jest wstrzymane tylko dla urządzeń, które nigdy się na nie nie logowały; te, które się logowały, działają dalej, więc nikt nie zablokuje właściciela."
 
-#: src/Modules/LoginLimits.php:83
+#: src/Modules/LoginLimits.php:84
 msgid "Failures before an address is locked out"
 msgstr "Pomyłki, po których adres jest blokowany"
 
-#: src/Modules/LoginLimits.php:89
+#: src/Modules/LoginLimits.php:90
 msgid "Counted over (minutes)"
 msgstr "Liczone przez (minuty)"
 
-#: src/Modules/LoginLimits.php:95
+#: src/Modules/LoginLimits.php:96
 msgid "First lockout (minutes)"
 msgstr "Pierwsza blokada (minuty)"
 
-#: src/Modules/LoginLimits.php:96
+#: src/Modules/LoginLimits.php:97
 msgid "Each further lockout of the same address lasts four times longer, up to 24 hours."
 msgstr "Każda kolejna blokada tego samego adresu trwa cztery razy dłużej, najwyżej 24 godziny."
 
-#: src/Modules/LoginLimits.php:102
+#: src/Modules/LoginLimits.php:103
 msgid "Failures per account in an hour before new devices are paused"
 msgstr "Pomyłki na konto w ciągu godziny, po których nowe urządzenia są wstrzymane"
 
-#: src/Modules/LoginLimits.php:108
+#: src/Modules/LoginLimits.php:109
 msgid "Never lock out these addresses"
 msgstr "Nigdy nie blokuj tych adresów"
 
-#: src/Modules/LoginLimits.php:109
+#: src/Modules/LoginLimits.php:110
 msgid "One IP address or range per line, for example 203.0.113.7 or 198.51.100.0/24."
 msgstr "Jeden adres IP lub zakres w wierszu, na przykład 203.0.113.7 albo 198.51.100.0/24."
 
-#: src/Modules/LoginLimits.php:114
+#: src/Modules/LoginLimits.php:115
 msgid "E-mail when an account is paused"
 msgstr "Mail, gdy konto zostanie wstrzymane"
 
-#: src/Modules/LoginLimits.php:124
+#: src/Modules/LoginLimits.php:125
 msgid "Wordfence brute force protection is on and already limits login attempts."
 msgstr "Ochrona brute force w Wordfence jest włączona i sama ogranicza próby logowania."
 
 #. translators: %d: minutes.
-#: src/Modules/LoginLimits.php:159
+#: src/Modules/LoginLimits.php:160
 #, php-format
 msgid "Too many failed login attempts from your address. Try again in %d minute."
 msgid_plural "Too many failed login attempts from your address. Try again in %d minutes."
@@ -1202,90 +1202,90 @@ msgstr[0] "Zbyt wiele nieudanych prób logowania z Twojego adresu. Spróbuj pono
 msgstr[1] "Zbyt wiele nieudanych prób logowania z Twojego adresu. Spróbuj ponownie za %d minuty."
 msgstr[2] "Zbyt wiele nieudanych prób logowania z Twojego adresu. Spróbuj ponownie za %d minut."
 
-#: src/Modules/LoginLimits.php:163
+#: src/Modules/LoginLimits.php:164
 msgid "This account is paused for new devices after many failed attempts. Log in from a device you used before, or try again in an hour."
 msgstr "To konto jest wstrzymane dla nowych urządzeń po wielu nieudanych próbach. Zaloguj się z urządzenia, którego już używałeś, albo spróbuj za godzinę."
 
-#: src/Modules/LoginLimits.php:192
+#: src/Modules/LoginLimits.php:193
 msgid "Too many failed login attempts from your address. Try again later."
 msgstr "Zbyt wiele nieudanych prób logowania z Twojego adresu. Spróbuj później."
 
-#: src/Modules/LoginLimits.php:308
+#: src/Modules/LoginLimits.php:309
 msgid "Lift all lockouts"
 msgstr "Zdejmij wszystkie blokady"
 
-#: src/Modules/LoginLimits.php:314
+#: src/Modules/LoginLimits.php:315
 msgid "All lockouts lifted."
 msgstr "Wszystkie blokady zdjęte."
 
-#: src/Modules/LoginLimits.php:324
+#: src/Modules/LoginLimits.php:325
 msgid "Nothing is locked out right now."
 msgstr "Nic nie jest teraz zablokowane."
 
-#: src/Modules/LoginLimits.php:327
+#: src/Modules/LoginLimits.php:328
 msgid "Address or account"
 msgstr "Adres lub konto"
 
-#: src/Modules/LoginLimits.php:327
+#: src/Modules/LoginLimits.php:328
 msgid "Until (UTC)"
 msgstr "Do (UTC)"
 
-#: src/Modules/LoginLimits.php:329
+#: src/Modules/LoginLimits.php:330
 msgid "account (new devices)"
 msgstr "konto (nowe urządzenia)"
 
-#: src/Modules/LoginLimits.php:341
-msgid "WPHouse login limits"
-msgstr "Limity logowania w WPHouse"
+#: src/Modules/LoginLimits.php:342
+msgid "SafeHouse login limits"
+msgstr "Limity logowania w SafeHouse"
 
-#: src/Modules/LoginLimits.php:351
+#: src/Modules/LoginLimits.php:352
 msgid "Login limits cannot block by address on this server"
 msgstr "Limity logowania nie mogą blokować po adresie na tym serwerze"
 
-#: src/Modules/LoginLimits.php:351
+#: src/Modules/LoginLimits.php:352
 msgid "Login limits block password guessing"
 msgstr "Limity logowania blokują zgadywanie haseł"
 
-#: src/Modules/LoginLimits.php:357
+#: src/Modules/LoginLimits.php:358
 msgid "Failed logins are counted per address and per account; addresses are locked out and accounts are paused for new devices."
 msgstr "Nieudane logowania są liczone na adres i na konto; adresy są blokowane, a konta wstrzymywane dla nowych urządzeń."
 
 #. translators: %s: user login.
-#: src/Modules/LoginLimits.php:387
+#: src/Modules/LoginLimits.php:388
 #, php-format
 msgid "Account %s paused for new devices"
 msgstr "Konto %s wstrzymane dla nowych urządzeń"
 
 #. translators: %s: user login.
-#: src/Modules/LoginLimits.php:387
+#: src/Modules/LoginLimits.php:388
 msgid "Many failed logins for this account came from devices that never logged into it. For an hour only devices that did can log in."
 msgstr "Wiele nieudanych logowań na to konto przyszło z urządzeń, które nigdy się na nie nie logowały. Przez godzinę logować się mogą tylko te, które to robiły."
 
-#: src/Modules/LoginLimits.php:453
-msgid "Requests come through Cloudflare, but WPHouse is not set up for it, so every visitor has a Cloudflare address. Locking one out would lock out everyone; only the per-account rule works. In WPHouse → General, set \"Proxy in front of the site\" to Cloudflare."
-msgstr "Ruch idzie przez Cloudflare, ale WPHouse nie jest na to ustawiony, więc każdy odwiedzający ma adres Cloudflare. Zablokowanie jednego zablokowałoby wszystkich; działa tylko reguła konta. W WPHouse → Ogólne ustaw „Proxy przed stroną” na Cloudflare."
-
 #: src/Modules/LoginLimits.php:454
-msgid "Requests come from a private address, so a proxy or load balancer sits in front of the site and every visitor has its address. Locking one out would lock out everyone; only the per-account rule works. Name the proxy in wp-config.php with WPHOUSE_TRUSTED_PROXIES."
-msgstr "Ruch przychodzi z adresu prywatnego, więc przed stroną stoi proxy albo load balancer i każdy odwiedzający ma jego adres. Zablokowanie jednego zablokowałoby wszystkich; działa tylko reguła konta. Wskaż proxy w wp-config.php stałą WPHOUSE_TRUSTED_PROXIES."
+msgid "Requests come through Cloudflare, but SafeHouse is not set up for it, so every visitor has a Cloudflare address. Locking one out would lock out everyone; only the per-account rule works. In SafeHouse → General, set \"Proxy in front of the site\" to Cloudflare."
+msgstr "Ruch idzie przez Cloudflare, ale SafeHouse nie jest na to ustawiony, więc każdy odwiedzający ma adres Cloudflare. Zablokowanie jednego zablokowałoby wszystkich; działa tylko reguła konta. W SafeHouse → Ogólne ustaw „Proxy przed stroną” na Cloudflare."
 
-#: src/Admin/Page.php:400
-msgid "Real visitor addresses behind Cloudflare (General, \"Proxy in front of the site\"), cache clearing after changes (the Cloudflare cache module, token in wp-config.php) and Turnstile on forms (Bot protection). WPHouse contacts Cloudflare only for the parts that are on."
-msgstr "Prawdziwe adresy odwiedzających za Cloudflare (Ogólne, „Proxy przed stroną”), czyszczenie cache po zmianach (moduł Cache Cloudflare, token w wp-config.php) i Turnstile na formularzach (Ochrona przed botami). WPHouse łączy się z Cloudflare tylko w tych częściach, które są włączone."
+#: src/Modules/LoginLimits.php:455
+msgid "Requests come from a private address, so a proxy or load balancer sits in front of the site and every visitor has its address. Locking one out would lock out everyone; only the per-account rule works. Name the proxy in wp-config.php with SHOUSE_TRUSTED_PROXIES."
+msgstr "Ruch przychodzi z adresu prywatnego, więc przed stroną stoi proxy albo load balancer i każdy odwiedzający ma jego adres. Zablokowanie jednego zablokowałoby wszystkich; działa tylko reguła konta. Wskaż proxy w wp-config.php stałą SHOUSE_TRUSTED_PROXIES."
 
-#: src/Admin/Page.php:460
+#: src/Admin/Page.php:414
+msgid "Real visitor addresses behind Cloudflare (General, \"Proxy in front of the site\"), cache clearing after changes (the Cloudflare cache module, token in wp-config.php) and Turnstile on forms (Bot protection). SafeHouse contacts Cloudflare only for the parts that are on."
+msgstr "Prawdziwe adresy odwiedzających za Cloudflare (Ogólne, „Proxy przed stroną”), czyszczenie cache po zmianach (moduł Cache Cloudflare, token w wp-config.php) i Turnstile na formularzach (Ochrona przed botami). SafeHouse łączy się z Cloudflare tylko w tych częściach, które są włączone."
+
+#: src/Admin/Page.php:474
 msgid "visitor addresses"
 msgstr "adresy odwiedzających"
 
-#: src/Admin/Page.php:461
+#: src/Admin/Page.php:475
 msgid "cache clearing"
 msgstr "czyszczenie cache"
 
-#: src/Admin/Page.php:465
+#: src/Admin/Page.php:479
 msgid "on"
 msgstr "włączone"
 
-#: src/Admin/Page.php:465
+#: src/Admin/Page.php:479
 msgid "off"
 msgstr "wyłączone"
 
@@ -1298,8 +1298,8 @@ msgid "Clears the Cloudflare cache after changes, for sites where Cloudflare cac
 msgstr "Czyści cache Cloudflare po zmianach, na stronach, gdzie Cloudflare zapisuje całe strony (APO albo reguła Cache Everything). Zmieniony wpis czyści swoją stronę i listy, na których się pojawia; menu, widgety, motywy i wtyczki czyszczą wszystko. Token API i ID strefy są w wp-config.php."
 
 #: src/Modules/Cloudflare.php:71
-msgid "Add WPHOUSE_CLOUDFLARE_TOKEN (an API token allowed only to purge this zone's cache) and WPHOUSE_CLOUDFLARE_ZONE (the zone ID from the Cloudflare dashboard) to wp-config.php."
-msgstr "Dodaj do wp-config.php WPHOUSE_CLOUDFLARE_TOKEN (token API z uprawnieniem tylko do czyszczenia cache tej strefy) i WPHOUSE_CLOUDFLARE_ZONE (ID strefy z panelu Cloudflare)."
+msgid "Add SHOUSE_CLOUDFLARE_TOKEN (an API token allowed only to purge this zone's cache) and SHOUSE_CLOUDFLARE_ZONE (the zone ID from the Cloudflare dashboard) to wp-config.php."
+msgstr "Dodaj do wp-config.php SHOUSE_CLOUDFLARE_TOKEN (token API z uprawnieniem tylko do czyszczenia cache tej strefy) i SHOUSE_CLOUDFLARE_ZONE (ID strefy z panelu Cloudflare)."
 
 #: src/Modules/Cloudflare.php:178
 msgid "Clear the whole Cloudflare cache"
@@ -1333,8 +1333,8 @@ msgid "The last call on %1$s failed: %2$s"
 msgstr "Ostatnie wywołanie %1$s się nie udało: %2$s"
 
 #: src/Modules/Cloudflare.php:216
-msgid "WPHouse Cloudflare cache"
-msgstr "Cache Cloudflare w WPHouse"
+msgid "SafeHouse Cloudflare cache"
+msgstr "Cache Cloudflare w SafeHouse"
 
 #: src/Modules/Cloudflare.php:227
 msgid "Cloudflare refused to clear the cache"
@@ -1359,3 +1359,7 @@ msgstr[2] "%d adresów"
 #: src/Modules/Cloudflare.php:196
 msgid "everything"
 msgstr "wszystko"
+
+#: src/Core/ObjectCache.php:57
+msgid "The object-cache.php loader dates from before the rename to SafeHouse. Run `wp shouse object-cache enable` to install the current one."
+msgstr "Plik object-cache.php pochodzi sprzed zmiany nazwy na SafeHouse. Uruchom `wp shouse object-cache enable`, żeby zainstalować aktualny."

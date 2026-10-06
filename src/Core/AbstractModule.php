@@ -2,12 +2,12 @@
 /**
  * Shared plumbing for modules: settings access, overlap handling and schema-driven sanitizing.
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Core;
+namespace SafeHouse\Core;
 
-use WPHouse\Plugin;
+use SafeHouse\Plugin;
 
 defined( 'ABSPATH' ) || exit;
 

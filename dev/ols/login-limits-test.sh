@@ -33,17 +33,17 @@ woo_login() { # ip user password
 	else echo denied; fi
 }
 rest() { curl -s -o "$T/body" -w '%{http_code}' -u "victim:$2" -H "X-Forwarded-For: $1" "$U/?rest_route=/wp/v2/users/me"; }
-seconds_left() { wp eval "global \$wpdb; echo (int) \$wpdb->get_var( \$wpdb->prepare( 'SELECT TIMESTAMPDIFF(SECOND, UTC_TIMESTAMP(), locked_until) FROM %i WHERE subject = %s', \$wpdb->prefix . 'wphouse_login', '$1' ) );"; }
-expire() { wp eval "global \$wpdb; \$wpdb->query( \$wpdb->prepare( 'UPDATE %i SET locked_until = UTC_TIMESTAMP() - INTERVAL 1 SECOND WHERE subject = %s', \$wpdb->prefix . 'wphouse_login', '$1' ) );" >/dev/null; }
+seconds_left() { wp eval "global \$wpdb; echo (int) \$wpdb->get_var( \$wpdb->prepare( 'SELECT TIMESTAMPDIFF(SECOND, UTC_TIMESTAMP(), locked_until) FROM %i WHERE subject = %s', \$wpdb->prefix . 'shouse_login', '$1' ) );"; }
+expire() { wp eval "global \$wpdb; \$wpdb->query( \$wpdb->prepare( 'UPDATE %i SET locked_until = UTC_TIMESTAMP() - INTERVAL 1 SECOND WHERE subject = %s', \$wpdb->prefix . 'shouse_login', '$1' ) );" >/dev/null; }
 
-backup=$(wp option get wphouse_settings --format=json)
-trap 'wp option update wphouse_settings "$backup" --format=json >/dev/null; wp wphouse login unlock --all >/dev/null' EXIT
-wp eval '$o = get_option( "wphouse_settings" ); $o["modules"]["login_limits"] = true; $o["modules"]["bots"] = false; $o["modules"]["litespeed"] = false;
+backup=$(wp option get shouse_settings --format=json)
+trap 'wp option update shouse_settings "$backup" --format=json >/dev/null; wp shouse login unlock --all >/dev/null' EXIT
+wp eval '$o = get_option( "shouse_settings" ); $o["modules"]["login_limits"] = true; $o["modules"]["bots"] = false; $o["modules"]["litespeed"] = false;
 $o["login_limits"] = [ "ip_attempts" => 3, "ip_window" => 15, "ip_lockout" => 1, "account_attempts" => 4, "allowlist" => "203.0.113.250", "notify" => false ];
-update_option( "wphouse_settings", $o );' >/dev/null
+update_option( "shouse_settings", $o );' >/dev/null
 wp user get victim >/dev/null 2>&1 || wp user create victim victim@example.test --role=subscriber >/dev/null
 wp user update victim --user_pass=Correct-Horse-1 >/dev/null
-wp wphouse login unlock --all >/dev/null
+wp shouse login unlock --all >/dev/null
 GOOD=Correct-Horse-1
 DEVICE=$(jar device)
 
@@ -61,14 +61,14 @@ expire $A
 for i in 1 2 3; do login $A victim wrong >/dev/null; done
 left=$(seconds_left $A)
 check "the next lockout is four times longer"      yes    "$([ "$left" -gt 200 ] && [ "$left" -le 240 ] && echo yes || echo "no ($left s)")"
-wp wphouse login unlock $A >/dev/null
-check "wp wphouse login unlock <address> lifts it" in     "$(login $A victim $GOOD "$DEVICE")"
+wp shouse login unlock $A >/dev/null
+check "wp shouse login unlock <address> lifts it" in     "$(login $A victim $GOOD "$DEVICE")"
 check "the account was paused meanwhile (its failures came from new devices)" paused "$(login 203.0.113.12 victim $GOOD)"
-wp wphouse login unlock victim >/dev/null
-check "wp wphouse login unlock <login> lifts the pause" in "$(login 203.0.113.12 victim $GOOD)"
+wp shouse login unlock victim >/dev/null
+check "wp shouse login unlock <login> lifts the pause" in "$(login 203.0.113.12 victim $GOOD)"
 
 echo "== account paused for new devices"
-wp wphouse login unlock --all >/dev/null
+wp shouse login unlock --all >/dev/null
 for i in 1 2 3 4; do login 198.51.100.$i victim wrong >/dev/null; done
 check "a new device is paused, even with the right password" paused "$(login 198.51.100.9 victim $GOOD)"
 check "a device that logged in before still gets in"         in     "$(login 198.51.100.10 victim $GOOD "$DEVICE")"
@@ -76,10 +76,10 @@ for i in 1 2 3 4; do login 198.51.100.2$i ghost wrong >/dev/null; done
 check "a made-up account pauses the same way (no enumeration)" paused "$(login 198.51.100.30 ghost whatever)"
 for i in 1 2 3; do login 198.51.100.40 ghost whatever >/dev/null; done
 check "hammering a paused account still locks the address out" locked "$(login 198.51.100.40 ghost whatever)"
-check "the table holds no plain user names"        0      "$(wp eval 'global $wpdb; echo (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE subject IN (%s, %s)", $wpdb->prefix . "wphouse_login", "victim", "ghost" ) );')"
+check "the table holds no plain user names"        0      "$(wp eval 'global $wpdb; echo (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE subject IN (%s, %s)", $wpdb->prefix . "shouse_login", "victim", "ghost" ) );')"
 
 echo "== WooCommerce login form"
-wp wphouse login unlock --all >/dev/null
+wp shouse login unlock --all >/dev/null
 MA=$(wp eval 'echo wc_get_page_permalink( "myaccount" );')
 C=203.0.113.20
 check "Woo login works"                            in     "$(woo_login $C victim $GOOD)"
@@ -87,21 +87,21 @@ for i in 1 2 3; do woo_login $C victim wrong >/dev/null; done
 check "Woo failures lock the address out"          locked "$(woo_login $C victim $GOOD)"
 
 echo "== application passwords (REST)"
-wp wphouse login unlock --all >/dev/null
+wp shouse login unlock --all >/dev/null
 app=$(wp user application-password create victim "limits-$RANDOM" --porcelain)
 G=203.0.113.30
 check "a valid application password works"        200 "$(rest $G "$app")"
 for i in 1 2 3; do rest $G wrong-password >/dev/null; done
-check "a locked address cannot use a valid one"    yes "$(code=$(rest $G "$app"); [ "$code" != 200 ] && grep -q wphouse_locked "$T/body" && echo yes || echo "no ($code)")"
+check "a locked address cannot use a valid one"    yes "$(code=$(rest $G "$app"); [ "$code" != 200 ] && grep -q shouse_locked "$T/body" && echo yes || echo "no ($code)")"
 
 echo "== exceptions and safety"
-wp wphouse login unlock --all >/dev/null
+wp shouse login unlock --all >/dev/null
 for i in 1 2 3 4 5; do login 203.0.113.250 victim wrong >/dev/null; done
 check "an allowlisted address is never locked out" in "$(login 203.0.113.250 victim $GOOD)"
 check "behind Cloudflare without the setting, addresses are never locked out" 0 "$(wp eval '
 $_SERVER["REMOTE_ADDR"] = "173.245.48.5"; unset( $_SERVER["HTTP_X_FORWARDED_FOR"] );
 for ( $i = 0; $i < 5; $i++ ) { do_action( "wp_login_failed", "safety-test", new WP_Error( "incorrect_password", "x" ) ); }
-global $wpdb; echo (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE kind = %s", $wpdb->prefix . "wphouse_login", "ip" ) );')"
+global $wpdb; echo (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE kind = %s", $wpdb->prefix . "shouse_login", "ip" ) );')"
 
 echo
 [ "$fails" -eq 0 ] && echo "All login limit checks passed." || echo "$fails login limit check(s) failed."

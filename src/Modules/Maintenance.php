@@ -9,15 +9,15 @@
  * site. Page caches are purged when the mode is switched, otherwise they keep serving the old
  * pages (or the 503) after the switch.
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Modules;
+namespace SafeHouse\Modules;
 
 use WP_Admin_Bar;
-use WPHouse\Core\AbstractModule;
-use WPHouse\Core\Log;
-use WPHouse\Plugin;
+use SafeHouse\Core\AbstractModule;
+use SafeHouse\Core\Log;
+use SafeHouse\Plugin;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -37,41 +37,41 @@ final class Maintenance extends AbstractModule {
 	}
 
 	public function label(): string {
-		return __( 'Maintenance mode', 'wphouse' );
+		return __( 'Maintenance mode', 'shouse' );
 	}
 
 	public function description(): string {
-		return __( 'Visitors see a short "back soon" page with HTTP 503, which search engines understand as temporary. Logged-in staff see the normal site. Payment callbacks, the REST API and cron keep working.', 'wphouse' );
+		return __( 'Visitors see a short "back soon" page with HTTP 503, which search engines understand as temporary. Logged-in staff see the normal site. Payment callbacks, the REST API and cron keep working.', 'shouse' );
 	}
 
 	public function fields(): array {
 		return [
 			'headline'    => [
 				'type'       => 'text',
-				'label'      => __( 'Headline', 'wphouse' ),
-				'help'       => __( 'Empty: "We will be back soon".', 'wphouse' ),
+				'label'      => __( 'Headline', 'shouse' ),
+				'help'       => __( 'Empty: "We will be back soon".', 'shouse' ),
 				'max_length' => 200,
 			],
 			'message'     => [
 				'type'       => 'html',
-				'label'      => __( 'Message', 'wphouse' ),
-				'help'       => __( 'Basic HTML allowed (links, bold, line breaks).', 'wphouse' ),
+				'label'      => __( 'Message', 'shouse' ),
+				'help'       => __( 'Basic HTML allowed (links, bold, line breaks).', 'shouse' ),
 				'max_length' => 2000,
 			],
 			'retry_after' => [
 				'type'  => 'number',
-				'label' => __( 'Expected duration (minutes)', 'wphouse' ),
-				'help'  => __( 'Sent to search engines as Retry-After.', 'wphouse' ),
+				'label' => __( 'Expected duration (minutes)', 'shouse' ),
+				'help'  => __( 'Sent to search engines as Retry-After.', 'shouse' ),
 				'min'   => 5,
 				'max'   => 10080,
 			],
 			'bypass'      => [
 				'type'    => 'select',
-				'label'   => __( 'Who sees the normal site', 'wphouse' ),
+				'label'   => __( 'Who sees the normal site', 'shouse' ),
 				'options' => [
-					'manage_options' => __( 'Administrators', 'wphouse' ),
-					'edit_posts'     => __( 'Anyone who can edit content', 'wphouse' ),
-					'read'           => __( 'Every logged-in user', 'wphouse' ),
+					'manage_options' => __( 'Administrators', 'shouse' ),
+					'edit_posts'     => __( 'Anyone who can edit content', 'shouse' ),
+					'read'           => __( 'Every logged-in user', 'shouse' ),
 				],
 			],
 		];
@@ -108,7 +108,7 @@ final class Maintenance extends AbstractModule {
 
 	private function render_page(): void {
 		$headline = (string) $this->opt( 'headline' );
-		$headline = '' !== $headline ? $headline : __( 'We will be back soon', 'wphouse' );
+		$headline = '' !== $headline ? $headline : __( 'We will be back soon', 'shouse' );
 		$message  = (string) $this->opt( 'message' );
 		$site     = get_bloginfo( 'name' );
 		?>
@@ -145,10 +145,10 @@ final class Maintenance extends AbstractModule {
 		}
 		$bar->add_node(
 			[
-				'id'    => 'wphouse-maintenance',
-				'title' => esc_html__( 'Maintenance mode is on', 'wphouse' ),
+				'id'    => 'shouse-maintenance',
+				'title' => esc_html__( 'Maintenance mode is on', 'shouse' ),
 				'href'  => Plugin::settings_url( 'maintenance' ),
-				'meta'  => [ 'class' => 'wphouse-maintenance-on' ],
+				'meta'  => [ 'class' => 'shouse-maintenance-on' ],
 			]
 		);
 	}
@@ -161,7 +161,7 @@ final class Maintenance extends AbstractModule {
 		self::purge_page_caches();
 	}
 
-	/** Purge the page caches we know about. `litespeed_purge_all` also reaches the WPHouse LiteSpeed and Cloudflare modules (Core\ContentChanges); without the Cloudflare module, Cloudflare HTML caching needs a manual purge. */
+	/** Purge the page caches we know about. `litespeed_purge_all` also reaches the SafeHouse LiteSpeed and Cloudflare modules (Core\ContentChanges); without the Cloudflare module, Cloudflare HTML caching needs a manual purge. */
 	private static function purge_page_caches(): void {
 		do_action( 'litespeed_purge_all' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- LiteSpeed Cache API.
 		if ( function_exists( 'rocket_clean_domain' ) ) {

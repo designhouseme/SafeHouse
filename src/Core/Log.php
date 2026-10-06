@@ -3,10 +3,10 @@
  * Security event log in its own table. Only state changes and admin actions are logged,
  * never anonymous traffic, so a scan cannot turn into a flood of database writes.
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Core;
+namespace SafeHouse\Core;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -19,7 +19,7 @@ final class Log {
 
 	public static function table(): string {
 		global $wpdb;
-		return $wpdb->prefix . 'wphouse_log';
+		return $wpdb->prefix . 'shouse_log';
 	}
 
 	/** Create or upgrade the table. Runs on activation and whenever the stored version differs. */
@@ -43,11 +43,11 @@ final class Log {
 				KEY event (event)
 			) {$collate};"
 		);
-		update_option( 'wphouse_db_version', self::DB_VERSION, true );
+		update_option( 'shouse_db_version', self::DB_VERSION, true );
 	}
 
 	public static function maybe_install(): void {
-		if ( get_option( 'wphouse_db_version' ) !== self::DB_VERSION ) {
+		if ( get_option( 'shouse_db_version' ) !== self::DB_VERSION ) {
 			self::install();
 		}
 	}

@@ -3,7 +3,7 @@
  * Cloudflare API stand-in for dev/ols/cloudflare-test.sh: records every call in /data/requests.jsonl
  * and answers success, or an API error when /data/mode says "error".
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
 // phpcs:ignoreFile -- test server, not part of the plugin.

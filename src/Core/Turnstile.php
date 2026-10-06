@@ -2,25 +2,25 @@
 /**
  * Cloudflare Turnstile: keys from wp-config.php, the widget placeholder and token verification.
  *
- *   define( 'WPHOUSE_TURNSTILE_SITE_KEY', '0x4AAAA…' );
- *   define( 'WPHOUSE_TURNSTILE_SECRET_KEY', '0x4AAAA…' );
+ *   define( 'SHOUSE_TURNSTILE_SITE_KEY', '0x4AAAA…' );
+ *   define( 'SHOUSE_TURNSTILE_SECRET_KEY', '0x4AAAA…' );
  *
  * Cloudflare's test keys (1x0000…, 2x0000…, 3x0000…) always give the same answer, so they are
  * refused on production sites: a staging wp-config copied to production must not switch the
  * check off quietly.
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Core;
+namespace SafeHouse\Core;
 
 defined( 'ABSPATH' ) || exit;
 
 final class Turnstile {
 
 	public const FIELD       = 'cf-turnstile-response';
-	public const HEADER      = 'X-WPHouse-Turnstile';
-	public const SCRIPT_URL  = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=wphouseTurnstileReady';
+	public const HEADER      = 'X-SHouse-Turnstile';
+	public const SCRIPT_URL  = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=shouseTurnstileReady';
 	public const PASSED      = 'passed';
 	public const FAILED      = 'failed';
 	public const UNAVAILABLE = 'unavailable';
@@ -31,11 +31,11 @@ final class Turnstile {
 	private const CONFIG_ERRORS = [ 'missing-input-secret', 'invalid-input-secret', 'internal-error' ];
 
 	public static function site_key(): string {
-		return defined( 'WPHOUSE_TURNSTILE_SITE_KEY' ) ? trim( (string) WPHOUSE_TURNSTILE_SITE_KEY ) : '';
+		return defined( 'SHOUSE_TURNSTILE_SITE_KEY' ) ? trim( (string) SHOUSE_TURNSTILE_SITE_KEY ) : '';
 	}
 
 	private static function secret_key(): string {
-		return defined( 'WPHOUSE_TURNSTILE_SECRET_KEY' ) ? trim( (string) WPHOUSE_TURNSTILE_SECRET_KEY ) : '';
+		return defined( 'SHOUSE_TURNSTILE_SECRET_KEY' ) ? trim( (string) SHOUSE_TURNSTILE_SECRET_KEY ) : '';
 	}
 
 	private static function is_test_key( string $key ): bool {
@@ -63,7 +63,7 @@ final class Turnstile {
 
 	/** Empty placeholder that assets/bots.js turns into a widget. Action names one form, so a token cannot be replayed on another. */
 	public static function widget( string $action ): string {
-		return '<div class="wphouse-turnstile" data-sitekey="' . esc_attr( self::site_key() ) . '" data-action="' . esc_attr( $action ) . '"></div>';
+		return '<div class="shouse-turnstile" data-sitekey="' . esc_attr( self::site_key() ) . '" data-action="' . esc_attr( $action ) . '"></div>';
 	}
 
 	/**
@@ -88,7 +88,7 @@ final class Turnstile {
 			'secret'   => self::secret_key(),
 			'response' => $token,
 		];
-		// remoteip is optional. Behind Cloudflare or another proxy without WPHOUSE_TRUSTED_PROXIES,
+		// remoteip is optional. Behind Cloudflare or another proxy without SHOUSE_TRUSTED_PROXIES,
 		// client_ip() is the proxy, and a wrong address is worse than none.
 		if ( Net::knows_visitor_ip() ) {
 			$body['remoteip'] = Net::client_ip();

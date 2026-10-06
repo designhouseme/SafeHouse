@@ -1,24 +1,24 @@
 <?php
 /**
- * One autoloaded option, `wphouse_settings`, with a section per module.
+ * One autoloaded option, `shouse_settings`, with a section per module.
  *
  * Shape: [ 'modules' => [ id => bool ], 'general' => [...], '<module id>' => [...] ].
  * Agency deploys can pin state in wp-config:
- *   define( 'WPHOUSE_MODULES', [ 'lockdown' => true, 'scripts' => false ] );  // forces modules on/off
- *   define( 'WPHOUSE_LOCK_SETTINGS', true );                                  // settings page becomes read-only
+ *   define( 'SHOUSE_MODULES', [ 'lockdown' => true, 'scripts' => false ] );  // forces modules on/off
+ *   define( 'SHOUSE_LOCK_SETTINGS', true );                                  // settings page becomes read-only
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Core;
+namespace SafeHouse\Core;
 
-use WPHouse\Plugin;
+use SafeHouse\Plugin;
 
 defined( 'ABSPATH' ) || exit;
 
 final class Settings {
 
-	public const OPTION = 'wphouse_settings';
+	public const OPTION = 'shouse_settings';
 
 	/** @var array<string, mixed>|null */
 	private ?array $cache = null;
@@ -48,12 +48,12 @@ final class Settings {
 		return is_array( $all[ $section ] ?? null ) ? $all[ $section ] : [];
 	}
 
-	/** State forced by WPHOUSE_MODULES, or null when the saved setting decides. */
+	/** State forced by SHOUSE_MODULES, or null when the saved setting decides. */
 	public function forced( string $module_id ): ?bool {
-		if ( ! defined( 'WPHOUSE_MODULES' ) || ! is_array( WPHOUSE_MODULES ) || ! array_key_exists( $module_id, WPHOUSE_MODULES ) ) {
+		if ( ! defined( 'SHOUSE_MODULES' ) || ! is_array( SHOUSE_MODULES ) || ! array_key_exists( $module_id, SHOUSE_MODULES ) ) {
 			return null;
 		}
-		return (bool) WPHOUSE_MODULES[ $module_id ];
+		return (bool) SHOUSE_MODULES[ $module_id ];
 	}
 
 	public function module_enabled( AbstractModule $module ): bool {
@@ -66,7 +66,7 @@ final class Settings {
 	}
 
 	public static function locked(): bool {
-		return defined( 'WPHOUSE_LOCK_SETTINGS' ) && WPHOUSE_LOCK_SETTINGS;
+		return defined( 'SHOUSE_LOCK_SETTINGS' ) && SHOUSE_LOCK_SETTINGS;
 	}
 
 	/** Alert recipients from the General section, or the site admin address. */
@@ -87,7 +87,7 @@ final class Settings {
 
 	public function register(): void {
 		register_setting(
-			'wphouse',
+			'shouse',
 			self::OPTION,
 			[
 				'type'              => 'array',

@@ -1,11 +1,11 @@
 <?php
 /**
- * Contract every WPHouse module implements.
+ * Contract every SafeHouse module implements.
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Core;
+namespace SafeHouse\Core;
 
 defined( 'ABSPATH' ) || exit;
 

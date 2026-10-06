@@ -7,14 +7,14 @@
  * design, so only users with unfiltered_html can change it, and the module is unavailable
  * when DISALLOW_UNFILTERED_HTML is set. Every change is logged with the user.
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Modules;
+namespace SafeHouse\Modules;
 
-use WPHouse\Core\AbstractModule;
-use WPHouse\Core\Compat;
-use WPHouse\Core\Log;
+use SafeHouse\Core\AbstractModule;
+use SafeHouse\Core\Compat;
+use SafeHouse\Core\Log;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -36,37 +36,37 @@ final class Scripts extends AbstractModule {
 	}
 
 	public function label(): string {
-		return __( 'Header and footer scripts', 'wphouse' );
+		return __( 'Header and footer scripts', 'shouse' );
 	}
 
 	public function description(): string {
-		return __( 'Adds tracking codes, verification tags and widgets to every front-end page. HTML and JavaScript only, never PHP. Only administrators who may post unfiltered HTML can edit them.', 'wphouse' );
+		return __( 'Adds tracking codes, verification tags and widgets to every front-end page. HTML and JavaScript only, never PHP. Only administrators who may post unfiltered HTML can edit them.', 'shouse' );
 	}
 
 	public function fields(): array {
 		return [
 			'head'        => [
 				'type'       => 'code',
-				'label'      => __( 'In <head>', 'wphouse' ),
-				'help'       => __( 'Printed early in <head>. Google Tag Manager, analytics, verification meta tags.', 'wphouse' ),
+				'label'      => __( 'In <head>', 'shouse' ),
+				'help'       => __( 'Printed early in <head>. Google Tag Manager, analytics, verification meta tags.', 'shouse' ),
 				'max_length' => self::MAX_LENGTH,
 			],
 			'body_open'   => [
 				'type'       => 'code',
-				'label'      => __( 'After <body>', 'wphouse' ),
-				'help'       => __( 'Needs a theme that calls wp_body_open() (all current themes do). GTM noscript iframe.', 'wphouse' ),
+				'label'      => __( 'After <body>', 'shouse' ),
+				'help'       => __( 'Needs a theme that calls wp_body_open() (all current themes do). GTM noscript iframe.', 'shouse' ),
 				'max_length' => self::MAX_LENGTH,
 			],
 			'footer'      => [
 				'type'       => 'code',
-				'label'      => __( 'Before </body>', 'wphouse' ),
-				'help'       => __( 'Chat widgets, pixels and other scripts that can load last.', 'wphouse' ),
+				'label'      => __( 'Before </body>', 'shouse' ),
+				'help'       => __( 'Chat widgets, pixels and other scripts that can load last.', 'shouse' ),
 				'max_length' => self::MAX_LENGTH,
 			],
 			'skip_admins' => [
 				'type'  => 'toggle',
-				'label' => __( 'Do not output for logged-in administrators', 'wphouse' ),
-				'help'  => __( 'Keeps your own visits out of analytics.', 'wphouse' ),
+				'label' => __( 'Do not output for logged-in administrators', 'shouse' ),
+				'help'  => __( 'Keeps your own visits out of analytics.', 'shouse' ),
 			],
 		];
 	}
@@ -76,7 +76,7 @@ final class Scripts extends AbstractModule {
 	}
 
 	public function unavailable_reason(): string {
-		return __( 'DISALLOW_UNFILTERED_HTML is set in wp-config.php, so nobody may add raw scripts.', 'wphouse' );
+		return __( 'DISALLOW_UNFILTERED_HTML is set in wp-config.php, so nobody may add raw scripts.', 'shouse' );
 	}
 
 	public function boot(): void {

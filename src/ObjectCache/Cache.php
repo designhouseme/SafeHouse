@@ -13,10 +13,10 @@
  * Loaded by src/ObjectCache/object-cache.php before WordPress has loaded plugins: no WordPress
  * functions beyond what wp-settings.php has loaded by then.
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\ObjectCache;
+namespace SafeHouse\ObjectCache;
 
 use Redis;
 use Throwable;
@@ -62,9 +62,9 @@ final class Cache {
 	 * settings of the running cache.
 	 */
 	public function __construct( ?Redis $redis = null, ?string $prefix = null, ?string $secret = null ) {
-		$this->redis  = $redis ?? ( $GLOBALS['wphouse_object_cache_redis'] ?? null );
-		$this->prefix = $prefix ?? ( function_exists( 'wphouse_object_cache_prefix' ) ? wphouse_object_cache_prefix() : 'wph:' );
-		$this->secret = $secret ?? ( function_exists( 'wphouse_object_cache_secret' ) ? wphouse_object_cache_secret() : '' );
+		$this->redis  = $redis ?? ( $GLOBALS['shouse_object_cache_redis'] ?? null );
+		$this->prefix = $prefix ?? ( function_exists( 'shouse_object_cache_prefix' ) ? shouse_object_cache_prefix() : 'wph:' );
+		$this->secret = $secret ?? ( function_exists( 'shouse_object_cache_secret' ) ? shouse_object_cache_secret() : '' );
 		if ( function_exists( 'is_multisite' ) && is_multisite() && function_exists( 'get_current_blog_id' ) ) {
 			$this->blog_prefix = (string) get_current_blog_id();
 		}
@@ -374,7 +374,7 @@ final class Cache {
 	/** Printed by debugging tools that call stats() on the object cache. */
 	public function stats(): void {
 		printf(
-			'<p><strong>WPHouse object cache</strong> %s<br>Hits: %d<br>Misses: %d</p>',
+			'<p><strong>SafeHouse object cache</strong> %s<br>Hits: %d<br>Misses: %d</p>',
 			null !== $this->redis ? 'Redis connected' : 'Redis not connected',
 			(int) $this->cache_hits,
 			(int) $this->cache_misses

@@ -10,14 +10,14 @@
  * anything else. A compromised update host can therefore not ship code: it has no private key.
  *
  * Constants:
- *   WPHOUSE_DISABLE_UPDATES  true: no update checks at all (e.g. sites deployed from git).
- *   WPHOUSE_AUTO_UPDATE      false: do not force background auto-updates for WPHouse.
- *   WPHOUSE_UPDATE_URL, WPHOUSE_UPDATE_PUBLIC_KEYS: overrides, honoured only on local/development sites.
+ *   SHOUSE_DISABLE_UPDATES  true: no update checks at all (e.g. sites deployed from git).
+ *   SHOUSE_AUTO_UPDATE      false: do not force background auto-updates for SafeHouse.
+ *   SHOUSE_UPDATE_URL, SHOUSE_UPDATE_PUBLIC_KEYS: overrides, honoured only on local/development sites.
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Core;
+namespace SafeHouse\Core;
 
 use WP_Error;
 
@@ -28,21 +28,21 @@ final class Updater {
 	/** Must match the host in the plugin's Update URI header. */
 	public const HOST = 'updates.designhouse.me';
 
-	private const MANIFEST_URL = 'https://updates.designhouse.me/wphouse/manifest.json';
+	private const MANIFEST_URL = 'https://updates.designhouse.me/shouse/manifest.json';
 
 	/** Base64 Ed25519 public keys. Keep the previous key here for one release when rotating. */
 	private const PUBLIC_KEYS = [
 		'a96AtREE2wwy9c3iXhw8ewmRm2weOS5UkOHuIsU11eU=', // 2026-10-05
 	];
 
-	private const CACHE_KEY      = 'wphouse_update_manifest';
+	private const CACHE_KEY      = 'shouse_update_manifest';
 	private const CACHE_TTL      = 3 * HOUR_IN_SECONDS;
 	private const ERROR_TTL      = HOUR_IN_SECONDS;
 	private const MAX_MANIFEST   = 64 * 1024;
 	private const VERSION_FORMAT = '/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/';
 
 	public static function register(): void {
-		if ( Compat::constant_on( 'WPHOUSE_DISABLE_UPDATES' ) || self::is_dev_checkout() ) {
+		if ( Compat::constant_on( 'SHOUSE_DISABLE_UPDATES' ) || self::is_dev_checkout() ) {
 			return;
 		}
 		add_filter( 'update_plugins_' . self::HOST, [ self::class, 'offer' ], 10, 3 );
@@ -56,11 +56,11 @@ final class Updater {
 
 	/** A git working copy must never be overwritten by an update. Release zips contain no .git. */
 	public static function is_dev_checkout(): bool {
-		return file_exists( dirname( WPHOUSE_FILE ) . '/.git' );
+		return file_exists( dirname( SHOUSE_FILE ) . '/.git' );
 	}
 
 	public static function basename(): string {
-		return plugin_basename( WPHOUSE_FILE );
+		return plugin_basename( SHOUSE_FILE );
 	}
 
 	/**
@@ -78,14 +78,14 @@ final class Updater {
 			return $update;
 		}
 		return [
-			'slug'         => 'wphouse',
+			'slug'         => 'shouse',
 			'version'      => $manifest['version'],
 			'url'          => $manifest['homepage'],
 			'package'      => $manifest['download_url'],
 			'requires'     => $manifest['requires'],
 			'requires_php' => $manifest['requires_php'],
 			'tested'       => $manifest['tested'],
-			'icons'        => [ 'svg' => plugins_url( 'assets/icon.svg', WPHOUSE_FILE ) ],
+			'icons'        => [ 'svg' => plugins_url( 'assets/icon.svg', SHOUSE_FILE ) ],
 		];
 	}
 
@@ -98,7 +98,7 @@ final class Updater {
 	 * @return mixed
 	 */
 	public static function details( mixed $result, string $action, object $args ): mixed {
-		if ( 'plugin_information' !== $action || 'wphouse' !== ( $args->slug ?? '' ) ) {
+		if ( 'plugin_information' !== $action || 'shouse' !== ( $args->slug ?? '' ) ) {
 			return $result;
 		}
 		$manifest = self::manifest();
@@ -106,8 +106,8 @@ final class Updater {
 			return $result;
 		}
 		return (object) [
-			'name'          => 'WPHouse',
-			'slug'          => 'wphouse',
+			'name'          => 'SafeHouse',
+			'slug'          => 'shouse',
 			'version'       => $manifest['version'],
 			'author'        => '<a href="https://designhouse.me/">Design House</a>',
 			'homepage'      => $manifest['homepage'],
@@ -152,8 +152,8 @@ final class Updater {
 			delete_site_transient( self::CACHE_KEY );
 			$manifest = self::manifest();
 			if ( null === $manifest || $package !== $manifest['download_url'] ) {
-				Log::add( 'update_rejected', 'WPHouse update refused: package URL is not in the signed manifest', [ 'package' => $package ], 'critical' );
-				return new WP_Error( 'wphouse_unsigned_package', __( 'This WPHouse package is not listed in the signed release manifest. Update cancelled.', 'wphouse' ) );
+				Log::add( 'update_rejected', 'SafeHouse update refused: package URL is not in the signed manifest', [ 'package' => $package ], 'critical' );
+				return new WP_Error( 'shouse_unsigned_package', __( 'This SafeHouse package is not listed in the signed release manifest. Update cancelled.', 'shouse' ) );
 			}
 		}
 
@@ -165,15 +165,15 @@ final class Updater {
 		$hash = (string) hash_file( 'sha256', $file );
 		if ( ! hash_equals( $manifest['sha256'], $hash ) ) {
 			wp_delete_file( $file );
-			Log::add( 'update_rejected', 'WPHouse update refused: package checksum does not match the signed manifest', [ 'version' => $manifest['version'] ], 'critical' );
-			return new WP_Error( 'wphouse_bad_checksum', __( 'The downloaded WPHouse package does not match the signed checksum. Update cancelled.', 'wphouse' ) );
+			Log::add( 'update_rejected', 'SafeHouse update refused: package checksum does not match the signed manifest', [ 'version' => $manifest['version'] ], 'critical' );
+			return new WP_Error( 'shouse_bad_checksum', __( 'The downloaded SafeHouse package does not match the signed checksum. Update cancelled.', 'shouse' ) );
 		}
-		Log::add( 'update_verified', 'WPHouse ' . $manifest['version'] . ' package verified' );
+		Log::add( 'update_verified', 'SafeHouse ' . $manifest['version'] . ' package verified' );
 		return $file;
 	}
 
 	/**
-	 * WPHouse updates itself in the background unless WPHOUSE_AUTO_UPDATE is false.
+	 * SafeHouse updates itself in the background unless SHOUSE_AUTO_UPDATE is false.
 	 *
 	 * @param mixed  $update Current decision.
 	 * @param object $item   Update offer.
@@ -183,7 +183,7 @@ final class Updater {
 		if ( self::basename() !== ( $item->plugin ?? '' ) ) {
 			return $update;
 		}
-		if ( defined( 'WPHOUSE_AUTO_UPDATE' ) && ! WPHOUSE_AUTO_UPDATE ) {
+		if ( defined( 'SHOUSE_AUTO_UPDATE' ) && ! SHOUSE_AUTO_UPDATE ) {
 			return $update;
 		}
 		return true;
@@ -238,13 +238,13 @@ final class Updater {
 			return $sig;
 		}
 		if ( ! Signature::verify( $body, $sig, self::public_keys() ) ) {
-			Log::add( 'update_rejected', 'WPHouse update manifest has an invalid signature', [ 'url' => $url ], 'critical' );
-			return new WP_Error( 'wphouse_bad_signature', 'Manifest signature is invalid.' );
+			Log::add( 'update_rejected', 'SafeHouse update manifest has an invalid signature', [ 'url' => $url ], 'critical' );
+			return new WP_Error( 'shouse_bad_signature', 'Manifest signature is invalid.' );
 		}
 
 		$data = json_decode( $body, true );
-		if ( ! is_array( $data ) || 'wphouse' !== ( $data['slug'] ?? '' ) ) {
-			return new WP_Error( 'wphouse_bad_manifest', 'Manifest is not for WPHouse.' );
+		if ( ! is_array( $data ) || 'shouse' !== ( $data['slug'] ?? '' ) ) {
+			return new WP_Error( 'shouse_bad_manifest', 'Manifest is not for SafeHouse.' );
 		}
 		$manifest = [
 			'version'      => (string) ( $data['version'] ?? '' ),
@@ -261,7 +261,7 @@ final class Updater {
 		if ( ! preg_match( self::VERSION_FORMAT, $manifest['version'] )
 			|| ! preg_match( '/^[a-f0-9]{64}$/', $manifest['sha256'] )
 			|| ! ( 'https' === $scheme || ( 'http' === $scheme && self::is_local() ) ) ) {
-			return new WP_Error( 'wphouse_bad_manifest', 'Manifest fields are invalid.' );
+			return new WP_Error( 'shouse_bad_manifest', 'Manifest fields are invalid.' );
 		}
 		return $manifest;
 	}
@@ -276,22 +276,22 @@ final class Updater {
 			return $response;
 		}
 		if ( 200 !== wp_remote_retrieve_response_code( $response ) ) {
-			return new WP_Error( 'wphouse_update_http', sprintf( 'HTTP %d for %s', wp_remote_retrieve_response_code( $response ), $url ) );
+			return new WP_Error( 'shouse_update_http', sprintf( 'HTTP %d for %s', wp_remote_retrieve_response_code( $response ), $url ) );
 		}
 		return wp_remote_retrieve_body( $response );
 	}
 
 	/** @return string[] */
 	private static function public_keys(): array {
-		if ( self::is_local() && defined( 'WPHOUSE_UPDATE_PUBLIC_KEYS' ) && is_array( WPHOUSE_UPDATE_PUBLIC_KEYS ) ) {
-			return array_map( 'strval', WPHOUSE_UPDATE_PUBLIC_KEYS );
+		if ( self::is_local() && defined( 'SHOUSE_UPDATE_PUBLIC_KEYS' ) && is_array( SHOUSE_UPDATE_PUBLIC_KEYS ) ) {
+			return array_map( 'strval', SHOUSE_UPDATE_PUBLIC_KEYS );
 		}
 		return self::PUBLIC_KEYS;
 	}
 
 	private static function manifest_url(): string {
-		if ( self::is_local() && defined( 'WPHOUSE_UPDATE_URL' ) ) {
-			return (string) WPHOUSE_UPDATE_URL;
+		if ( self::is_local() && defined( 'SHOUSE_UPDATE_URL' ) ) {
+			return (string) SHOUSE_UPDATE_URL;
 		}
 		return self::MANIFEST_URL;
 	}

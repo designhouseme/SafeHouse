@@ -60,7 +60,7 @@ async function fresh() {
 }
 
 {
-	// Block checkout: widget placed by bots.js, token sent in the X-WPHouse-Turnstile header.
+	// Block checkout: widget placed by bots.js, token sent in the X-SHouse-Turnstile header.
 	const { ctx, page } = await fresh();
 	await page.goto(`${U}/?add-to-cart=${process.env.PRODUCT_ID}`);
 	await page.goto(`${U}/checkout/`);
@@ -72,11 +72,11 @@ async function fresh() {
 			await input.first().fill(value);
 		}
 	}
-	check('block checkout: widget placed', await page.waitForSelector('.wphouse-turnstile', { state: 'attached', timeout: 20000 }).then(() => true).catch(() => false));
+	check('block checkout: widget placed', await page.waitForSelector('.shouse-turnstile', { state: 'attached', timeout: 20000 }).then(() => true).catch(() => false));
 	let header = null;
 	page.on('request', (r) => {
 		if (r.method() === 'POST' && /wc\/store(\/v\d+)?\/checkout/.test(r.url())) {
-			header = r.headers()['x-wphouse-turnstile'] ?? '';
+			header = r.headers()['x-shouse-turnstile'] ?? '';
 		}
 	});
 	await Promise.all([page.waitForURL(/order-received/, { timeout: 45000 }).catch(() => {}), page.click('.wc-block-components-checkout-place-order-button')]);
@@ -97,7 +97,7 @@ async function fresh() {
 	for (const [field, value] of [['first_name', 'Jan'], ['last_name', 'Test'], ['address_1', '1 Main St'], ['city', 'San Francisco'], ['postcode', '94103'], ['phone', '5005550006'], ['email', `k${n}@example.test`]]) {
 		await page.fill(`#billing_${field}`, value);
 	}
-	check('classic checkout: widget in the payment box', await page.waitForSelector('#payment .wphouse-turnstile', { state: 'attached', timeout: 20000 }).then(() => true).catch(() => false));
+	check('classic checkout: widget in the payment box', await page.waitForSelector('#payment .shouse-turnstile', { state: 'attached', timeout: 20000 }).then(() => true).catch(() => false));
 	await Promise.all([page.waitForURL(/order-received/, { timeout: 45000 }).catch(() => {}), page.click('#place_order')]);
 	check('classic checkout: order placed', page.url().includes('order-received'), page.url());
 	check('classic checkout: no script errors', page.errors.length === 0, page.errors.join(' | '));

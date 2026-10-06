@@ -1,16 +1,16 @@
 <?php
 /**
- * One place that knows when published content changed, for every cache WPHouse clears (LiteSpeed,
+ * One place that knows when published content changed, for every cache SafeHouse clears (LiteSpeed,
  * Cloudflare; maintenance mode triggers it through `litespeed_purge_all`). It fires
- * `wphouse_content_changed` with the addresses that changed, or with an empty list when the change can
- * show on any page: menus, widgets, theme, plugins, WPHouse settings, unpublishing.
+ * `shouse_content_changed` with the addresses that changed, or with an empty list when the change can
+ * show on any page: menus, widgets, theme, plugins, SafeHouse settings, unpublishing.
  *
  * Comments count only once approved, so spam does not empty caches.
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
-namespace WPHouse\Core;
+namespace SafeHouse\Core;
 
 use WP_Post;
 
@@ -18,9 +18,9 @@ defined( 'ABSPATH' ) || exit;
 
 final class ContentChanges {
 
-	public const ACTION = 'wphouse_content_changed';
+	public const ACTION = 'shouse_content_changed';
 
-	private const SITE_WIDE = [ 'switch_theme', 'customize_save_after', 'wp_update_nav_menu', 'update_option_sidebars_widgets', 'update_option_wphouse_settings', 'upgrader_process_complete', 'activated_plugin', 'deactivated_plugin', '_core_updated_successfully', 'litespeed_purge_all' ];
+	private const SITE_WIDE = [ 'switch_theme', 'customize_save_after', 'wp_update_nav_menu', 'update_option_sidebars_widgets', 'update_option_shouse_settings', 'upgrader_process_complete', 'activated_plugin', 'deactivated_plugin', '_core_updated_successfully', 'litespeed_purge_all' ];
 
 	private const STOCK = [ 'woocommerce_product_set_stock', 'woocommerce_variation_set_stock', 'woocommerce_product_set_stock_status', 'woocommerce_variation_set_stock_status' ];
 
@@ -40,14 +40,14 @@ final class ContentChanges {
 
 	/** Something that can show on every page changed. */
 	public static function everything(): void {
-		do_action( 'wphouse_content_changed', [] ); // Literal name: ACTION is for listeners.
+		do_action( 'shouse_content_changed', [] ); // Literal name: ACTION is for listeners.
 	}
 
 	/** A post's own page and the listings it appears on changed. */
 	public static function post( int|WP_Post $post ): void {
 		$urls = self::post_urls( $post );
 		if ( $urls ) {
-			do_action( 'wphouse_content_changed', $urls );
+			do_action( 'shouse_content_changed', $urls );
 		}
 	}
 

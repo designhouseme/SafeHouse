@@ -4,12 +4,12 @@
  *
  *   keygen   <keyfile>                       new Ed25519 key pair; prints the public key
  *   pubkey   <keyfile>                       prints the public key
- *   package  <srcdir> <zipfile>              zips srcdir under "wphouse/", sorted, fixed timestamps
+ *   package  <srcdir> <zipfile>              zips srcdir under "shouse/", sorted, fixed timestamps
  *   manifest <zipfile> <out.json> <version> <download_url> <changelog.md>
  *   sign     <keyfile> <file>                writes <file>.sig (base64 detached signature)
  *   verify   <public_key_b64> <file>         exits 1 unless <file>.sig is valid
  *
- * @package WPHouse
+ * @package SafeHouse
  */
 
 // phpcs:ignoreFile -- CLI build tool, not loaded by WordPress.
@@ -38,7 +38,7 @@ function plugin_header( string $zipfile, string $field ): string {
 	if ( true !== $zip->open( $zipfile ) ) {
 		fail( "cannot open $zipfile" );
 	}
-	$main = (string) $zip->getFromName( 'wphouse/wphouse.php' );
+	$main = (string) $zip->getFromName( 'shouse/shouse.php' );
 	$zip->close();
 	return preg_match( '/^\s*\*\s*' . preg_quote( $field, '/' ) . ':\s*(.+)$/mi', $main, $m ) ? trim( $m[1] ) : '';
 }
@@ -76,7 +76,7 @@ switch ( $cmd ) {
 			fail( "cannot create $zipfile" );
 		}
 		foreach ( $files as $relative ) {
-			$name = 'wphouse/' . $relative;
+			$name = 'shouse/' . $relative;
 			$zip->addFile( "$src/$relative", $name );
 			$zip->setMtimeName( $name, 315532800 ); // 1980-01-01, so the zip only changes when content does.
 		}
@@ -94,8 +94,8 @@ switch ( $cmd ) {
 			$changelog = trim( $m[1] );
 		}
 		$manifest = [
-			'slug'         => 'wphouse',
-			'name'         => 'WPHouse',
+			'slug'         => 'shouse',
+			'name'         => 'SafeHouse',
 			'version'      => $version,
 			'requires'     => plugin_header( $zipfile, 'Requires at least' ),
 			'requires_php' => plugin_header( $zipfile, 'Requires PHP' ),
