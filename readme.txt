@@ -1,6 +1,6 @@
 === WPHouse ===
 Contributors: designhouse
-Tags: security, hardening, vulnerability, smtp, woocommerce
+Tags: security, hardening, captcha, vulnerability, woocommerce
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.1
@@ -8,23 +8,26 @@ Stable tag: 0.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-One plugin instead of a dozen small ones: hardening, install lockdown, change and vulnerability alerts, everyday tweaks. Works alongside Wordfence.
+One plugin instead of a dozen small ones: hardening, bot protection, install lockdown, change and vulnerability alerts, everyday tweaks. Works on its own or next to Wordfence.
 
 == Description ==
 
 WPHouse replaces the single-purpose plugins most sites collect over time with one small plugin. Every feature is a module you switch on or off on the WPHouse page in the admin menu, and every module is safe in WP-CLI, cron, REST and AJAX requests.
 
+WPHouse does not need Wordfence. When Wordfence is active, the WPHouse features it already provides stand down on their own, so the two never do the same job twice.
+
 = Modules =
 
 On by default:
 
-* **Hardening:** no theme and plugin file editor; no username discovery for visitors (`?author=` scans, the REST users endpoint, the users sitemap, author data in oEmbed); one generic login error on wp-login.php and the WooCommerce login form; WordPress version hidden; XML-RPC off (left on when Jetpack or WooPayments needs it); basic security headers. HSTS is available but off.
-* **Change alerts:** an e-mail and a log entry when an administrator is added, a plugin or theme appears or is activated, a mu-plugin or drop-in shows up, or wp-config.php changes.
+* **Hardening:** no theme and plugin file editor; no username discovery for visitors (`?author=` scans, the REST users endpoint, the users sitemap, author data in oEmbed); one generic login error on wp-login.php and the WooCommerce login form; WordPress version hidden; XML-RPC off (left on when Jetpack or WooPayments needs it); basic security headers; new accounts never get an admin-level role, even when the default role was changed straight in the database. HSTS is available but off. Adds a registration check to Tools → Site Health.
+* **Change alerts:** an e-mail and a log entry when an administrator is added, a plugin or theme appears or is activated, a mu-plugin or drop-in shows up, wp-config.php changes, or someone opens registration or changes the default role for new accounts, the admin e-mail or the site address. A changed admin e-mail is also reported to the previous address.
 * **Plugin health:** a weekly check for plugins closed on WordPress.org, not updated for two years, not from WordPress.org, one-time tools left active, inactive leftovers, and plugins a WPHouse module replaces. Also shown in Tools → Site Health.
 * **Vulnerability alerts:** for sites without Wordfence. Warns when the installed WordPress, a plugin or a theme has a known security vulnerability and names the version that fixes it. Urgent findings (CVSS 7 or higher, or no fix yet) appear on every admin screen; all findings appear in Site Health and are e-mailed once. While Wordfence is active the module stands down, because Wordfence warns about vulnerable software itself.
 
 Off by default:
 
+* **Bot protection:** stops automated sign-ups, spam comments, password-reset floods, scripted logins and fake orders. A honeypot (an invisible trap field plus proof that a person used the form) guards registration, lost password and comments with no outside service. With Cloudflare Turnstile keys in wp-config.php, Turnstile also guards login, registration, lost password, comments and reviews, and the classic and block checkout, including orders sent straight to the WooCommerce Store API. You choose what happens when Cloudflare cannot be reached.
 * **Install lockdown:** nobody can install plugins or themes or upload ZIP files, not even through a vulnerable plugin that skips permission checks. Updates keep working. Unlock for 30 minutes when you need to install something.
 * **Tweaks:** separate switches for comments, front-end search, emojis, embeds, `<head>` clean-up, Heartbeat, self-pingbacks and the number of revisions kept.
 * **Duplicate posts and pages:** a "Duplicate" link that creates a draft copy with the content, taxonomies and custom fields. WooCommerce products keep WooCommerce's own duplicate action.
@@ -37,8 +40,8 @@ Off by default:
 
 WPHouse is built to run alongside these plugins. The Integrations card on the settings page shows which of them a site has and what WPHouse does for each.
 
-* **Wordfence:** WPHouse detects the features Wordfence already provides and skips its own. WPHouse has no firewall, rate limiting, two-factor login or malware scanner; use Wordfence for those.
-* **WooCommerce:** compatible with HPOS and the block checkout. Generic login errors also cover the My Account form, maintenance mode lets the Store API and payment callbacks through, and product reviews survive "disable comments".
+* **Wordfence:** optional. When it is active, WPHouse skips what Wordfence already does: username discovery blocking, login error masking (on sites without WooCommerce, whose login form Wordfence does not cover), version hiding, vulnerability alerts, and the login and registration captcha when Wordfence Login Security has its reCAPTCHA on. WPHouse has no firewall and no malware scanner; use Wordfence or Cloudflare for those. Two-factor login and login attempt limits are not in WPHouse yet.
+* **WooCommerce:** compatible with HPOS and the block checkout. Generic login errors also cover the My Account form, bot protection covers the My Account forms and both checkouts, maintenance mode lets the Store API and payment callbacks through, and product reviews survive "disable comments".
 * **Payment gateways:** Autopay, Przelewy24, PayU, imoje, Paynow, Stripe, PayPal and WooPayments. Their callbacks (`?wc-api=` and the REST API) pass maintenance mode.
 * **Elementor** and Elementor Pro.
 * **Redis Object Cache:** its connection status is shown, but WPHouse has its own Redis object cache (below).
@@ -79,6 +82,7 @@ Yes. `define( 'WPHOUSE_MODULES', [ 'lockdown' => true, 'scripts' => false ] );` 
 = Which other wp-config.php constants are there? =
 
 * `WPHOUSE_SMTP_HOST`, `WPHOUSE_SMTP_PORT`, `WPHOUSE_SMTP_USER`, `WPHOUSE_SMTP_PASS`, `WPHOUSE_SMTP_SECURE`: SMTP credentials.
+* `WPHOUSE_TURNSTILE_SITE_KEY` and `WPHOUSE_TURNSTILE_SECRET_KEY`: Cloudflare Turnstile keys for Bot protection. Cloudflare's test keys are refused on production sites.
 * `WPHOUSE_DISABLE_UPDATES`: no update checks. Use it (or `DISALLOW_FILE_MODS`) on sites deployed from git or rsync, otherwise the next deploy reverts an update.
 * `WPHOUSE_AUTO_UPDATE`: set to false to stop forcing background updates of WPHouse.
 * `WPHOUSE_IGNORE_OVERLAPS`: run WPHouse features even where Wordfence or another plugin already provides them.
@@ -96,10 +100,12 @@ English and Polish.
 
 == External services ==
 
-Apart from the SMTP and Redis servers you configure yourself, WPHouse contacts two services. Requests use WordPress's HTTP API and its default user agent, which includes the site address.
+Apart from the SMTP and Redis servers you configure yourself, WPHouse contacts up to three services. Requests use WordPress's HTTP API and its default user agent, which includes the site address.
 
 * **WordPress.org plugin directory** (api.wordpress.org), for Plugin health: once a week, and when plugins are added, removed or updated, it sends the slugs of the installed plugins to read their status (closed, last update). [Terms and privacy](https://wordpress.org/about/privacy/).
 * **Design House update host** (updates.designhouse.me): WordPress checks it for WPHouse updates every few hours, and Vulnerability alerts download the signed vulnerability data from it at most every 6 hours. The site never sends its plugin list: it fetches an index and only the data files that cover its installed software, each file covering about 1/256 of all plugins and themes. The vulnerability data comes from Wordfence Intelligence. [Privacy policy](https://designhouse.me/polityka-prywatnosci).
+
+* **Cloudflare Turnstile** (challenges.cloudflare.com), for Bot protection, only when its keys are set in wp-config.php. Pages with a protected form load Cloudflare's Turnstile script in the visitor's browser. When the form is sent, the site sends the Turnstile token and the visitor's IP address to Cloudflare to check it. [Turnstile privacy addendum](https://www.cloudflare.com/turnstile-privacy-policy/), [Cloudflare privacy policy](https://www.cloudflare.com/privacypolicy/).
 
 WPHouse sends no telemetry. The activity log stays in the site's database, stores the user and IP address of each event and deletes entries after 90 days.
 
@@ -107,8 +113,9 @@ WPHouse sends no telemetry. The activity log stays in the site's database, store
 
 = 0.1.0 =
 * Core: module registry with a switch per module, schema-driven settings page, activity log, safe mode, WP-CLI commands, Wordfence overlap detection.
-* Hardening: file editor off, username discovery blocked, generic login errors, version hidden, XML-RPC off, basic security headers, optional HSTS.
-* Install lockdown, change alerts and plugin health.
+* Hardening: file editor off, username discovery blocked, generic login errors, version hidden, XML-RPC off, basic security headers, optional HSTS, no admin-level role for new accounts, registration check in Site Health.
+* Bot protection: honeypot on registration, lost password and comments; Cloudflare Turnstile on login, registration, lost password, comments and checkout, including the Store API.
+* Install lockdown, change alerts (also for open registration, the default role, the admin e-mail and the site address) and plugin health.
 * Vulnerability alerts for sites without Wordfence, from signed Wordfence Intelligence data.
 * Integrations card for Wordfence, WooCommerce, payment gateways and Elementor.
 * LiteSpeed page cache without the LiteSpeed Cache plugin: cache headers only, safe for WooCommerce.

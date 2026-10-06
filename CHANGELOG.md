@@ -5,9 +5,10 @@ Each release needs a `## x.y.z` section; its body is shown in the WordPress "Vie
 ## 0.1.0
 
 - Core: module registry with per-module switches, schema-driven settings page, event log, safe mode, WP-CLI (`wp wphouse …`), Wordfence overlap detection.
-- Hardening: file editor off, username discovery blocked, generic login errors, version hidden, XML-RPC off, basic security headers, optional HSTS.
+- Hardening: file editor off, username discovery blocked, generic login errors, version hidden, XML-RPC off, basic security headers, optional HSTS, no admin-level role for new accounts, registration check in Site Health.
+- Bot protection: honeypot on registration, lost password and comments; Cloudflare Turnstile on login, registration, lost password, comments and checkout, including the Store API.
 - Install lockdown: no new plugins, themes or ZIP uploads (updates keep working), timed unlock.
-- Change alerts: new administrators, plugins, themes, mu-plugins, drop-ins and wp-config.php edits.
+- Change alerts: new administrators, plugins, themes, mu-plugins, drop-ins, wp-config.php edits, and changes to registration, the default role, the admin e-mail and the site address.
 - Plugin health: closed, abandoned, unknown-source and forgotten plugins, also in Site Health.
 - Vulnerability alerts for sites without Wordfence, from signed Wordfence Intelligence data.
 - Integrations card for Wordfence, WooCommerce, payment gateways and Elementor.
