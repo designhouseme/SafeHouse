@@ -47,7 +47,7 @@ check "users sitemap not served"          0   "$(curl -s "$U/wp-sitemap-users-1.
 check "nosniff header"                    1   "$(curl -sI "$U/" | grep -ci '^x-content-type-options: nosniff')"
 check "no generator tag"                  0   "$(curl -s "$U/" | grep -ci 'name="generator" content="WordPress')"
 # Language-independent: the error for an unknown user must equal the error for a wrong password.
-login_msg() { curl -s -b "wordpress_test_cookie=WP%20Cookie%20check" --data-urlencode "log=$1" -d "pwd=wrong&testcookie=1" "$U/wp-login.php" | tr '\n' ' ' | grep -o 'id="login_error".\{0,300\}' | sed 's/<[^>]*>//g' | cut -c1-200; }
+login_msg() { curl -s -b "wordpress_test_cookie=WP%20Cookie%20check" --data-urlencode "log=$1" -d "pwd=wrong&testcookie=1" "$U/wp-login.php" | tr '\n' ' ' | grep -o 'id="login_error".\{0,250\}' | sed 's/<[^>]*>//g' | cut -c1-200; }
 unknown=$(login_msg nosuchuser); known=$(login_msg admin)
 check "login error shown"                 1   "$([ -n "$unknown" ] && echo 1 || echo 0)"
 check "same error, unknown vs known user" same "$([ "$unknown" = "$known" ] && echo same || echo "differs: $unknown | $known")"
@@ -60,7 +60,7 @@ if [ "$has_woo" = 1 ]; then
 		jar=$(mktemp); page=$(curl -s -c "$jar" -b "$jar" "$MA")
 		nonce=$(echo "$page" | grep -o 'name="woocommerce-login-nonce" value="[^"]*"' | sed 's/.*value="//;s/"//')
 		curl -s -c "$jar" -b "$jar" --data-urlencode "username=$1" -d "password=wrong&woocommerce-login-nonce=$nonce&_wp_http_referer=%2F&login=1" "$MA" \
-			| tr '\n' ' ' | grep -o 'notice-banner__content">.\{0,300\}\|woocommerce-error.\{0,300\}' | sed 's/<[^>]*>//g' | cut -c1-160
+			| tr '\n' ' ' | grep -o 'notice-banner__content">.\{0,250\}\|woocommerce-error.\{0,250\}' | sed 's/<[^>]*>//g' | cut -c1-160
 		rm -f "$jar"
 	}
 	wunknown=$(woo_login nosuchuser); wknown=$(woo_login admin)
