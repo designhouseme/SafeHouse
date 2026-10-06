@@ -1,4 +1,6 @@
 :root {
+	--h-size: clamp(44px, 5.2vw, 76px);
+	--p-size: 20px;
 	--ink: #07080b;
 	--ink-2: #0e0f13;
 	--signal: #2f6bff;
@@ -159,7 +161,7 @@ a { color: inherit; }
 	margin: 0;
 	max-width: 12ch;
 	font-weight: 500;
-	font-size: clamp(46px, 6.1vw, 88px);
+	font-size: var(--h-size);
 	line-height: 0.98;
 	letter-spacing: -0.045em;
 	background: linear-gradient(180deg, #fff 40%, #d9dcf2);
@@ -169,9 +171,9 @@ a { color: inherit; }
 }
 
 .hero-copy p {
-	max-width: 440px;
+	max-width: 470px;
 	margin: 24px 0 0;
-	font-size: 18px;
+	font-size: var(--p-size);
 	line-height: 1.42;
 	letter-spacing: -0.01em;
 	color: rgba(255, 255, 255, 0.82);
@@ -457,7 +459,7 @@ main section { position: relative; padding: 168px 0; }
 .display {
 	margin: 0;
 	font-weight: 500;
-	font-size: clamp(44px, 6.4vw, 92px);
+	font-size: var(--h-size);
 	line-height: 0.96;
 	letter-spacing: -0.05em;
 	text-wrap: balance;
@@ -466,8 +468,8 @@ main section { position: relative; padding: 168px 0; }
 .lede {
 	max-width: 640px;
 	margin: 28px 0 0;
-	font-size: 20px;
-	line-height: 1.42;
+	font-size: var(--p-size);
+	line-height: 1.45;
 	letter-spacing: -0.01em;
 	text-wrap: pretty;
 }
@@ -489,9 +491,7 @@ main section { position: relative; padding: 168px 0; }
 
 /* what it does: dark cards on the light page, stepped like a staircase */
 
-/* The heading starts where the top row of cards starts, one column in. */
-.mb-head { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); column-gap: 18px; width: min(1360px, calc(100% - 48px)); margin-inline: auto; }
-.mb-head > * { grid-column: 2 / -1; }
+.mb-head { width: min(1216px, calc(100% - 48px)); margin-inline: auto; }
 
 .mb {
 	position: relative;
@@ -669,7 +669,7 @@ main section { position: relative; padding: 168px 0; }
 .mb-sheet--back span { border-color: rgba(255, 255, 255, 0.08); color: inherit; }
 .mb-sheet .mb-sheet-bad { color: #a35b14; }
 
-.mb-more { max-width: 760px; margin: 56px 0 0; font-size: 19px; line-height: 1.5; color: #3a3d46; text-wrap: pretty; }
+.mb-more { max-width: 760px; margin: 56px 0 0; font-size: var(--p-size); line-height: 1.45; color: #3a3d46; text-wrap: pretty; }
 
 /* our own security: a wall of light that stops forged updates and outsiders, lets signed updates and the admin through */
 
@@ -706,7 +706,7 @@ main section { position: relative; padding: 168px 0; }
 .lane-src > span,
 .lane-out > span { display: block; margin-top: 3px; font-size: 14.5px; color: rgba(255, 255, 255, 0.5); }
 .lane-out { grid-column: 5; margin: 0; padding-left: 28px; }
-.gate-note { max-width: 720px; margin: 72px 0 0; font-size: 19px; line-height: 1.5; color: rgba(255, 255, 255, 0.7); text-wrap: pretty; }
+.gate-note { max-width: 760px; margin: 72px 0 0; font-size: var(--p-size); line-height: 1.45; color: rgba(255, 255, 255, 0.7); text-wrap: pretty; }
 
 /* The beams are pixel bands: blue where traffic passes, white burning to red where it stops. */
 .lane-beam {
@@ -769,7 +769,6 @@ main section { position: relative; padding: 168px 0; }
 /* Text on the page's usual left edge; the screen and its panels centred beneath. */
 .room-head { width: min(1216px, calc(100% - 48px)); margin-inline: auto; }
 .room { display: grid; grid-template-columns: minmax(0, 1fr) min(820px, 56vw) minmax(0, 1fr); column-gap: 40px; }
-.room-head .display { font-size: clamp(44px, 5.2vw, 78px); }
 .room-head .lede { max-width: 680px; }
 .room { position: relative; align-items: center; margin-top: 80px; view-timeline-name: --room; }
 /* Wall panels behind everything, white on white. */
@@ -817,7 +816,7 @@ main section { position: relative; padding: 168px 0; }
 	-webkit-mask-composite: source-in;
 }
 .room-side--right .ghost:last-child::before { background: radial-gradient(circle at 50% 55%, rgba(255, 170, 110, 0.6), rgba(255, 200, 160, 0.2) 45%, transparent 70%); }
-.ghost p { margin: 0; font-size: 21px; font-weight: 500; letter-spacing: -0.02em; color: #26334f; }
+.ghost p { margin: 0; font-size: 18px; font-weight: 500; letter-spacing: -0.02em; color: #26334f; }
 .ghost code,
 .ghost span { margin-top: 8px; font: 500 13px var(--mono); color: #2148c9; overflow-wrap: anywhere; }
 .ghost span { margin-top: 4px; font: 400 14px var(--sans); color: #4a5672; }
@@ -858,7 +857,7 @@ main section { position: relative; padding: 168px 0; }
 /* Without scroll-driven animation the screen simply shows safe mode. */
 .st-on { display: none !important; }
 
-.room-big { max-width: 860px; margin: 72px 0 0; font-size: clamp(22px, 2.3vw, 32px); line-height: 1.38; letter-spacing: -0.02em; color: #2a2d35; text-wrap: pretty; }
+.room-big { max-width: 760px; margin: 72px 0 0; font-size: var(--p-size); line-height: 1.45; letter-spacing: -0.01em; color: #3a3d46; text-wrap: pretty; }
 
 /* Scrolling in, the modules are running; then the file lands, the notice appears and each one stops. */
 @supports (animation-timeline: view()) {
@@ -874,7 +873,7 @@ main section { position: relative; padding: 168px 0; }
 
 .final { overflow: hidden; padding: 180px 0 160px; background: var(--ink); view-timeline-name: --final; }
 .final-grid { display: grid; grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); gap: 72px; align-items: center; }
-.final-copy .display { font-size: clamp(44px, 5.2vw, 78px); background: linear-gradient(180deg, #fff 40%, #d9dcf2); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.final-copy .display { background: linear-gradient(180deg, #fff 40%, #d9dcf2); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .final-copy .lede { color: rgba(255, 255, 255, 0.72); }
 .actions { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 40px; }
 
@@ -1133,7 +1132,6 @@ main section { position: relative; padding: 168px 0; }
 	main section { padding: 112px 0; }
 	.mb { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none; grid-auto-rows: 300px; margin-top: 56px; }
 	.mb-beam { display: none; }
-	.mb-head { display: block; width: min(1216px, calc(100% - 48px)); }
 	.mb-card { grid-column: auto; grid-row: auto; }
 	.mb-f,
 	.mb-g { grid-column: 1 / -1; }
@@ -1177,7 +1175,6 @@ main section { position: relative; padding: 168px 0; }
 @media (max-width: 520px) {
 	.nav { gap: 16px; }
 	.nav-end .pill:first-child { display: none; }
-	.hero-copy p { font-size: 16.5px; }
 	.pill--glow { padding: 0 44px; }
 	.panel-main { padding: 18px 16px; }
 	.wp-body { grid-template-columns: minmax(0, 1fr); }
@@ -1189,7 +1186,7 @@ main section { position: relative; padding: 168px 0; }
 	.panel-tabs b { padding: 6px 10px; }
 	.chip { display: none; }
 	.panel-mods li { grid-template-columns: 34px minmax(0, 1fr); }
-	.lede { font-size: 18px; }
+	:root { --p-size: 18px; }
 	.mb { grid-template-columns: minmax(0, 1fr); grid-auto-rows: 290px; }
 	.mb-f,
 	.mb-g { grid-column: auto; }
@@ -1201,7 +1198,6 @@ main section { position: relative; padding: 168px 0; }
 	.screen-card b { font-size: 13px; }
 	.room-side { grid-template-columns: minmax(0, 1fr); }
 	.ghost { height: 130px; }
-	.ghost p { font-size: 18px; }
 	.dial-crown { right: -32px; width: 12px; height: 36px; }
 }
 
