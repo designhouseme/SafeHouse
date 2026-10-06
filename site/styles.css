@@ -383,7 +383,7 @@ a { color: inherit; }
 
 .sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.px-icon { display: block; width: 40px; height: 40px; shape-rendering: crispEdges; }
+.icon { display: block; width: 44px; height: 44px; }
 
 .wrap { width: min(1216px, calc(100% - 48px)); margin-inline: auto; }
 .wrap--narrow { padding-left: clamp(0px, 24vw - 60px, 288px); }
@@ -551,7 +551,7 @@ main section { position: relative; padding: 168px 0; }
 	-webkit-mask-composite: source-in;
 	animation: spin 24s linear infinite;
 }
-.ring .px-icon { position: relative; width: 64px; height: 64px; filter: drop-shadow(0 0 16px rgba(79, 134, 255, 0.7)); }
+.ring .icon { position: relative; width: 64px; height: 64px; filter: drop-shadow(0 0 16px rgba(79, 134, 255, 0.7)); }
 .ring em {
 	position: absolute;
 	top: 82px;
@@ -627,7 +627,7 @@ main section { position: relative; padding: 168px 0; }
 .feature p { max-width: 270px; margin: 0; font-size: 15.5px; line-height: 1.45; }
 .light .feature p { color: #5b6070; }
 .dark .feature p { color: rgba(255, 255, 255, 0.55); }
-.dark .feature .px-icon { filter: drop-shadow(0 0 14px rgba(79, 134, 255, 0.55)); }
+.dark .feature .icon { filter: drop-shadow(0 0 14px rgba(79, 134, 255, 0.55)); }
 
 .wp-snippet {
 	display: flex;
@@ -667,7 +667,7 @@ main section { position: relative; padding: 168px 0; }
 		radial-gradient(60% 80% at 90% 90%, rgba(255, 200, 220, 0.7), transparent 70%),
 		#eef1f8;
 }
-.mini-visual .px-icon { width: 48px; height: 48px; }
+.mini-visual .icon { width: 48px; height: 48px; }
 .mini-visual code { font-size: 12px; }
 .mini-visual--hash code { line-height: 1.7; color: #33363f; text-align: center; }
 .mini-visual--hash span { padding: 2px 9px; border-radius: 6px; font: 500 11.5px var(--mono); color: #0c6b3c; background: rgba(126, 224, 168, 0.45); }
