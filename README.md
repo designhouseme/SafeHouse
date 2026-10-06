@@ -86,4 +86,4 @@ Please report vulnerabilities privately: on the **Security** tab, use **Report a
 
 ## License
 
-GPL-2.0-or-later. See [LICENSE](LICENSE).
+Apache License 2.0. See [LICENSE](LICENSE). Releases up to 0.2.0 were published under GPL-2.0-or-later.

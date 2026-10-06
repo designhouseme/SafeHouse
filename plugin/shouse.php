@@ -9,8 +9,8 @@
  * Tested up to:         7.1
  * Author:               Design House
  * Author URI:           https://designhouse.me/
- * License:              GPL-2.0-or-later
- * License URI:          https://www.gnu.org/licenses/gpl-2.0.html
+ * License:              Apache-2.0
+ * License URI:          https://www.apache.org/licenses/LICENSE-2.0
  * Text Domain:          shouse
  * Domain Path:          /languages
  * Update URI:           https://updates.designhouse.me/shouse/

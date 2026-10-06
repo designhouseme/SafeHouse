@@ -2,7 +2,7 @@
     "name": "designhouse/shouse",
     "description": "SafeHouse WordPress plugin (in plugin/): development tooling.",
     "type": "project",
-    "license": "GPL-2.0-or-later",
+    "license": "Apache-2.0",
     "require": {
         "php": ">=8.1"
     },

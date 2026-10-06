@@ -47,6 +47,7 @@ build() { # <git-ref> <version> <outdir> [trusted: 1 = the key must be one PUBLI
 	mkdir "$work/src"
 	git archive --format=tar "$ref:plugin" | tar -x -C "$work/src"   # the plugin/ tree only: everything in it ships
 	git show "$ref:CHANGELOG.md" > "$work/CHANGELOG.md"
+	git show "$ref:LICENSE" > "$work/src/LICENSE" # the license travels with every copy (Apache-2.0, section 4)
 	set_version "$work/src" "$version"
 	grep -q "__SHOUSE_PUBLIC_KEY__" "$work/src/src/Core/Updater.php" && die "Updater.php still has the placeholder public key"
 

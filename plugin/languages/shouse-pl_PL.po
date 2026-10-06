@@ -1364,52 +1364,52 @@ msgstr "Plik object-cache.php pochodzi sprzed zmiany nazwy na SafeHouse. Uruchom
 msgid "Compatible with HPOS and the block checkout. Reduced prices show the lowest price from the previous 30 days (Omnibus). Generic login errors also cover the My Account form, maintenance mode lets the Store API and payment callbacks through, and product reviews survive \"disable comments\"."
 msgstr "Zgodny z HPOS i blokowym checkoutem. Przy obniżonych cenach widać najniższą cenę z poprzednich 30 dni (Omnibus). Ogólne błędy logowania obejmują też formularz „Moje konto”, tryb serwisowy przepuszcza Store API i powiadomienia z płatności, a recenzje produktów zostają mimo wyłączenia komentarzy."
 
-#: src/Modules/Omnibus.php:76
+#: src/Modules/Omnibus.php:77
 msgid "Omnibus price history"
 msgstr "Historia cen (Omnibus)"
 
-#: src/Modules/Omnibus.php:80
+#: src/Modules/Omnibus.php:81
 msgid "Records every price change of products and variations, and next to each reduced price shows the lowest price from the 30 days before the reduction, as the EU Omnibus Directive requires. A product that is already reduced when recording starts shows its regular price there until its price next changes."
 msgstr "Zapisuje każdą zmianę ceny produktów i wariantów, a przy każdej obniżonej cenie pokazuje najniższą cenę z 30 dni przed obniżką, czego wymaga unijna dyrektywa Omnibus. Produkt przeceniony już w chwili rozpoczęcia zapisu pokazuje tam swoją cenę regularną aż do najbliższej zmiany ceny."
 
-#: src/Modules/Omnibus.php:87
+#: src/Modules/Omnibus.php:88
 msgid "Show the lowest price next to reduced prices"
 msgstr "Pokazuj najniższą cenę przy obniżonych cenach"
 
-#: src/Modules/Omnibus.php:88
+#: src/Modules/Omnibus.php:89
 msgid "Shops that show reduced prices must show this. Prices are still recorded while it is off, so the figures are right when it comes back on."
 msgstr "Sklep, który pokazuje obniżki, musi pokazywać tę informację. Gdy jest wyłączona, ceny dalej się zapisują, więc po ponownym włączeniu liczby są prawdziwe."
 
-#: src/Modules/Omnibus.php:92
+#: src/Modules/Omnibus.php:93
 msgid "Wording"
 msgstr "Brzmienie"
 
 #. translators: %s is typed literally by the shop owner; keep it as it is.
-#: src/Modules/Omnibus.php:94
+#: src/Modules/Omnibus.php:95
 #, php-format
 msgid "Leave empty for the standard wording. Write %s where the price goes; without it, the price goes at the end."
 msgstr "Zostaw puste, aby użyć standardowego brzmienia. Wpisz %s tam, gdzie ma stać cena; bez tego cena trafi na koniec."
 
-#: src/Modules/Omnibus.php:105
+#: src/Modules/Omnibus.php:106
 msgid "Needs WooCommerce."
 msgstr "Wymaga WooCommerce."
 
-#: src/Modules/Omnibus.php:319
+#: src/Modules/Omnibus.php:321
 msgid "Nothing recorded yet. Recording starts when the module is on and WooCommerce is active."
 msgstr "Na razie nic nie zapisano. Zapis zaczyna się, gdy moduł jest włączony, a WooCommerce aktywne."
 
 #. translators: 1: date and time, 2: number of price changes, 3: number of products and variations.
-#: src/Modules/Omnibus.php:329
+#: src/Modules/Omnibus.php:331
 #, php-format
 msgid "Recording since %1$s. Price changes on record: %2$s, for %3$s products and variations."
 msgstr "Zapis od %1$s. Zapisane zmiany cen: %2$s, dla produktów i wariantów: %3$s."
 
-#: src/Modules/Omnibus.php:336
+#: src/Modules/Omnibus.php:338
 msgid "A product that was already reduced when recording started has no earlier price on record, so its regular price is shown as the lowest price until its price next changes. `wp shouse omnibus status` lists every reduced product and where its figure comes from."
 msgstr "Produkt przeceniony już w chwili rozpoczęcia zapisu nie ma w historii wcześniejszej ceny, więc jako najniższa pokazywana jest jego cena regularna, aż do najbliższej zmiany ceny. `wp shouse omnibus status` wyświetla wszystkie przecenione produkty i źródło każdej liczby."
 
 #. translators: %s: a price.
-#: src/Modules/Omnibus.php:403
+#: src/Modules/Omnibus.php:405
 #, php-format
 msgid "Lowest price in the 30 days before the reduction: %s"
 msgstr "Najniższa cena z 30 dni przed obniżką: %s"
