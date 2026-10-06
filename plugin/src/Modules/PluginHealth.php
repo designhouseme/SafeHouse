@@ -93,6 +93,11 @@ final class PluginHealth extends AbstractModule {
 		'limit-login-attempts'          => 'login_limits',
 		'wp-limit-login-attempts'       => 'login_limits',
 		'cloudflare'                    => 'cloudflare',
+		'omnibus'                       => 'omnibus',
+		'wc-price-history'              => 'omnibus',
+		'omnibus-by-ilabs'              => 'omnibus',
+		'omnibus-for-woocommerce'       => 'omnibus',
+		'product-price-history'         => 'omnibus',
 	];
 
 	public function id(): string {

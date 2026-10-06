@@ -4,6 +4,7 @@ Each release needs a `## x.y.z` section; its body is shown in the WordPress "Vie
 
 ## 0.2.0
 
+- Omnibus price history for WooCommerce, on by default: every price change of products and variations is recorded, and the lowest price from the 30 days before a reduction is shown next to reduced prices on product pages, in lists and for the picked variation. A product already reduced when recording starts shows its regular price there until its price next changes. `wp shouse omnibus status` lists reduced products and where each figure comes from.
 - Renamed from WPHouse to SafeHouse. The plugin folder and file, the WP-CLI command, the wp-config.php constants and everything stored in the database now use the `shouse` prefix (`shouse/shouse.php`, `wp shouse`, `SHOUSE_*`).
 - Moving an existing site: activate `shouse`. Settings, the activity log, login limits and scheduled checks move over on their own. `WPHOUSE_*` constants and the `wphouse-safe-mode` file keep working, so wp-config.php can be updated later. With the Redis object cache on, run `wp shouse object-cache enable` once to install the new loader; until then WordPress uses its own cache.
 

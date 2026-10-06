@@ -36,6 +36,7 @@ final class Plugin {
 		Modules\Bots::class,
 		Modules\LoginLimits::class,
 		Modules\Cloudflare::class,
+		Modules\Omnibus::class,
 	];
 
 	private static ?Plugin $instance = null;

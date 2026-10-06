@@ -298,125 +298,125 @@ msgstr "Zaraz wracamy"
 msgid "Maintenance mode is on"
 msgstr "Tryb serwisowy jest włączony"
 
-#: src/Modules/PluginHealth.php:111
+#: src/Modules/PluginHealth.php:116
 msgid "Plugin health"
 msgstr "Kondycja wtyczek"
 
-#: src/Modules/PluginHealth.php:115
+#: src/Modules/PluginHealth.php:120
 msgid "Weekly check of installed plugins: closed on WordPress.org (often for security reasons), no update for two years, not from WordPress.org, one-time tools left active, inactive leftovers, and plugins a SafeHouse module replaces. Results also appear in Tools → Site Health."
 msgstr "Cotygodniowy przegląd zainstalowanych wtyczek: zamknięte na WordPress.org (często z powodów bezpieczeństwa), bez aktualizacji od dwóch lat, spoza WordPress.org, jednorazowe narzędzia pozostawione jako aktywne, nieaktywne pozostałości oraz wtyczki, które zastępuje moduł SafeHouse. Wyniki widać też w Narzędzia → Stan witryny."
 
-#: src/Modules/PluginHealth.php:239
+#: src/Modules/PluginHealth.php:244
 msgid "Inactive. Inactive plugins can still be attacked through their files; delete it if you do not need it."
 msgstr "Nieaktywna. Nieaktywne wtyczki nadal można zaatakować przez ich pliki; usuń ją, jeśli nie jest potrzebna."
 
 #. translators: 1: date, 2: reason code from WordPress.org, e.g. security-issue.
-#: src/Modules/PluginHealth.php:266
+#: src/Modules/PluginHealth.php:271
 #, php-format
 msgid "Closed on WordPress.org (%1$s, reason: %2$s). It gets no more updates; replace or remove it."
 msgstr "Zamknięta na WordPress.org (%1$s, powód: %2$s). Nie dostanie już aktualizacji; zastąp ją albo usuń."
 
 #. translators: %s: date of the last update.
-#: src/Modules/PluginHealth.php:272
+#: src/Modules/PluginHealth.php:277
 #, php-format
 msgid "No update since %s. Probably abandoned."
 msgstr "Brak aktualizacji od %s. Prawdopodobnie porzucona."
 
-#: src/Modules/PluginHealth.php:277
+#: src/Modules/PluginHealth.php:282
 msgid "Not on WordPress.org and no update source declared. Make sure you know where its updates come from."
 msgstr "Nie ma jej na WordPress.org i nie deklaruje źródła aktualizacji. Upewnij się, skąd przychodzą jej aktualizacje."
 
-#: src/Modules/PluginHealth.php:282
+#: src/Modules/PluginHealth.php:287
 msgid "Updates come from its vendor, not WordPress.org. Keep the licence active so security fixes arrive."
 msgstr "Aktualizacje przychodzą od producenta, nie z WordPress.org. Utrzymuj aktywną licencję, żeby docierały poprawki bezpieczeństwa."
 
-#: src/Modules/PluginHealth.php:287
+#: src/Modules/PluginHealth.php:292
 msgid "One-time tool (migration, search-replace, import, file access or debugging) left active. Delete it when the job is done."
 msgstr "Jednorazowe narzędzie (migracja, wyszukaj-i-zamień, import, dostęp do plików lub debugowanie) pozostawione jako aktywne. Usuń je po zakończeniu pracy."
 
 #. translators: %s: SafeHouse module name.
-#: src/Modules/PluginHealth.php:294
+#: src/Modules/PluginHealth.php:299
 #, php-format
 msgid "SafeHouse can do this: module \"%s\". Switch it on, then remove this plugin."
 msgstr "SafeHouse to potrafi: moduł „%s”. Włącz go, a potem usuń tę wtyczkę."
 
-#: src/Modules/PluginHealth.php:318
+#: src/Modules/PluginHealth.php:323
 msgid "SafeHouse plugin health"
 msgstr "Kondycja wtyczek (SafeHouse)"
 
-#: src/Modules/PluginHealth.php:339
+#: src/Modules/PluginHealth.php:344
 msgid "No closed, abandoned or forgotten plugins found"
 msgstr "Nie znaleziono zamkniętych, porzuconych ani zapomnianych wtyczek"
 
-#: src/Modules/PluginHealth.php:340
+#: src/Modules/PluginHealth.php:345
 msgid "Some plugins need attention"
 msgstr "Niektóre wtyczki wymagają uwagi"
 
 #: src/Core/Net.php:155
 #: src/Modules/Hardening.php:270
 #: src/Modules/LoginLimits.php:355
-#: src/Modules/PluginHealth.php:345
+#: src/Modules/PluginHealth.php:350
 #: src/Modules/Vulnerabilities.php:301
 msgid "Security"
 msgstr "Bezpieczeństwo"
 
 #. translators: 1: number of critical findings, 2: number of warnings.
-#: src/Modules/PluginHealth.php:351
+#: src/Modules/PluginHealth.php:356
 #, php-format
 msgid "%1$d critical, %2$d warnings. Details are on the SafeHouse settings page."
 msgstr "Krytyczne: %1$d, ostrzeżenia: %2$d. Szczegóły na stronie ustawień SafeHouse."
 
-#: src/Modules/PluginHealth.php:356
+#: src/Modules/PluginHealth.php:361
 msgid "Open SafeHouse"
 msgstr "Otwórz SafeHouse"
 
-#: src/Modules/PluginHealth.php:362
+#: src/Modules/PluginHealth.php:367
 #: src/Modules/Vulnerabilities.php:311
 #: src/Modules/Watch.php:238
 msgid "Check now"
 msgstr "Sprawdź teraz"
 
 #. translators: %s: error message.
-#: src/Modules/PluginHealth.php:369
+#: src/Modules/PluginHealth.php:374
 #, php-format
 msgid "Could not reach WordPress.org: %s"
 msgstr "Nie udało się połączyć z WordPress.org: %s"
 
-#: src/Modules/PluginHealth.php:370
+#: src/Modules/PluginHealth.php:375
 msgid "Plugin health updated."
 msgstr "Kondycja wtyczek zaktualizowana."
 
-#: src/Modules/PluginHealth.php:377
+#: src/Modules/PluginHealth.php:382
 msgid "Not checked yet. Use \"Check now\" or wait for the daily run."
 msgstr "Jeszcze nie sprawdzono. Kliknij „Sprawdź teraz” albo poczekaj na codzienne sprawdzenie."
 
 #. translators: %s: date and time.
-#: src/Modules/PluginHealth.php:381
+#: src/Modules/PluginHealth.php:386
 #: src/Modules/Vulnerabilities.php:330
 #, php-format
 msgid "Last check: %s."
 msgstr "Ostatnie sprawdzenie: %s."
 
 #. translators: %s: error message.
-#: src/Modules/PluginHealth.php:383
+#: src/Modules/PluginHealth.php:388
 #, php-format
 msgid "The last refresh failed: %s"
 msgstr "Ostatnie odświeżenie nie powiodło się: %s"
 
-#: src/Modules/PluginHealth.php:388
+#: src/Modules/PluginHealth.php:393
 msgid "Nothing to report."
 msgstr "Brak uwag."
 
-#: src/Modules/PluginHealth.php:391
+#: src/Modules/PluginHealth.php:396
 msgid "Plugin"
 msgstr "Wtyczka"
 
-#: src/Modules/PluginHealth.php:391
+#: src/Modules/PluginHealth.php:396
 msgid "Findings"
 msgstr "Wyniki"
 
 #: src/Admin/Page.php:468
-#: src/Modules/PluginHealth.php:393
+#: src/Modules/PluginHealth.php:398
 msgid "inactive"
 msgstr "nieaktywna"
 
@@ -625,7 +625,7 @@ msgstr "Brak zmian od ostatniego sprawdzenia."
 msgid "No baseline yet. It is recorded on the first hourly check."
 msgstr "Brak punktu odniesienia. Zostanie zapisany przy pierwszym cogodzinnym sprawdzeniu."
 
-#: src/Plugin.php:130
+#: src/Plugin.php:131
 msgid "SafeHouse 0.x supports single sites only. Activate it per site instead of network-wide."
 msgstr "SafeHouse 0.x obsługuje tylko pojedyncze witryny. Włącz wtyczkę na poszczególnych witrynach, a nie w całej sieci."
 
@@ -738,10 +738,6 @@ msgstr "%1$s %2$s%3$s: %4$s. Nie ma jeszcze poprawionej wersji: wyłącz to opro
 #: src/Admin/Page.php:410
 msgid "SafeHouse skips what Wordfence already does (for example username discovery and login error masking) and leaves the firewall, two-factor login and malware scans to it. Vulnerability alerts stand down, because Wordfence warns about vulnerable plugins itself."
 msgstr "SafeHouse pomija to, co Wordfence już robi (na przykład blokadę wyliczania użytkowników i ogólne błędy logowania), a zaporę, logowanie dwuetapowe i skaner złośliwego kodu zostawia jemu. Ostrzeżenia o lukach się wyłączają, bo Wordfence sam ostrzega o podatnych wtyczkach."
-
-#: src/Admin/Page.php:411
-msgid "Compatible with HPOS and the block checkout. Generic login errors also cover the My Account form, maintenance mode lets the Store API and payment callbacks through, and product reviews survive \"disable comments\"."
-msgstr "Zgodny z HPOS i blokowym checkoutem. Ogólne błędy logowania obejmują też formularz „Moje konto”, tryb serwisowy przepuszcza Store API i powiadomienia z płatności, a recenzje produktów zostają mimo wyłączenia komentarzy."
 
 #: src/Admin/Page.php:412
 msgid "Payment gateways"
@@ -1363,3 +1359,57 @@ msgstr "wszystko"
 #: src/Core/ObjectCache.php:57
 msgid "The object-cache.php loader dates from before the rename to SafeHouse. Run `wp shouse object-cache enable` to install the current one."
 msgstr "Plik object-cache.php pochodzi sprzed zmiany nazwy na SafeHouse. Uruchom `wp shouse object-cache enable`, żeby zainstalować aktualny."
+
+#: src/Admin/Page.php:411
+msgid "Compatible with HPOS and the block checkout. Reduced prices show the lowest price from the previous 30 days (Omnibus). Generic login errors also cover the My Account form, maintenance mode lets the Store API and payment callbacks through, and product reviews survive \"disable comments\"."
+msgstr "Zgodny z HPOS i blokowym checkoutem. Przy obniżonych cenach widać najniższą cenę z poprzednich 30 dni (Omnibus). Ogólne błędy logowania obejmują też formularz „Moje konto”, tryb serwisowy przepuszcza Store API i powiadomienia z płatności, a recenzje produktów zostają mimo wyłączenia komentarzy."
+
+#: src/Modules/Omnibus.php:76
+msgid "Omnibus price history"
+msgstr "Historia cen (Omnibus)"
+
+#: src/Modules/Omnibus.php:80
+msgid "Records every price change of products and variations, and next to each reduced price shows the lowest price from the 30 days before the reduction, as the EU Omnibus Directive requires. A product that is already reduced when recording starts shows its regular price there until its price next changes."
+msgstr "Zapisuje każdą zmianę ceny produktów i wariantów, a przy każdej obniżonej cenie pokazuje najniższą cenę z 30 dni przed obniżką, czego wymaga unijna dyrektywa Omnibus. Produkt przeceniony już w chwili rozpoczęcia zapisu pokazuje tam swoją cenę regularną aż do najbliższej zmiany ceny."
+
+#: src/Modules/Omnibus.php:87
+msgid "Show the lowest price next to reduced prices"
+msgstr "Pokazuj najniższą cenę przy obniżonych cenach"
+
+#: src/Modules/Omnibus.php:88
+msgid "Shops that show reduced prices must show this. Prices are still recorded while it is off, so the figures are right when it comes back on."
+msgstr "Sklep, który pokazuje obniżki, musi pokazywać tę informację. Gdy jest wyłączona, ceny dalej się zapisują, więc po ponownym włączeniu liczby są prawdziwe."
+
+#: src/Modules/Omnibus.php:92
+msgid "Wording"
+msgstr "Brzmienie"
+
+#. translators: %s is typed literally by the shop owner; keep it as it is.
+#: src/Modules/Omnibus.php:94
+#, php-format
+msgid "Leave empty for the standard wording. Write %s where the price goes; without it, the price goes at the end."
+msgstr "Zostaw puste, aby użyć standardowego brzmienia. Wpisz %s tam, gdzie ma stać cena; bez tego cena trafi na koniec."
+
+#: src/Modules/Omnibus.php:105
+msgid "Needs WooCommerce."
+msgstr "Wymaga WooCommerce."
+
+#: src/Modules/Omnibus.php:319
+msgid "Nothing recorded yet. Recording starts when the module is on and WooCommerce is active."
+msgstr "Na razie nic nie zapisano. Zapis zaczyna się, gdy moduł jest włączony, a WooCommerce aktywne."
+
+#. translators: 1: date and time, 2: number of price changes, 3: number of products and variations.
+#: src/Modules/Omnibus.php:329
+#, php-format
+msgid "Recording since %1$s. Price changes on record: %2$s, for %3$s products and variations."
+msgstr "Zapis od %1$s. Zapisane zmiany cen: %2$s, dla produktów i wariantów: %3$s."
+
+#: src/Modules/Omnibus.php:336
+msgid "A product that was already reduced when recording started has no earlier price on record, so its regular price is shown as the lowest price until its price next changes. `wp shouse omnibus status` lists every reduced product and where its figure comes from."
+msgstr "Produkt przeceniony już w chwili rozpoczęcia zapisu nie ma w historii wcześniejszej ceny, więc jako najniższa pokazywana jest jego cena regularna, aż do najbliższej zmiany ceny. `wp shouse omnibus status` wyświetla wszystkie przecenione produkty i źródło każdej liczby."
+
+#. translators: %s: a price.
+#: src/Modules/Omnibus.php:403
+#, php-format
+msgid "Lowest price in the 30 days before the reduction: %s"
+msgstr "Najniższa cena z 30 dni przed obniżką: %s"

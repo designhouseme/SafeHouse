@@ -15,6 +15,7 @@ SafeHouse has no firewall and no malware scanner. Leave those to Wordfence, Clou
 | Plugin health | Flags plugins that are closed, abandoned, not from WordPress.org, left over, or replaceable by SafeHouse | on |
 | Vulnerability alerts | Known vulnerabilities in core, plugins and themes, from signed Wordfence Intelligence data (stands down when Wordfence runs) | on |
 | Login limits | Address lockouts that grow longer each time; accounts under attack are paused only for new devices | on |
+| Omnibus price history | Next to every reduced price, the lowest price from the 30 days before the reduction (EU Omnibus Directive), from a recorded price history | on with WooCommerce |
 | Bot protection | Honeypot, plus Cloudflare Turnstile on login, registration, comments and both WooCommerce checkouts (Store API included) | off |
 | Install lockdown | Nobody installs plugins or themes or uploads ZIPs; updates still work | off |
 | LiteSpeed page cache | Cache headers and purges for LiteSpeed servers, with no files written | off |
