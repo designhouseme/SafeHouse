@@ -12,7 +12,7 @@ One plugin instead of a dozen: hardening, bot protection, login limits, install 
 
 == Description ==
 
-SafeHouse replaces the single-purpose plugins most sites collect over time with one small plugin. Every feature is a module you switch on or off on the SafeHouse page in the admin menu, and every module is safe in WP-CLI, cron, REST and AJAX requests.
+SafeHouse replaces the single-purpose plugins most sites collect over time with one small plugin. Every feature is a module you switch on or off on the SafeHouse page in the admin menu, with regression coverage for WordPress, WP-CLI and selected REST/WooCommerce flows.
 
 SafeHouse does not need Wordfence. When Wordfence is active, the SafeHouse features it already provides stand down on their own, so the two never do the same job twice.
 
@@ -25,7 +25,7 @@ On by default:
 * **Plugin health:** a weekly check for plugins closed on WordPress.org, not updated for two years, not from WordPress.org, one-time tools left active, inactive leftovers, and plugins a SafeHouse module replaces. Also shown in Tools → Site Health.
 * **Vulnerability alerts:** for sites without Wordfence. Warns when the installed WordPress, a plugin or a theme has a known security vulnerability and names the version that fixes it. Urgent findings (CVSS 7 or higher, or no fix yet) appear on every admin screen; all findings appear in Site Health and are e-mailed once. While Wordfence is active the module stands down, because Wordfence warns about vulnerable software itself.
 * **Login limits:** stops password guessing on wp-login.php, the WooCommerce login form, XML-RPC and application passwords. Five failures from one address in 15 minutes lock it out for 15 minutes, and every further lockout lasts four times longer (up to 24 hours); IPv6 counts by /64. An account under attack is never locked for everyone: after ten failures in an hour it is paused only for devices that never logged into it, while devices that did (they carry a signed cookie) keep working. Behind Cloudflare or another proxy, set the proxy (see below), otherwise every visitor has the proxy's address and SafeHouse blocks no addresses at all. Stands down while Wordfence brute force protection is on.
-* **Omnibus price history:** for WooCommerce shops (on as soon as WooCommerce is active). Records every price change of products and variations and, next to each reduced price, shows the lowest price from the 30 days before the reduction, as the EU Omnibus Directive requires: on product pages (classic and block themes), in product lists and for the variation a customer picks. The 30 days count back from the moment the current price took effect and include the price already in effect when they began. A product that was already reduced when recording started shows its regular price there until its price next changes. Changes from the editor, the REST API, imports and scheduled sales are all recorded; prices changed straight in the database with SQL are not. History is kept for a year. While another Omnibus plugin is active, SafeHouse keeps recording but shows nothing.
+* **Omnibus price history:** records observed WooCommerce product and variation prices. A complete recorded window shows the lowest price from the 30 days before the reduction; shorter observation is labelled partial, and absent data is shown as unavailable. The regular price is never substituted for missing history. Changes through WordPress metadata hooks are observed; direct SQL price changes are not. History retention includes the window before a long active reduction. Upgrading the old schema starts a new observation period because earlier versions inferred timestamps; old records remain inspectable. Check reduced products with `wp shouse omnibus status`. This records evidence, not a guarantee of legal compliance.
 
 Off by default:
 
@@ -36,8 +36,8 @@ Off by default:
 * **SMTP mail:** all WordPress and WooCommerce mail through your SMTP server, with the credentials in wp-config.php. No mail log, so password-reset links are never stored.
 * **Header and footer scripts:** tracking codes, verification tags and widgets in `<head>`, after `<body>` or before `</body>`. HTML and JavaScript only, never PHP; only administrators allowed to post unfiltered HTML can edit them.
 * **Maintenance mode:** visitors get a short "back soon" page with HTTP 503 and Retry-After. Logged-in staff see the normal site; wp-login, the REST API, cron and payment callbacks keep working. Switching it on or off purges LiteSpeed Cache, WP Rocket, W3 Total Cache, WP Super Cache and Autoptimize; Cloudflare HTML caching (APO, Cache Everything) needs a manual purge.
-* **LiteSpeed page cache:** on LiteSpeed servers, pages for visitors who are not logged in and have no cart are served from the server cache without running WordPress. SafeHouse only sends cache headers and clears the cache after content, menu, theme, plugin and stock changes; it writes no files and no `.htaccess`. Logged-in users, commenters, visitors with a cart, and the cart, checkout and account pages are never cached. On LiteSpeed Enterprise the host, or one `CacheLookup public on` line in `.htaccess`, turns the server cache on; Site Health checks that it works. Stands down while the LiteSpeed Cache plugin is active.
-* **Cloudflare cache:** for sites where Cloudflare caches whole pages (APO or a Cache Everything rule). After a change SafeHouse clears the post's own page and the listings it appears on (home, archives, its categories); menus, widgets, themes and plugins clear everything. At most one call every 30 seconds; changes in between follow by cron. Needs `SHOUSE_CLOUDFLARE_TOKEN` (an API token with only Zone → Cache Purge) and `SHOUSE_CLOUDFLARE_ZONE` in wp-config.php.
+* **LiteSpeed page cache:** on LiteSpeed servers, pages for visitors who are not logged in and have no cart are served from the server cache without running WordPress. SafeHouse only sends cache headers and clears the cache after content, menu, theme, plugin and stock changes; it writes no files and no `.htaccess`. Logged-in users, commenters, visitors with a cart, and the cart, checkout and account pages are never cached. On LiteSpeed Enterprise the host, or one `CacheLookup public on` line in `.htaccess`, turns the server cache on; Site Health checks that it works. Public caching stays paused until the host applies every cookie vary rule shown in the module panel; restart LiteSpeed and run Site Health afterward. PHP headers alone are insufficient on OpenLiteSpeed. Existing sessions must bypass cache even without the supplementary _lscache_vary cookie. Stands down while the LiteSpeed Cache plugin is active.
+* **Cloudflare cache:** for sites where Cloudflare caches whole pages (APO or a Cache Everything rule). Content, URL, taxonomy, stock, price, menu, widget, theme and plugin changes queue a whole-zone purge, covering old URLs and arbitrary listings. Failed requests remain queued with backoff. Calls are spaced by at least 30 seconds; WP-Cron handles pending retries. Needs `SHOUSE_CLOUDFLARE_TOKEN` (an API token with only Zone → Cache Purge) and `SHOUSE_CLOUDFLARE_ZONE` in wp-config.php.
 
 = Integrations =
 
@@ -58,14 +58,14 @@ SafeHouse has its own persistent object cache for servers with Redis and the Php
 
 * Installed and removed with WP-CLI: `wp shouse object-cache enable` and `disable`. There is no button in wp-admin: the drop-in file is written only by WP-CLI and removed only by WP-CLI or when SafeHouse is deactivated or uninstalled.
 * Needs Redis 6.0 or newer and the PhpRedis extension in both the web server's PHP and the PHP that runs WP-CLI.
-* Every cached value is signed with a key derived from the site's secret keys and checked before it is unserialized, so other sites on a shared Redis cannot plant objects.
+* Every persistent value has an HMAC signature checked before decoding. At least one configured, non-default WordPress authentication key is required. Redis still requires isolated ACL credentials: signatures do not prevent replay of old signed business data. User/session groups and role/security options remain request-local and bypass Redis.
 * Only this site's keys are ever deleted, never the whole Redis database.
-* When Redis is down, WordPress falls back to its own cache and the site keeps working. Whatever changed meanwhile is not served stale later: the first request that reaches Redis again clears this site's keys first. The same happens after SafeHouse safe mode, and when WP-CLI runs on a PHP without PhpRedis.
+* If Redis is unavailable during startup, WordPress loads its native cache. A failure later in a request uses runtime storage; transient values need not survive requests. A database generation and guarded invalidation keep older requests from repopulating the recovered namespace. Failed invalidation keeps Redis disabled.
 * Tested with WordPress's own object cache and option tests (wordpress-develop) and a WooCommerce cart and checkout run against Redis.
 
 = Updates =
 
-Updates come from the Design House update host, not WordPress.org. Each release is signed (Ed25519): WordPress installs a package only when the manifest signature and the package checksum both match. A copy of SafeHouse that lives in a git working copy never updates itself.
+Updates come from the Design House update host, not WordPress.org. New releases use one signed Ed25519 envelope with expiry, generation and package size. WordPress rejects old accepted generations and checks a bounded private download against the signed SHA-256. A host can still withhold updates; accurate clocks and renewed metadata are required. Legacy signed metadata is accepted only during migration, before a protocol-2 publication has been accepted. A copy of SafeHouse that lives in a git working copy never updates itself.
 
 == Installation ==
 
@@ -77,7 +77,7 @@ Updates come from the Design House update host, not WordPress.org. Each release 
 
 = Something broke. How do I switch SafeHouse off without wp-admin? =
 
-Turn on safe mode, which stops every module without touching the database: upload an empty file named `shouse-safe-mode` to `wp-content` (FTP is enough), add `define( 'SHOUSE_SAFE_MODE', true );` to wp-config.php, or run `wp shouse safe-mode on`. Remove the file or the constant to resume.
+Turn on safe mode, which stops feature modules: upload an empty file named `shouse-safe-mode` to `wp-content` (FTP is enough), add `define( 'SHOUSE_SAFE_MODE', true );` to wp-config.php, or run `wp shouse safe-mode on`. Remove the file or the constant to resume. Updates, diagnostics, already queued alert delivery and pending cache invalidation remain available and may write to the database. If you enabled safe mode by a file/constant, visit wp-admin/admin-ajax.php or purge at the host; an existing cache hit cannot execute PHP. The CLI command triggers a purge request automatically.
 
 = Can I pin the configuration in wp-config.php? =
 
@@ -112,9 +112,9 @@ Apart from the SMTP and Redis servers you configure yourself, SafeHouse contacts
 * **Design House update host** (updates.designhouse.me): WordPress checks it for SafeHouse updates every few hours, and Vulnerability alerts download the signed vulnerability data from it at most every 6 hours. The site never sends its plugin list: it fetches an index and only the data files that cover its installed software, each file covering about 1/256 of all plugins and themes. The vulnerability data comes from Wordfence Intelligence. [Privacy policy](https://designhouse.me/polityka-prywatnosci).
 
 * **Cloudflare Turnstile** (challenges.cloudflare.com), for Bot protection, only when its keys are set in wp-config.php. Pages with a protected form load Cloudflare's Turnstile script in the visitor's browser. When the form is sent, the site sends the Turnstile token to Cloudflare to check it, together with the visitor's IP address when the site knows it (no proxy in front, or trusted proxies set in `SHOUSE_TRUSTED_PROXIES`). [Turnstile privacy addendum](https://www.cloudflare.com/turnstile-privacy-policy/), [Cloudflare privacy policy](https://www.cloudflare.com/privacypolicy/).
-* **Cloudflare API** (api.cloudflare.com), for the Cloudflare cache module, only when it is on and its token is set: the zone ID and the addresses of changed pages, at most once every 30 seconds. [Cloudflare's privacy policy](https://www.cloudflare.com/privacypolicy/).
+* **Cloudflare API** (api.cloudflare.com), for the Cloudflare cache module, only when it is on and its token is set: the zone ID and a whole-zone purge for content changes, with retry after failures and calls spaced by at least 30 seconds. Manual/custom URL batches are also supported. [Cloudflare's privacy policy](https://www.cloudflare.com/privacypolicy/).
 
-SafeHouse sends no telemetry. The activity log stays in the site's database, stores the user and IP address of each event and deletes entries after 90 days.
+SafeHouse sends no telemetry. The activity log stays in the site's database, stores the user and IP address of each event and deletes entries after 90 days. Pending security-alert recipients/bodies and cache purge jobs are stored until transport acceptance; regular mail and password-reset messages are not put in this outbox. Delivery retries need working WP-Cron. Site Health reports failures. SMTP acceptance is not inbox confirmation, and a crash can cause duplicate delivery.
 
 == Changelog ==
 

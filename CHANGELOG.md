@@ -2,6 +2,17 @@
 
 Each release needs a `## x.y.z` section; its body is shown in the WordPress "View details" window.
 
+## Unreleased
+
+- Canonical account limits, early password-check rejection, application-password lock stability, strict proxy CIDRs and operation-scoped Turnstile checks.
+- Metadata and taxonomy authorization when duplicating content.
+- Durable alert/purge queues, retries and Site Health status; monitoring of stored sensitive capabilities, custom roles and direct user grants.
+- Redis recovery generations, isolated user/role state, unambiguous namespaces, multisite runtime separation and atomic signed counters.
+- Cache lifecycle fixes and conservative invalidation for old URLs, terms, prices and listings.
+- Observed price history only: unavailable/partial states, complete windows beyond 1000 changes, long-reduction retention, zero prices and visible storage failures. Migration begins a new trusted observation period.
+- Atomic signed release/advisory envelopes, expiry and persistent anti-rollback floors, private size-limited downloads and conditional immutable publication. See dev/SIGNED-DATA-PROTOCOL.txt for rollout and renewal.
+- Isolated digest-pinned signer, security release gates, local-only dev ports, random dev credentials and strict SMTP encryption validation.
+
 ## 0.2.0
 
 - Omnibus price history for WooCommerce, on by default: every price change of products and variations is recorded, and the lowest price from the 30 days before a reduction is shown next to reduced prices on product pages, in lists and for the picked variation. A product already reduced when recording starts shows its regular price there until its price next changes. `wp shouse omnibus status` lists reduced products and where each figure comes from.

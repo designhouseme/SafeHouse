@@ -7,7 +7,7 @@
 
 **One WordPress plugin instead of the single-purpose ones most sites collect over time.** Hardening, bot protection, login limits, install lockdown, change and vulnerability alerts, page and object caching, and the everyday tweaks people usually install a separate plugin for.
 
-Each feature is a module with its own switch, and every module is safe in WP-CLI, cron, REST and AJAX requests. SafeHouse works as the only security plugin on a site, next to Wordfence, and in WooCommerce shops.
+Each feature is a module with its own switch. The regression suites cover WordPress requests, WP-CLI, cron and selected REST/WooCommerce flows; third-party integrations still need testing on the target site. SafeHouse can run alongside Wordfence.
 
 SafeHouse has no firewall and no malware scanner. Leave those to Wordfence, Cloudflare or your host.
 
@@ -16,15 +16,15 @@ SafeHouse has no firewall and no malware scanner. Leave those to Wordfence, Clou
 | Module | What it does | Default |
 |---|---|---|
 | Hardening | File editor off, no username discovery, generic login errors, version hidden, XML-RPC off, security headers, no admin role for new accounts | on |
-| Change alerts | E-mail when an admin, plugin, theme, mu-plugin or drop-in appears, or `wp-config.php` and key options change | on |
+| Change alerts | Queued alerts for sensitive capability grants, custom roles, plugins, themes, files and key settings | on |
 | Plugin health | Flags plugins that are closed, abandoned, not from WordPress.org, left over, or replaceable by SafeHouse | on |
 | Vulnerability alerts | Known vulnerabilities in core, plugins and themes, from signed Wordfence Intelligence data (stands down when Wordfence runs) | on |
 | Login limits | Address lockouts that grow longer each time; accounts under attack are paused only for new devices | on |
-| Omnibus price history | Next to every reduced price, the lowest price from the 30 days before the reduction (EU Omnibus Directive), from a recorded price history | on with WooCommerce |
+| Omnibus price history | Recorded pre-reduction minimum; incomplete or missing history is identified explicitly | on with WooCommerce |
 | Bot protection | Honeypot, plus Cloudflare Turnstile on login, registration, comments and both WooCommerce checkouts (Store API included) | off |
 | Install lockdown | Nobody installs plugins or themes or uploads ZIPs; updates still work | off |
 | LiteSpeed page cache | Cache headers and purges for LiteSpeed servers, with no files written | off |
-| Cloudflare cache | Clears changed pages on Cloudflare after edits | off |
+| Cloudflare cache | Queues whole-zone purges after content changes and retries failed requests | off |
 | SMTP mail, Header and footer scripts, Duplicate posts, Maintenance mode, Tweaks | The small things sites usually install separate plugins for | off |
 
 A Redis object cache (signed values, its own keys only) is installed with `wp shouse object-cache enable`.
@@ -66,10 +66,10 @@ Wordfence is optional. When it is active, the SafeHouse features it already prov
 A security plugin must not become the weak spot itself:
 
 - **Signed updates.** WordPress installs a SafeHouse update only when its Ed25519 signature and its checksum both match. How releases are built, signed and checked is under [Install](#install).
-- **Admin-only actions.** Every request handler checks `current_user_can()` and a nonce, and every settings change goes to the activity log.
-- **No files written at runtime.** The Redis object cache drop-in is written only by WP-CLI.
+- **Authorized changes.** Administrative actions check the required capability and a nonce. Duplication also checks metadata and taxonomy permissions. Public authentication and checkout handlers use the relevant WordPress/WooCommerce checks and bot verification.
+- **Limited filesystem changes.** SafeHouse does not edit `.htaccess` or `wp-config.php`. Updates use private temporary files and WordPress replaces the plugin package. CLI can install the Redis drop-in and manage the safe-mode flag; deactivation/uninstall removes the owned drop-in.
 - **No telemetry.** The activity log stays in the site's database and deletes entries after 90 days.
-- **Safe mode.** If a change locks you out, upload an empty file named `shouse-safe-mode` to `wp-content` (FTP is enough), add `define( 'SHOUSE_SAFE_MODE', true );` to `wp-config.php`, or run `wp shouse safe-mode on`. Every module stops until you remove the file or the constant, or run `wp shouse safe-mode off`.
+- **Safe mode.** If a change locks you out, upload an empty file named `shouse-safe-mode` to `wp-content` (FTP is enough), add `define( 'SHOUSE_SAFE_MODE', true );` to `wp-config.php`, or run `wp shouse safe-mode on`. Feature modules stop until you remove the flag. The updater, diagnostics, already queued alert delivery and pending cache invalidation remain available; safe mode is not a read-only database mode. After enabling it by a file/constant, visit an uncached endpoint such as `wp-admin/admin-ajax.php` or ask the host to purge: a pre-existing server cache hit cannot execute PHP. The CLI command triggers that request automatically.
 
 ## Install
 
@@ -78,9 +78,19 @@ Requirements: WordPress 6.6+ and PHP 8.1+. WooCommerce is optional.
 1. Download `shouse-x.y.z.zip` from [Releases](https://github.com/designhouseme/SafeHouse/releases) and upload it in Plugins → Add New → Upload Plugin.
 2. Activate it and open **SafeHouse** in the admin menu.
 
-Updates come from the Design House update host, not WordPress.org. Every release is signed with Ed25519, and WordPress installs a package only when the manifest signature and the package checksum both match. Each GitHub release carries the same three files (`shouse-x.y.z.zip`, `manifest.json`, `manifest.json.sig`), so anyone can check a download against the signed checksum. Releases are built and signed by the [Release workflow](.github/workflows/release.yml) from the version tag, only after a maintainer approves the protected `release` environment that holds the key. The build is reproducible: `./dev/release.sh build x.y.z` rebuilds a byte-identical zip from the tag.
+Updates come from the Design House update host, not WordPress.org. Every release is signed with Ed25519, and WordPress installs a package only when the manifest signature and the package checksum both match. New releases carry the ZIP, atomic `release.json` envelope and legacy `manifest.json` / `manifest.json.sig` files, so anyone can check a download against the signed checksum. The [Release workflow](.github/workflows/release.yml) builds from the version tag and puts signing credentials in the `release` environment. Configure required reviewers for that environment in GitHub; the workflow file alone cannot enforce a human approval. The build is reproducible: `./dev/release.sh build x.y.z` rebuilds a byte-identical zip from the tag.
 
 Do not run the plugin from a clone of this repository on a live site. A copy inside a git working copy never updates itself.
+
+## Security guarantees and operation
+
+- Signed release and advisory metadata carry expiry and generation numbers. New clients reject older accepted generations and expired data; a compromised host can still withhold data. Correct server time and metadata renewal are required. See [protocol and rollout](dev/SIGNED-DATA-PROTOCOL.txt) before changing the Workers or publisher.
+- Redis signatures prevent unsigned value injection. User/session/role-option groups remain request-local so replayed Redis values cannot restore their old state. Other business caches still require isolated Redis ACLs: signatures alone do not prevent replay. Redis failure during a request uses a runtime cache; transient data may disappear between requests, as allowed by WordPress. Startup recovery uses the database generation and invalidates stale keys before Redis is reused.
+- Alerts and Cloudflare purges use a durable database queue. WP-Cron retries failures with backoff; Site Health reports pending/retried work. Use a reliable system cron on sites without regular traffic. SMTP acceptance does not prove inbox delivery, and a crash after remote acceptance can cause a duplicate. Pending alert recipients and bodies stay in the site's database until accepted; password-reset mail is not added to this outbox.
+- Change alerts monitor stored sensitive capabilities, including custom roles and direct grants, plus the documented inventory. Runtime capability filters and arbitrary file contents are outside that inventory; it is not a malware scanner.
+- LiteSpeed public caching stays paused until server cookie vary rules cover every required login, cart, comment and password cookie. Apply the per-site rules shown in the module panel, restart LiteSpeed and run Site Health. Existing sessions must bypass without `_lscache_vary`. This was verified on OpenLiteSpeed 1.9.2; PHP response headers alone were insufficient. The plugin does not edit `.htaccess`.
+- Content, taxonomy, stock and price changes conservatively purge the whole page cache/Cloudflare zone. This includes old URLs and unknown listing pages, at the cost of additional cache misses. An API acknowledgement does not independently prove edge eviction.
+- Price history reports observed data only. A shorter observation period is labelled partial; missing history is shown as unavailable. The schema upgrade starts a new trusted observation period because older code could infer historical timestamps; old rows remain inspectable. Long active reductions retain their preceding window. No reconstructed history or automatic legal-compliance guarantee is provided.
 
 ## Repository layout
 
@@ -88,7 +98,7 @@ Do not run the plugin from a clone of this repository on a live site. A copy ins
 plugin/     the plugin as it ships: shouse.php, src/, assets/, languages/, readme.txt, uninstall.php
 site/       the landing page (static files on Cloudflare Workers)
 updates/    the update host: a read-only Cloudflare Worker serving release files and vulnerability data from R2,
-            and updates/ingest/, the token-protected Worker that accepts only new vulnerability data
+            and updates/ingest/, the token-protected publisher with separate release/advisory credentials
 dev/        Docker environments, test scripts and release tooling
 design/     the README animation: an HTML composition rendered to WebP (design/hero/README.md)
 CHANGELOG.md, composer.json, phpcs.xml.dist, phpstan.neon.dist
@@ -101,13 +111,14 @@ Release ZIPs are built from `plugin/` only.
 You need Docker. You don't need PHP or Composer on the host.
 
 ```sh
-cd dev && docker compose up -d && ./setup.sh   # WordPress + WooCommerce + Wordfence on http://localhost:8894 (admin/admin)
+./dev/setup.sh                                # localhost:8894; admin password in ignored build/dev-credentials.env
 ./dev/wp.sh shouse status                      # WP-CLI inside the container
 ./dev/lint.sh                                  # PHPCS (WordPress coding standards) + PHPStan
 ./dev/smoke.sh                                 # HTTP and WP-CLI regression checks against the dev site
+./dev/security-test.sh                         # disposable release-gate tests, including real Redis
 ```
 
-Mailpit catches all outgoing mail at http://localhost:8025.
+Mailpit catches outgoing dev mail at http://localhost:8025. All published dev ports bind to `127.0.0.1`. Setup generates random database and administrator passwords in `build/dev-credentials.env` (mode 0600). Source `dev/env.sh` before raw Compose commands. Existing volumes retain their credentials: deliberately migrate them or recreate disposable volumes; setup does not silently reset a site. The standalone security gate publishes no ports and blocks outbound mail and HTTP in its fixtures.
 
 Other test environments:
 
@@ -119,11 +130,11 @@ Other test environments:
 
 ### Rules for changes
 
-- Every request handler checks `current_user_can()` and a nonce.
+- Administrative mutations require an appropriate capability and a nonce; public handlers enforce their own protocol and authentication checks.
 - No `eval`, `unserialize`, `extract` or `do_shortcode` on input.
 - `$wpdb->prepare()` everywhere, and output is escaped.
 - The visitor IP comes from `REMOTE_ADDR`, unless trusted-proxy rules say otherwise.
-- No file writes at runtime. The object cache drop-in is written only by WP-CLI.
+- Do not edit server configuration. Keep authorized update, drop-in and safe-mode filesystem changes narrow and documented.
 - No remote calls beyond those listed under External services in `readme.txt`.
 - Code and source strings are in English. Translations go in `plugin/languages/` (`./dev/i18n.sh`).
 
