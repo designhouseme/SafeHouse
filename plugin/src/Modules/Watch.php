@@ -23,9 +23,12 @@ defined( 'ABSPATH' ) || exit;
 
 final class Watch extends AbstractModule {
 
-	private const STATE_OPTION = 'shouse_watch_state';
-	private const OPTIONS      = [ 'users_can_register', 'default_role', 'admin_email', 'siteurl', 'home' ];
-	private const DROPINS      = [ 'advanced-cache.php', 'object-cache.php', 'db.php', 'db-error.php', 'maintenance.php', 'install.php', 'sunrise.php', 'fatal-error-handler.php', 'php-error.php' ];
+	private const STATE_OPTION    = 'shouse_watch_state';
+	private const CAPS            = [ 'manage_options', 'create_users', 'edit_users', 'promote_users', 'delete_users', 'install_plugins', 'update_plugins', 'activate_plugins', 'delete_plugins', 'edit_plugins', 'install_themes', 'update_themes', 'edit_themes', 'delete_themes', 'switch_themes', 'unfiltered_html', 'manage_woocommerce' ];
+	private const OPTIONS         = [ 'users_can_register', 'default_role', 'admin_email', 'siteurl', 'home' ];
+	private bool $delivery_queued = true;
+
+	private const DROPINS = [ 'advanced-cache.php', 'object-cache.php', 'db.php', 'db-error.php', 'maintenance.php', 'install.php', 'sunrise.php', 'fatal-error-handler.php', 'php-error.php' ];
 
 	public function id(): string {
 		return 'watch';
@@ -44,7 +47,7 @@ final class Watch extends AbstractModule {
 	}
 
 	public function description(): string {
-		return __( 'E-mails the alert recipients when an administrator is added, a plugin or theme appears or is activated, a mu-plugin or drop-in shows up, wp-config.php changes, or someone opens registration or changes the default role, admin e-mail or site address. Changes are also written to the activity log.', 'shouse' );
+		return __( 'Queues an alert when sensitive capabilities are granted or removed (including custom roles and individual grants), a plugin or theme appears or is activated, a mu-plugin or drop-in shows up, wp-config.php changes, or someone opens registration or changes the default role, admin e-mail or site address. Changes are also written to the activity log.', 'shouse' );
 	}
 
 	public function fields(): array {
@@ -52,9 +55,15 @@ final class Watch extends AbstractModule {
 	}
 
 	public function boot(): void {
-		add_action( 'user_register', [ $this, 'on_user_register' ] );
-		add_action( 'set_user_role', [ $this, 'on_role_change' ], 10, 3 );
-		add_action( 'add_user_role', [ $this, 'on_role_added' ], 10, 2 );
+		// Establish a baseline before capability metadata is first changed in this request.
+		if ( ! $this->stored_state() ) {
+			$this->accept();
+		}
+		foreach ( [ 'added_user_meta', 'updated_user_meta', 'deleted_user_meta' ] as $hook ) {
+			add_action( $hook, [ $this, 'on_capability_meta' ], 10, 3 );
+		}
+		global $wpdb;
+		add_action( 'update_option_' . $wpdb->get_blog_prefix() . 'user_roles', [ $this, 'cron_check' ] );
 		foreach ( self::OPTIONS as $option ) {
 			add_action( 'update_option_' . $option, [ $this, 'on_option_update' ], 10, 3 );
 		}
@@ -64,52 +73,11 @@ final class Watch extends AbstractModule {
 		}
 	}
 
-	public function on_user_register( int $user_id ): void {
-		if ( user_can( $user_id, 'manage_options' ) ) {
-			$this->admin_alert( $user_id, 'New administrator account' );
-		}
-	}
-
-	/**
-	 * @param int      $user_id   User.
-	 * @param string   $role      New role.
-	 * @param string[] $old_roles Previous roles.
-	 */
-	public function on_role_change( int $user_id, string $role, array $old_roles ): void {
-		if ( 'administrator' === $role && ! in_array( 'administrator', $old_roles, true ) ) {
-			$this->admin_alert( $user_id, 'User promoted to administrator' );
-		}
-	}
-
-	public function on_role_added( int $user_id, string $role ): void {
-		if ( 'administrator' === $role ) {
-			$this->admin_alert( $user_id, 'Administrator role added to a user' );
-		}
-	}
-
-	private function admin_alert( int $user_id, string $what ): void {
-		// wp_insert_user() fires set_user_role and then user_register for the same account.
-		static $alerted = [];
-		if ( isset( $alerted[ $user_id ] ) ) {
-			return;
-		}
-		$alerted[ $user_id ] = true;
-
-		$user  = get_userdata( $user_id );
-		$actor = wp_get_current_user();
-		$line  = sprintf(
-			'%s: %s (%s), by %s',
-			$what,
-			$user ? $user->user_login : '#' . $user_id,
-			$user ? $user->user_email : '?',
-			$actor->exists() ? $actor->user_login : 'no logged-in user (code, CLI or cron)'
-		);
-		Log::add( 'admin_added', $line, [ 'user_id' => $user_id ], 'critical' );
-		Notify::send( 'new administrator', [ $line, '', 'If you did not expect this, lock the account and check the site.' ] );
-		$state = $this->stored_state();
-		if ( $state && $user ) {
-			$state['admins'][ (string) $user_id ] = $user->user_login;
-			update_option( self::STATE_OPTION, $state, false );
+	/** @param mixed $meta_id Changed metadata row ID or IDs. */
+	public function on_capability_meta( mixed $meta_id, int $user_id, string $key ): void {
+		global $wpdb;
+		if ( $wpdb->get_blog_prefix() . 'capabilities' === $key ) {
+			$this->check();
 		}
 	}
 
@@ -118,13 +86,13 @@ final class Watch extends AbstractModule {
 		$actor  = wp_get_current_user();
 		$line   = sprintf( '%s, by %s', $change, $actor->exists() ? $actor->user_login : 'no logged-in user (code, CLI or cron)' );
 		Log::add( 'option_changed', $line, [ 'option' => $option ], 'critical' );
-		Notify::send(
+		$queued = Notify::send(
 			'site setting changed',
 			[ $line, '', 'Attackers change these settings to register their own administrator or take over password resets. If you did not expect this, change it back and check the site.' ],
 			'admin_email' === $option ? (string) $old_value : ''
 		);
-		$state = $this->stored_state();
-		if ( $state && isset( $state['options'] ) ) {
+		$state  = $this->stored_state();
+		if ( $queued && $state && isset( $state['options'] ) ) {
 			$state['options'][ $option ] = self::scalar( $value );
 			update_option( self::STATE_OPTION, $state, false );
 		}
@@ -145,19 +113,18 @@ final class Watch extends AbstractModule {
 	 * @return array<string, mixed>
 	 */
 	public function snapshot(): array {
-		$admins = [];
-		foreach ( get_users(
-			[
-				'role'   => 'administrator',
-				'fields' => [ 'ID', 'user_login' ],
-			]
-		) as $user ) {
-			$admins[ (string) $user->ID ] = $user->user_login;
+		$privileges = self::privileges();
+		$admins     = [];
+		foreach ( $privileges as $id => $entry ) {
+			if ( in_array( 'manage_options', $entry['caps'], true ) ) {
+				$admins[ $id ] = $entry['login'];
+			}
 		}
 		$active = get_option( 'active_plugins', [] );
 		$config = $this->config_path();
 		return [
 			'admins'         => $admins,
+			'privileges'     => $privileges,
 			'plugins'        => self::entries( WP_PLUGIN_DIR ),
 			'active_plugins' => is_array( $active ) ? array_values( $active ) : [],
 			'themes'         => self::entries( get_theme_root() ),
@@ -178,16 +145,16 @@ final class Watch extends AbstractModule {
 	 * @return string[] Changes found.
 	 */
 	public function check(): array {
-		$before = $this->stored_state();
-		$now    = $this->snapshot();
-		update_option( self::STATE_OPTION, $now, false );
+		$this->delivery_queued = true;
+		$before                = $this->stored_state();
+		$now                   = $this->snapshot();
 		if ( ! $before ) {
+			update_option( self::STATE_OPTION, $now, false );
 			return [];
 		}
 
 		$changes = [];
 		$labels  = [
-			'admins'         => [ 'Administrator added', 'Administrator removed' ],
 			'plugins'        => [ 'Plugin directory added', 'Plugin directory removed' ],
 			'active_plugins' => [ 'Plugin activated', 'Plugin deactivated' ],
 			'themes'         => [ 'Theme added', 'Theme removed' ],
@@ -202,6 +169,27 @@ final class Watch extends AbstractModule {
 			}
 			foreach ( array_diff( $old, $new ) as $item ) {
 				$changes[] = "$removed_label: $item";
+			}
+		}
+		// Older baselines have only role-name inventories. Adopt capabilities once without false alerts.
+		if ( isset( $before['privileges'] ) && is_array( $before['privileges'] ) ) {
+			foreach ( array_unique( array_merge( array_keys( $before['privileges'] ), array_keys( $now['privileges'] ) ) ) as $id ) {
+				$old     = $before['privileges'][ $id ] ?? [
+					'login' => '#' . $id,
+					'caps'  => [],
+				];
+				$new     = $now['privileges'][ $id ] ?? [
+					'login' => $old['login'],
+					'caps'  => [],
+				];
+				$added   = array_diff( $new['caps'], $old['caps'] );
+				$removed = array_diff( $old['caps'], $new['caps'] );
+				if ( $added ) {
+					$changes[] = 'Privileges granted to ' . $new['login'] . ' (#' . $id . '): ' . implode( ', ', $added );
+				}
+				if ( $removed ) {
+					$changes[] = 'Privileges removed from ' . $old['login'] . ' (#' . $id . '): ' . implode( ', ', $removed );
+				}
 			}
 		}
 		if ( ( $before['config_hash'] ?? '' ) !== $now['config_hash'] ) {
@@ -220,17 +208,22 @@ final class Watch extends AbstractModule {
 			}
 		}
 
+		$queued = true;
 		if ( $changes ) {
-			$critical = (bool) preg_grep( '/^(Administrator added|Must-use plugin added|Drop-in added|wp-config|Setting )/', $changes );
+			$critical = (bool) preg_grep( '/^(Privileges granted|Must-use plugin added|Drop-in added|wp-config|Setting )/', $changes );
 			Log::add( 'inventory_changed', implode( '; ', $changes ), [], $critical ? 'critical' : 'warning' );
-			Notify::send( 'changes detected', array_merge( [ 'SafeHouse noticed these changes since the last check (up to an hour ago):', '' ], array_map( static fn( $c ) => '- ' . $c, $changes ) ), $old_admin_email );
+			$queued = Notify::send( 'changes detected', array_merge( [ 'SafeHouse noticed these changes since the last check (up to an hour ago):', '' ], array_map( static fn( $c ) => '- ' . $c, $changes ) ), $old_admin_email );
+		}
+		$this->delivery_queued = $queued;
+		if ( $queued ) {
+			update_option( self::STATE_OPTION, $now, false );
 		}
 		return $changes;
 	}
 
 	public function accept(): void {
 		update_option( self::STATE_OPTION, $this->snapshot(), false );
-		Log::add( 'inventory_accepted', 'Current plugins, admins, files and site settings accepted as the baseline' );
+		Log::add( 'inventory_accepted', 'Current plugins, privileges, files and site settings accepted as the baseline' );
 	}
 
 	public function tasks(): array {
@@ -246,6 +239,9 @@ final class Watch extends AbstractModule {
 			return __( 'The current state is the new baseline.', 'shouse' );
 		}
 		$changes = $this->check();
+		if ( ! $this->delivery_queued ) {
+			return __( 'Changes detected, but the alert could not be stored. The previous baseline was retained. Check database access and alert recipients.', 'shouse' );
+		}
 		/* translators: %d: number of changes. */
 		return $changes ? sprintf( _n( '%d change found and reported.', '%d changes found and reported.', count( $changes ), 'shouse' ), count( $changes ) ) : __( 'No changes since the last check.', 'shouse' );
 	}
@@ -254,13 +250,13 @@ final class Watch extends AbstractModule {
 		$state = $this->stored_state();
 		echo '<p class="shouse-panel">';
 		if ( ! $state ) {
-			esc_html_e( 'No baseline yet. It is recorded on the first hourly check.', 'shouse' );
+			esc_html_e( 'No baseline yet. It is recorded when monitoring starts.', 'shouse' );
 		} else {
 			echo esc_html(
 				sprintf(
-					/* translators: 1: number of administrators, 2: number of plugins, 3: number of mu-plugins, 4: number of drop-ins, 5: number of site settings. */
-					__( 'Watching %1$d administrators, %2$d plugins, %3$d must-use plugins, %4$d drop-ins, wp-config.php and %5$d site settings.', 'shouse' ),
-					count( (array) $state['admins'] ),
+					/* translators: 1: number of privileged accounts, 2: number of plugins, 3: number of mu-plugins, 4: number of drop-ins, 5: number of site settings. */
+					__( 'Watching %1$d privileged accounts, %2$d plugins, %3$d must-use plugins, %4$d drop-ins, wp-config.php and %5$d site settings.', 'shouse' ),
+					count( (array) ( $state['privileges'] ?? $state['admins'] ) ),
 					count( (array) $state['plugins'] ),
 					count( (array) $state['mu_plugins'] ),
 					count( (array) $state['dropins'] ),
@@ -296,6 +292,9 @@ final class Watch extends AbstractModule {
 		foreach ( $changes as $change ) {
 			WP_CLI::log( $change );
 		}
+		if ( ! $this->delivery_queued ) {
+			WP_CLI::error( 'Alert could not be stored. The previous baseline was retained. Check database access and alert recipients.' );
+		}
 		WP_CLI::success( $changes ? count( $changes ) . ' change(s) reported.' : 'No changes.' );
 	}
 
@@ -314,6 +313,49 @@ final class Watch extends AbstractModule {
 			$options[ (string) $row->option_name ] = self::scalar( $row->option_value );
 		}
 		return $options;
+	}
+
+	/**
+	 * Read stored role definitions and individual grants without cache or capability filters.
+	 * This observes persistent privileges, including custom roles and direct SQL changes.
+	 * Runtime user_has_cap filters are deliberately outside this inventory.
+	 *
+	 * @return array<int, array{login: string, caps: list<string>}>
+	 */
+	private static function privileges(): array {
+		global $wpdb;
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery -- this inventory must see database changes past caches.
+		$roles  = maybe_unserialize( $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", $wpdb->get_blog_prefix() . 'user_roles' ) ) );
+		$roles  = is_array( $roles ) ? $roles : [];
+		$out    = [];
+		$cursor = 0;
+		do {
+			$users = (array) $wpdb->get_results( $wpdb->prepare( "SELECT u.ID, u.user_login, m.meta_value FROM {$wpdb->users} u JOIN {$wpdb->usermeta} m ON u.ID = m.user_id WHERE m.meta_key = %s AND u.ID > %d ORDER BY u.ID LIMIT 500", $wpdb->get_blog_prefix() . 'capabilities', $cursor ), ARRAY_A );
+			foreach ( $users as $user ) {
+				$cursor   = (int) $user['ID'];
+				$assigned = maybe_unserialize( $user['meta_value'] );
+				if ( ! is_array( $assigned ) ) {
+					continue;
+				}
+				$all = [];
+				foreach ( array_keys( $assigned ) as $role ) {
+					if ( isset( $roles[ $role ]['capabilities'] ) && is_array( $roles[ $role ]['capabilities'] ) ) {
+						$all = array_merge( $all, $roles[ $role ]['capabilities'] );
+					}
+				}
+				$all  = array_merge( $all, $assigned );
+				$caps = array_values( array_filter( self::CAPS, static fn( $cap ) => ! empty( $all[ $cap ] ) ) );
+				if ( $caps ) {
+					$out[ $cursor ] = [
+						'login' => (string) $user['user_login'],
+						'caps'  => $caps,
+					];
+				}
+			}
+			$more = count( $users ) === 500;
+		} while ( $more );
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery
+		return $out;
 	}
 
 	/** @return array<string, mixed> */

@@ -69,6 +69,8 @@ final class Plugin {
 		$plugin = self::instance();
 
 		Log::maybe_install();
+		Core\Queue::boot();
+		Core\Notify::register();
 		self::schedule_events();
 		add_action( 'shouse_daily', [ Log::class, 'purge' ] );
 		add_action( 'init', [ $plugin, 'load_textdomain' ] );
@@ -138,6 +140,8 @@ final class Plugin {
 	public static function deactivate(): void {
 		wp_clear_scheduled_hook( 'shouse_hourly' );
 		wp_clear_scheduled_hook( 'shouse_daily' );
+		wp_clear_scheduled_hook( 'shouse_queue' );
+		wp_clear_scheduled_hook( 'shouse_cloudflare_purge' );
 		ObjectCache::deactivate();
 	}
 }

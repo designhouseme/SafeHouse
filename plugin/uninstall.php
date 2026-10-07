@@ -14,6 +14,7 @@ global $wpdb;
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}shouse_log" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- prefix only.
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}shouse_login" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- prefix only.
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}shouse_price_history" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- prefix only.
+$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}shouse_jobs" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- prefix only.
 // Also the names from before the rename to SafeHouse, in case the plugin is removed before it ever ran.
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wphouse_log" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- prefix only.
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wphouse_login" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- prefix only.
@@ -33,6 +34,8 @@ foreach ( [ 'shouse_', 'wphouse_' ] as $shouse_prefix ) {
 
 wp_clear_scheduled_hook( 'shouse_hourly' );
 wp_clear_scheduled_hook( 'shouse_daily' );
+wp_clear_scheduled_hook( 'shouse_queue' );
+wp_clear_scheduled_hook( 'shouse_cloudflare_purge' );
 
 // Our object cache loader, if deactivation did not remove it already. Another plugin's drop-in is left alone.
 $shouse_dropin = WP_CONTENT_DIR . '/object-cache.php';
