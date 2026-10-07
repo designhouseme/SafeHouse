@@ -50,7 +50,7 @@ Plugin health recognises these plugins and names the SafeHouse module that does 
 
 </details>
 
-[`plugin/readme.txt`](plugin/readme.txt) is the full user documentation: every module, the wp-config constants, WP-CLI commands and the external services SafeHouse contacts.
+The [wiki](https://github.com/designhouseme/SafeHouse/wiki) is the full documentation: getting started, every module, the wp-config constants and WP-CLI commands, troubleshooting and the external services SafeHouse contacts. [`plugin/readme.txt`](plugin/readme.txt) is the short version that ships with the plugin.
 
 ## With Wordfence
 
