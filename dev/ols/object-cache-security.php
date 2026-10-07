@@ -109,6 +109,8 @@ $a->set('item', 'site-a', 'posts');
 $a->switch_to_blog(2);
 check(false === $a->get('item', 'posts'), 'runtime does not leak blog A into blog B');
 check($a->add('item', 'site-b', 'posts'), 'add in another blog has its own namespace');
+check('site-b' === $a->cache['posts']['item'], 'diagnostic cache view contains only the active blog');
+check(!isset($a->secret) && null === $a->secret && !isset($a->redis), 'compatibility accessors do not expose connection or signing secrets');
 $a->switch_to_blog(1);
 check('site-a' === $a->get('item', 'posts'), 'returning to blog A preserves its own runtime value');
 $a->flush_runtime();
@@ -179,12 +181,16 @@ $fresh->set('expired-counter', 4, 'expire', 1);
 sleep(2);
 check(false === $fresh->incr('expired-counter', 1, 'expire'), 'expired Redis value is not resurrected from runtime');
 
-foreach (['set', 'del'] as $denied) {
+foreach (['set', 'del', 'get', 'mget'] as $denied) {
     $failing = new Cache(restricted($r, 'deny-'.$denied, $denied), $prefix, $secret);
     if ('set' === $denied) {
         check($failing->set('outage', 'first-write', 'transient'), 'first failed Redis write succeeds in runtime');
-    } else {
+    } elseif ('del' === $denied) {
         $failing->delete('item', 'posts');
+    } else {
+        $failing->set('outage', 'remembered', 'transient');
+        $value = 'get' === $denied ? $failing->get('outage', 'transient', true) : $failing->get_multiple(['outage'], 'transient', true)['outage'];
+        check('remembered' === $value, $denied.' failure preserves the current request runtime value');
     }
     check(!$failing->redis_status(), $denied.' failure disconnects the persistent backend');
     check($failing->set('outage', 'second-write', 'transient'), 'transient write survives disconnected backend');

@@ -44,8 +44,8 @@ final class Cache {
 	 */
 	private array $cache = [];
 
-	/** @var array<string, true> */
-	private array $global_groups = [];
+	/** @var array<string, true> WordPress's cache-switch fallback and debugging tools read this map. */
+	public array $global_groups = [];
 
 	/** @var array<string, true> */
 	private array $non_persistent_groups = [
@@ -84,6 +84,29 @@ final class Cache {
 		if ( function_exists( 'is_multisite' ) && is_multisite() && function_exists( 'get_current_blog_id' ) ) {
 			$this->blog_prefix = (string) get_current_blog_id();
 		}
+	}
+
+	/** WordPress compatibility: expose group metadata and a read-only view of the current blog. */
+	public function __get( string $name ): mixed {
+		if ( 'no_mc_groups' === $name ) {
+			return array_keys( $this->non_persistent_groups );
+		}
+		if ( 'cache' !== $name ) {
+			return null;
+		}
+		$view = [];
+		foreach ( $this->cache as $runtime_group => $values ) {
+			[ $encoded, $scope ] = explode( ':', $runtime_group, 2 );
+			$group               = hex2bin( $encoded );
+			if ( false !== $group && $scope === $this->scope( $group ) ) {
+				$view[ $group ] = array_map( static fn( $value ) => is_object( $value ) ? clone $value : $value, $values );
+			}
+		}
+		return $view;
+	}
+
+	public function __isset( string $name ): bool {
+		return in_array( $name, [ 'cache', 'no_mc_groups' ], true );
 	}
 
 	public function add( int|string $key, mixed $data, string $group = '', int $expire = 0 ): bool {
@@ -359,7 +382,9 @@ final class Cache {
 	}
 
 	public function switch_to_blog( int $blog_id ): void {
-		$this->blog_prefix = (string) $blog_id;
+		if ( function_exists( 'is_multisite' ) && is_multisite() ) {
+			$this->blog_prefix = (string) $blog_id;
+		}
 	}
 
 	public function close(): bool {
