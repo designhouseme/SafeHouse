@@ -17,6 +17,7 @@
 namespace SafeHouse\Modules;
 
 use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 use WP_Error;
 use SafeHouse\Core\AbstractModule;
 use SafeHouse\Core\Log;
@@ -79,6 +80,7 @@ final class Smtp extends AbstractModule {
 	public function boot(): void {
 		if ( self::configured() ) {
 			add_action( 'phpmailer_init', [ $this, 'configure' ] );
+			add_filter( 'pre_wp_mail', [ $this, 'preflight' ], PHP_INT_MAX );
 		}
 		if ( '' !== $this->opt( 'from_email' ) ) {
 			add_filter( 'wp_mail_from', [ $this, 'from_email' ] );
@@ -89,12 +91,46 @@ final class Smtp extends AbstractModule {
 		add_action( 'wp_mail_failed', [ $this, 'log_failure' ] );
 	}
 
+	/** Fail through WordPress's mail API, before phpmailer_init (which core calls outside its try block). */
+	public function preflight( mixed $pre ): mixed {
+		$error = self::configuration_error();
+		if ( null !== $pre || '' === $error ) {
+			return $pre;
+		}
+		do_action( 'wp_mail_failed', new WP_Error( 'wp_mail_failed', $error ) ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- preserve the core mail failure contract.
+		return false;
+	}
+
+	private static function configuration_error(): string {
+		if ( ! in_array( self::config( 'SECURE', 'tls' ), [ 'tls', 'ssl', '' ], true ) ) {
+			return 'Invalid SHOUSE_SMTP_SECURE: use tls, ssl, or an explicit empty string.';
+		}
+		if ( false === filter_var(
+			self::config( 'PORT', '587' ),
+			FILTER_VALIDATE_INT,
+			[
+				'options' => [
+					'min_range' => 1,
+					'max_range' => 65535,
+				],
+			]
+		) ) {
+			return 'Invalid SHOUSE_SMTP_PORT.';
+		}
+		return '';
+	}
+
 	public function configure( PHPMailer $mailer ): void {
+		$error = self::configuration_error();
+		if ( '' !== $error ) {
+			throw new Exception( $error ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- fixed configuration messages, no HTML output.
+		}
 		$secure = self::config( 'SECURE', 'tls' );
+		$port   = (int) self::config( 'PORT', '587' );
 		$mailer->isSMTP();
 		$mailer->Host        = self::config( 'HOST' ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- PHPMailer API.
-		$mailer->Port        = (int) self::config( 'PORT', '587' ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
-		$mailer->SMTPSecure  = in_array( $secure, [ 'tls', 'ssl' ], true ) ? $secure : ''; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+		$mailer->Port        = $port; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+		$mailer->SMTPSecure  = $secure; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 		$mailer->SMTPAutoTLS = '' !== $secure; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 		if ( '' !== self::config( 'USER' ) ) {
 			$mailer->SMTPAuth = true; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
