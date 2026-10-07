@@ -4,7 +4,7 @@
  * Cache Rules with "Cache Everything"). Static files are cached by Cloudflare anyway; this keeps pages fresh.
  *
  * Listens to Core\ContentChanges: a changed post clears its own address and the listings it appears on
- * (up to 30 addresses per call, Cloudflare's limit), anything site-wide clears everything. Calls go out
+ * (a conservative batch of up to 30 addresses per call), anything site-wide clears everything. Calls go out
  * at the end of the request, at most one every 30 seconds; changes in between are sent by cron.
  *
  * The only outbound host is api.cloudflare.com. The token (a Cloudflare API token with only
@@ -19,9 +19,11 @@
 namespace SafeHouse\Modules;
 
 use WP_CLI;
+use WP_Error;
 use SafeHouse\Core\AbstractModule;
 use SafeHouse\Core\ContentChanges;
 use SafeHouse\Core\Log;
+use SafeHouse\Core\Queue;
 use SafeHouse\Core\Updater;
 
 defined( 'ABSPATH' ) || exit;
@@ -33,7 +35,6 @@ final class Cloudflare extends AbstractModule {
 	private const MAX_URLS = 30;
 	private const CRON     = 'shouse_cloudflare_purge';
 	private const PENDING  = 'shouse_cloudflare_pending';
-	private const LAST     = 'shouse_cloudflare_last';
 	private const RESULT   = 'shouse_cloudflare_result';
 
 	/**
@@ -56,7 +57,7 @@ final class Cloudflare extends AbstractModule {
 	}
 
 	public function description(): string {
-		return __( 'Clears the Cloudflare cache after changes, for sites where Cloudflare caches whole pages (APO or a Cache Everything rule). A changed post clears its own page and the listings it appears on; menus, widgets, themes and plugins clear everything. The API token and zone ID live in wp-config.php.', 'shouse' );
+		return __( 'Clears the Cloudflare cache after changes, for sites where Cloudflare caches whole pages (APO or a Cache Everything rule). Content, URL, taxonomy, stock, price and site-wide changes queue a whole-zone purge, covering old pages and arbitrary listings. Failed requests are retained and retried by WP-Cron. The API token and zone ID live in wp-config.php.', 'shouse' );
 	}
 
 	public function fields(): array {
@@ -74,7 +75,9 @@ final class Cloudflare extends AbstractModule {
 	public function boot(): void {
 		add_action( ContentChanges::ACTION, [ $this, 'collect' ] ); // phpcs:ignore WordPress.NamingConventions.ValidHookName.UseUnderscores
 		add_action( 'shutdown', [ $this, 'send' ], PHP_INT_MAX );
+		Queue::handler( 'cloudflare', [ $this, 'deliver' ] );
 		add_action( self::CRON, [ $this, 'send_pending' ] );
+		$this->send_pending();
 		add_filter( 'site_status_tests', [ $this, 'site_health_test' ] );
 		if ( Updater::is_local() ) {
 			add_filter( 'http_request_host_is_external', [ $this, 'allow_local_api' ], 10, 2 );
@@ -98,31 +101,88 @@ final class Cloudflare extends AbstractModule {
 		}
 	}
 
-	/** End of the request: purge now, or leave it to cron when the last call was under 30 seconds ago. */
+	/** End of the request: persist before attempting a purge. */
 	public function send(): void {
-		if ( null === $this->pending ) {
-			return;
+		if ( null !== $this->pending && '' === $this->purge( $this->pending ) ) {
+			$this->pending = null;
 		}
-		$batch         = $this->pending;
-		$this->pending = null;
-		if ( get_transient( self::LAST ) ) {
-			$queued = get_option( self::PENDING, [] );
-			update_option( self::PENDING, ( is_array( $queued ) ? $queued : [] ) + $batch, false );
-			if ( ! wp_next_scheduled( self::CRON ) ) {
-				wp_schedule_single_event( time() + self::GAP, self::CRON );
-			}
-			return;
-		}
-		$this->purge( $batch );
 	}
 
-	/** Cron: send what piled up while calls were spaced out. */
+	/** Migrate the old pending option without removing it before durable acceptance. */
 	public function send_pending(): void {
 		$queued = get_option( self::PENDING, [] );
-		delete_option( self::PENDING );
-		if ( is_array( $queued ) && $queued ) {
-			$this->purge( $queued );
+		if ( is_array( $queued ) && $queued && Queue::add(
+			'cloudflare',
+			[
+				'zone'  => self::zone(),
+				'batch' => $queued,
+			]
+		) ) {
+			global $wpdb;
+			$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name = %s AND option_value = %s", self::PENDING, maybe_serialize( $queued ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- compare-and-delete preserves concurrent legacy writers.
+			wp_cache_delete( self::PENDING, 'options' );
 		}
+	}
+
+	/**
+	 * @param array<string, true> $batch URLs, or * for the whole zone.
+	 * @return string Empty on durable acceptance.
+	 */
+	public function purge( array $batch ): string {
+		if ( ! $batch ) {
+			return '';
+		}
+		if ( ! Queue::add(
+			'cloudflare',
+			[
+				'zone'  => self::zone(),
+				'batch' => $batch,
+			]
+		) ) {
+			return 'The purge could not be stored. Check database access.';
+		}
+		Queue::run( 'cloudflare', 1 );
+		return '';
+	}
+
+	/**
+	 * @param array<string, mixed> $payload Pending purge.
+	 * @return true|WP_Error
+	 */
+	public function deliver( array $payload ): bool|WP_Error {
+		if ( ! isset( $payload['batch'], $payload['zone'] ) || ! is_array( $payload['batch'] ) || ! $payload['batch'] || $payload['zone'] !== self::zone() ) {
+			return new WP_Error( 'cloudflare_payload', 'The queued purge does not match the configured zone.' );
+		}
+		if ( ! Queue::reserve( 'cloudflare:' . self::zone(), self::GAP ) ) {
+			return new WP_Error(
+				'cloudflare_spacing',
+				'Waiting for the next purge slot.',
+				[
+					'retry_after' => self::GAP,
+					'deferred'    => true,
+				]
+			);
+		}
+		// A whole-zone purge also covers already queued changes. Freeze this list before the
+		// request: content changed while the API is running needs its own later purge.
+		$covered = [];
+		if ( isset( $payload['batch']['*'] ) || count( $payload['batch'] ) > self::MAX_URLS ) {
+			global $wpdb;
+			$rows = (array) $wpdb->get_results( $wpdb->prepare( 'SELECT id, payload FROM %i WHERE queue = %s ORDER BY id LIMIT 1000', Queue::table(), 'cloudflare' ), ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- capture only already committed work.
+			foreach ( $rows as $row ) {
+				$pending = json_decode( $row['payload'], true );
+				if ( is_array( $pending ) && ( $pending['zone'] ?? null ) === self::zone() ) {
+					$covered[] = (int) $row['id'];
+				}
+			}
+		}
+		$error = $this->request( $payload['batch'] );
+		if ( '' === $error && $covered ) {
+			global $wpdb;
+			$placeholders = implode( ',', array_fill( 0, count( $covered ), '%d' ) );
+			$wpdb->query( $wpdb->prepare( "DELETE FROM %i WHERE queue = %s AND id IN ($placeholders)", array_merge( [ Queue::table(), 'cloudflare' ], $covered ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- IDs captured before this whole-zone purge; placeholders only.
+		}
+		return '' === $error ? true : new WP_Error( 'cloudflare_request', $error );
 	}
 
 	/**
@@ -131,19 +191,20 @@ final class Cloudflare extends AbstractModule {
 	 * @param array<string, true> $batch Addresses, or "*" for everything.
 	 * @return string Error message, or '' on success.
 	 */
-	public function purge( array $batch ): string {
-		set_transient( self::LAST, time(), self::GAP );
+	private function request( array $batch ): string {
 		$everything = isset( $batch['*'] ) || count( $batch ) > self::MAX_URLS;
 		$body       = $everything ? [ 'purge_everything' => true ] : [ 'files' => array_keys( $batch ) ];
 		$response   = wp_safe_remote_post(
 			self::api() . '/zones/' . rawurlencode( self::zone() ) . '/purge_cache',
 			[
-				'timeout' => 5,
-				'headers' => [
+				'timeout'             => 5,
+				'redirection'         => 0,
+				'limit_response_size' => 128 * KB_IN_BYTES,
+				'headers'             => [
 					'Authorization' => 'Bearer ' . self::token(),
 					'Content-Type'  => 'application/json',
 				],
-				'body'    => (string) wp_json_encode( $body ),
+				'body'                => (string) wp_json_encode( $body ),
 			]
 		);
 		$what       = $everything ? 'everything' : count( $batch ) . ' addresses';
@@ -152,7 +213,7 @@ final class Cloudflare extends AbstractModule {
 			$error = $response->get_error_message();
 		} else {
 			$data = json_decode( wp_remote_retrieve_body( $response ), true );
-			if ( ! is_array( $data ) || empty( $data['success'] ) ) {
+			if ( 200 !== wp_remote_retrieve_response_code( $response ) || ! is_array( $data ) || true !== ( $data['success'] ?? null ) ) {
 				$first = is_array( $data ) ? ( $data['errors'][0] ?? [] ) : [];
 				$error = sprintf( 'HTTP %d: %s', wp_remote_retrieve_response_code( $response ), is_array( $first ) ? (string) ( $first['message'] ?? 'unknown error' ) : 'unknown error' );
 			}
@@ -181,7 +242,7 @@ final class Cloudflare extends AbstractModule {
 	public function handle_task( string $task ): string {
 		$error = $this->purge( [ '*' => true ] );
 		/* translators: %s: error message. */
-		return '' === $error ? __( 'Cloudflare cache cleared.', 'shouse' ) : sprintf( __( 'Cloudflare refused: %s', 'shouse' ), $error );
+		return '' === $error ? __( 'Cloudflare purge queued. Check the panel for delivery status.', 'shouse' ) : sprintf( __( 'Cloudflare refused: %s', 'shouse' ), $error );
 	}
 
 	public function render_panel(): void {
@@ -244,7 +305,7 @@ final class Cloudflare extends AbstractModule {
 		if ( '' !== $error ) {
 			WP_CLI::error( 'Cloudflare refused: ' . $error );
 		}
-		WP_CLI::success( 'Cloudflare cache cleared.' );
+		WP_CLI::success( 'Cloudflare purge queued. Check Site Health and the Cloudflare panel for delivery status.' );
 	}
 
 	/** Lets the test API on a private address through, on local/development sites only. */

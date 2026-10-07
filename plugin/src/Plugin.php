@@ -78,6 +78,7 @@ final class Plugin {
 		ObjectCache::register(); // Also in safe mode: status and `wp shouse object-cache disable` must stay reachable.
 		add_filter( 'site_status_tests', [ Core\Net::class, 'site_health_test' ] );
 		Core\ContentChanges::register();
+		Modules\LiteSpeed::register(); // Finish pending invalidations even after the module is disabled.
 
 		if ( ! SafeMode::active() ) {
 			foreach ( $plugin->modules as $id => $module ) {

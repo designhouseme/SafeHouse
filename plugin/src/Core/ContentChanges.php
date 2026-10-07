@@ -2,8 +2,9 @@
 /**
  * One place that knows when published content changed, for every cache SafeHouse clears (LiteSpeed,
  * Cloudflare; maintenance mode triggers it through `litespeed_purge_all`). It fires
- * `shouse_content_changed` with the addresses that changed, or with an empty list when the change can
- * show on any page: menus, widgets, theme, plugins, SafeHouse settings, unpublishing.
+ * `shouse_content_changed` with an empty list to clear the site's pages. Published content, prices,
+ * stock and taxonomy changes can affect old URLs, arbitrary listings, pagination and related items;
+ * WordPress cannot enumerate every page that a theme or extension may have rendered from them.
  *
  * Comments count only once approved, so spam does not empty caches.
  *
@@ -22,7 +23,8 @@ final class ContentChanges {
 
 	private const SITE_WIDE = [ 'switch_theme', 'customize_save_after', 'wp_update_nav_menu', 'update_option_sidebars_widgets', 'update_option_shouse_settings', 'upgrader_process_complete', 'activated_plugin', 'deactivated_plugin', '_core_updated_successfully', 'litespeed_purge_all' ];
 
-	private const STOCK = [ 'woocommerce_product_set_stock', 'woocommerce_variation_set_stock', 'woocommerce_product_set_stock_status', 'woocommerce_variation_set_stock_status' ];
+	private const STOCK        = [ 'woocommerce_product_set_stock', 'woocommerce_variation_set_stock', 'woocommerce_product_set_stock_status', 'woocommerce_variation_set_stock_status' ];
+	private const PRODUCT_META = [ '_price', '_regular_price', '_sale_price', '_sale_price_dates_from', '_sale_price_dates_to', '_stock', '_stock_status', '_manage_stock', '_backorders' ];
 
 	public static function register(): void {
 		foreach ( self::SITE_WIDE as $hook ) {
@@ -36,6 +38,16 @@ final class ContentChanges {
 		foreach ( self::STOCK as $hook ) {
 			add_action( $hook, [ self::class, 'stock_changed' ] );
 		}
+		foreach ( [ 'added_post_meta', 'updated_post_meta', 'deleted_post_meta' ] as $hook ) {
+			add_action( $hook, [ self::class, 'product_meta_changed' ], 10, 3 );
+		}
+		add_action( 'woocommerce_update_product', [ self::class, 'post' ] );
+		add_action( 'woocommerce_update_product_variation', [ self::class, 'post' ] );
+		add_action( 'woocommerce_scheduled_sales', [ self::class, 'everything' ] );
+		add_action( 'set_object_terms', [ self::class, 'post' ] );
+		add_action( 'deleted_term_relationships', [ self::class, 'post' ] );
+		add_action( 'edited_term', [ self::class, 'term_changed' ], 10, 3 );
+		add_action( 'delete_term', [ self::class, 'term_changed' ], 10, 3 );
 	}
 
 	/** Something that can show on every page changed. */
@@ -43,11 +55,27 @@ final class ContentChanges {
 		do_action( 'shouse_content_changed', [] ); // Literal name: ACTION is for listeners.
 	}
 
-	/** A post's own page and the listings it appears on changed. */
+	/** Published content may appear on any page, including an address or term it used to have. */
 	public static function post( int|WP_Post $post ): void {
-		$urls = self::post_urls( $post );
-		if ( $urls ) {
-			do_action( 'shouse_content_changed', $urls );
+		$post = get_post( $post );
+		if ( $post instanceof WP_Post && 'product_variation' === $post->post_type ) {
+			$post = get_post( $post->post_parent );
+		}
+		if ( $post instanceof WP_Post && 'publish' === $post->post_status && is_post_type_viewable( $post->post_type ) ) {
+			self::everything();
+		}
+	}
+
+	public static function product_meta_changed( mixed $meta_id, int $post_id, string $meta_key ): void {
+		if ( in_array( $meta_key, self::PRODUCT_META, true ) && in_array( get_post_type( $post_id ), [ 'product', 'product_variation' ], true ) ) {
+			self::post( $post_id );
+		}
+	}
+
+	public static function term_changed( int $term_id, int $tt_id, string $taxonomy ): void {
+		$object = get_taxonomy( $taxonomy );
+		if ( $object && $object->public ) {
+			self::everything();
 		}
 	}
 

@@ -138,8 +138,8 @@ final class Queue {
 						$wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE id = %d AND lock_token = %s', self::table(), $row['id'], $token ) );
 						continue;
 					}
-					$attempts = (int) $row['attempts'] + 1;
 					$data     = $result->get_error_data();
+					$attempts = (int) $row['attempts'] + ( is_array( $data ) && ! empty( $data['deferred'] ) ? 0 : 1 );
 					$delay    = is_array( $data ) && isset( $data['retry_after'] ) ? max( 30, min( DAY_IN_SECONDS, (int) $data['retry_after'] ) ) : min( HOUR_IN_SECONDS, 60 * ( 2 ** min( 6, $attempts - 1 ) ) ) + wp_rand( 0, 30 );
 					$wpdb->query( $wpdb->prepare( 'UPDATE %i SET attempts = %d, available_at = %d, locked_until = 0, lock_token = %s, last_error = %s WHERE id = %d AND lock_token = %s', self::table(), $attempts, time() + $delay, '', mb_substr( sanitize_text_field( $result->get_error_message() ), 0, 300 ), $row['id'], $token ) );
 				}
@@ -167,14 +167,15 @@ final class Queue {
 		}
 	}
 
-	/** @return array{pending: int, failed: int, oldest: int} */
+	/** @return array{pending: int, failed: int, oldest: int, storage_available: bool} */
 	public static function status(): array {
 		global $wpdb;
 		$row = (array) $wpdb->get_row( $wpdb->prepare( 'SELECT COUNT(*) AS pending, SUM(attempts > 0) AS failed, MIN(created_at) AS oldest FROM %i', self::table() ), ARRAY_A );
 		return [
-			'pending' => (int) ( $row['pending'] ?? 0 ),
-			'failed'  => (int) ( $row['failed'] ?? 0 ),
-			'oldest'  => (int) ( $row['oldest'] ?? 0 ),
+			'storage_available' => '' === $wpdb->last_error,
+			'pending'           => (int) ( $row['pending'] ?? 0 ),
+			'failed'            => (int) ( $row['failed'] ?? 0 ),
+			'oldest'            => (int) ( $row['oldest'] ?? 0 ),
 		];
 	}
 
@@ -193,7 +194,7 @@ final class Queue {
 	/** @return array<string, mixed> */
 	public static function health(): array {
 		$status = self::status();
-		$bad    = get_option( 'shouse_queue_storage_error' ) || $status['failed'] > 0 || ( $status['oldest'] > 0 && $status['oldest'] < time() - HOUR_IN_SECONDS );
+		$bad    = ! $status['storage_available'] || get_option( 'shouse_queue_storage_error' ) || $status['failed'] > 0 || ( $status['oldest'] > 0 && $status['oldest'] < time() - HOUR_IN_SECONDS );
 		return [
 			'label'       => $bad ? __( 'SafeHouse has undelivered work', 'shouse' ) : __( 'SafeHouse delivery queue is healthy', 'shouse' ),
 			'status'      => $bad ? 'recommended' : 'good',
