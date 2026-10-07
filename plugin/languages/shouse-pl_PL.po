@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: SafeHouse 0.1.0\n"
+"Project-Id-Version: SafeHouse 0.2.1\n"
 "Report-Msgid-Bugs-To: https://designhouse.me/\n"
 "Last-Translator: Design House\n"
 "Language-Team: Design House\n"

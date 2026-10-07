@@ -2,7 +2,7 @@
 
 Each release needs a `## x.y.z` section; its body is shown in the WordPress "View details" window.
 
-## Unreleased
+## 0.2.1
 
 - Canonical account limits, early password-check rejection, application-password lock stability, strict proxy CIDRs and operation-scoped Turnstile checks.
 - Metadata and taxonomy authorization when duplicating content.

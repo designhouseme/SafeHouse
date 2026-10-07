@@ -4,7 +4,7 @@ Tags: security, hardening, captcha, vulnerability, woocommerce
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 0.2.0
+Stable tag: 0.2.1
 License: Apache-2.0
 License URI: https://www.apache.org/licenses/LICENSE-2.0
 
@@ -117,6 +117,13 @@ Apart from the SMTP and Redis servers you configure yourself, SafeHouse contacts
 SafeHouse sends no telemetry. The activity log stays in the site's database, stores the user and IP address of each event and deletes entries after 90 days. Pending security-alert recipients/bodies and cache purge jobs are stored until transport acceptance; regular mail and password-reset messages are not put in this outbox. Delivery retries need working WP-Cron. Site Health reports failures. SMTP acceptance is not inbox confirmation, and a crash can cause duplicate delivery.
 
 == Changelog ==
+
+= 0.2.1 =
+* Security fixes for account limits, proxy ranges, bot checks and duplication permissions.
+* Durable alert and cache-purge retries, safer Redis recovery and required LiteSpeed cookie isolation.
+* Atomic signed update and advisory metadata with expiry, rollback prevention and bounded private downloads.
+* Accurate observed price history, explicit storage errors and strict SMTP configuration validation.
+* Expanded security release gates and Polish translations. See CHANGELOG.md and dev/SIGNED-DATA-PROTOCOL.txt in the repository for the full changes and deployment sequence.
 
 = 0.1.0 =
 * Core: module registry with a switch per module, schema-driven settings page, activity log, safe mode, WP-CLI commands, Wordfence overlap detection.
