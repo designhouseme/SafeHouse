@@ -4,8 +4,9 @@
  * global and non-persistent groups, found flag), with Redis behind it.
  *
  * Every value written to Redis is signed: HMAC-SHA256 over the Redis key and the serialized value,
- * with a key derived from AUTH_KEY. A value whose signature does not match (written by someone else
- * on a shared Redis, or for another key) is a cache miss and is never unserialized.
+ * with a key derived from AUTH_KEY. A mismatching signature is never unserialized. Redis still needs
+ * isolated ACL credentials: signatures do not prevent replay of an old value. WordPress user,
+ * session and permission-option groups therefore never use persistent Redis storage.
  *
  * Flushes delete only keys under this site's prefix (SCAN + UNLINK), never the whole database.
  * If Redis fails during a request, the rest of the request runs on the runtime copy only.
@@ -19,6 +20,7 @@
 namespace SafeHouse\ObjectCache;
 
 use Redis;
+use RuntimeException;
 use Throwable;
 
 defined( 'ABSPATH' ) || exit;
@@ -27,6 +29,7 @@ final class Cache {
 
 	private const SIGNATURE_BYTES = 32;
 	private const SCAN_BATCH      = 1000;
+	private const CHANGE_RETRIES  = 64;
 
 	/** Read by debugging tools (Query Monitor, Debug Bar) like WP_Object_Cache's. */
 	public int $cache_hits = 0;
@@ -35,7 +38,7 @@ final class Cache {
 	public int $cache_misses = 0;
 
 	/**
-	 * Runtime copy: group => key => value.
+	 * Runtime copy: encoded group + blog/global scope => key => value.
 	 *
 	 * @var array<string, array<string, mixed>>
 	 */
@@ -45,7 +48,16 @@ final class Cache {
 	private array $global_groups = [];
 
 	/** @var array<string, true> */
-	private array $non_persistent_groups = [];
+	private array $non_persistent_groups = [
+		'users'        => true,
+		'user_meta'    => true,
+		'userlogins'   => true,
+		'useremail'    => true,
+		'userslugs'    => true,
+		'user-queries' => true,
+		'options'      => true, // Includes role definitions and security-related plugin settings.
+		'site-options' => true,
+	];
 
 	private string $blog_prefix = '1';
 
@@ -57,14 +69,18 @@ final class Cache {
 
 	private string $secret;
 
+	/** Trusted database generation: requests predating recovery cannot refill the current namespace. */
+	private string $generation;
+
 	/**
 	 * Without arguments (as WordPress's own tests create a second cache) it uses the connection and
 	 * settings of the running cache.
 	 */
 	public function __construct( ?Redis $redis = null, ?string $prefix = null, ?string $secret = null ) {
-		$this->redis  = $redis ?? ( $GLOBALS['shouse_object_cache_redis'] ?? null );
-		$this->prefix = $prefix ?? ( function_exists( 'shouse_object_cache_prefix' ) ? shouse_object_cache_prefix() : 'wph:' );
-		$this->secret = $secret ?? ( function_exists( 'shouse_object_cache_secret' ) ? shouse_object_cache_secret() : '' );
+		$this->redis      = $redis ?? ( $GLOBALS['shouse_object_cache_redis'] ?? null );
+		$this->prefix     = $prefix ?? ( function_exists( 'shouse_object_cache_prefix' ) ? shouse_object_cache_prefix() : 'wph:' );
+		$this->secret     = $secret ?? ( function_exists( 'shouse_object_cache_secret' ) ? shouse_object_cache_secret() : '' );
+		$this->generation = (string) ( $GLOBALS['shouse_object_cache_generation'] ?? '0' );
 		if ( function_exists( 'is_multisite' ) && is_multisite() && function_exists( 'get_current_blog_id' ) ) {
 			$this->blog_prefix = (string) get_current_blog_id();
 		}
@@ -84,7 +100,7 @@ final class Cache {
 			if ( $expire > 0 ) {
 				$options['EX'] = $expire;
 			}
-			if ( ! $this->redis_call( fn( Redis $r ) => $r->set( $this->redis_key( $key, $group ), $this->encode( $this->redis_key( $key, $group ), $data ), $options ) ) ) {
+			if ( ! $this->redis_call( fn( Redis $r ) => $r->set( $this->redis_key( $key, $group ), $this->encode( $this->redis_key( $key, $group ), $data ), $options ) ) && null !== $this->redis ) {
 				return false;
 			}
 		}
@@ -119,7 +135,9 @@ final class Cache {
 			$options['EX'] = $expire;
 		}
 		if ( ! $this->redis_call( fn( Redis $r ) => $r->set( $this->redis_key( $key, $group ), $this->encode( $this->redis_key( $key, $group ), $data ), $options ) ) ) {
-			return false;
+			if ( null !== $this->redis || ! $this->in_runtime( $key, $group ) ) {
+				return false;
+			}
 		}
 		$this->remember( $key, $group, $data );
 		return true;
@@ -132,9 +150,8 @@ final class Cache {
 			$redis_key = $this->redis_key( $key, $group );
 			$value     = $this->encode( $redis_key, $data );
 			$ok        = $this->redis_call( fn( Redis $r ) => $expire > 0 ? $r->setex( $redis_key, $expire, $value ) : $r->set( $redis_key, $value ) );
-			if ( ! $ok ) {
-				$this->forget( $key, $group ); // Never keep a runtime value that Redis does not have.
-				return false;
+			if ( ! $ok && null !== $this->redis ) {
+				$this->failed( 'Redis refused a cache write.' );
 			}
 		}
 		$this->remember( $key, $group, $data );
@@ -157,7 +174,7 @@ final class Cache {
 			}
 			return $result;
 		}
-		$ok     = $this->redis_call(
+		$ok = $this->redis_call(
 			function ( Redis $r ) use ( $data, $group, $expire ) {
 				$pipe = $r->multi( Redis::PIPELINE );
 				foreach ( $data as $key => $value ) {
@@ -172,9 +189,12 @@ final class Cache {
 				return $pipe->exec();
 			}
 		);
+		if ( null !== $this->redis && ( ! is_array( $ok ) || count( $ok ) !== count( $data ) || in_array( false, $ok, true ) ) ) {
+			$this->failed( 'Redis refused a batch cache write.' );
+		}
 		$result = [];
 		foreach ( $data as $key => $value ) {
-			$stored         = is_array( $ok ) && ! empty( $ok[ count( $result ) ] );
+			$stored         = null === $this->redis || ( is_array( $ok ) && ! empty( $ok[ count( $result ) ] ) );
 			$result[ $key ] = $stored;
 			if ( $stored ) {
 				$this->remember( (string) $key, $group, $value );
@@ -195,17 +215,21 @@ final class Cache {
 		if ( ( ! $force || ! $this->persistent( $group ) ) && $this->in_runtime( $key, $group ) ) {
 			$found = true;
 			++$this->cache_hits;
-			return self::copy( $this->cache[ $group ][ $key ] );
+			return self::copy( $this->cache[ $this->runtime_group( $group ) ][ $key ] );
 		}
 		if ( ! $this->persistent( $group ) ) {
 			$found = false;
 			++$this->cache_misses;
 			return false;
 		}
-		$redis_key         = $this->redis_key( $key, $group );
-		$raw               = $this->redis_call( fn( Redis $r ) => $r->get( $redis_key ) );
+		$redis_key = $this->redis_key( $key, $group );
+		$raw       = $this->redis_call( fn( Redis $r ) => $r->get( $redis_key ) );
+		if ( null === $this->redis && $this->in_runtime( $key, $group ) ) {
+			return $this->get( $key, $group, false, $found );
+		}
 		[ $found, $value ] = $this->decode( $redis_key, $raw );
 		if ( ! $found ) {
+			$this->forget( $key, $group );
 			++$this->cache_misses;
 			return false;
 		}
@@ -225,7 +249,7 @@ final class Cache {
 		foreach ( $keys as $key ) {
 			$key = (string) $key;
 			if ( ( ! $force || ! $this->persistent( $group ) ) && $this->in_runtime( $key, $group ) ) {
-				$result[ $key ] = self::copy( $this->cache[ $group ][ $key ] );
+				$result[ $key ] = self::copy( $this->cache[ $this->runtime_group( $group ) ][ $key ] );
 				++$this->cache_hits;
 			} elseif ( $this->persistent( $group ) ) {
 				$fetch[]        = $key;
@@ -239,12 +263,17 @@ final class Cache {
 			$redis_keys = array_map( fn( $k ) => $this->redis_key( $k, $group ), $fetch );
 			$raw        = $this->redis_call( fn( Redis $r ) => $r->mget( $redis_keys ) );
 			foreach ( $fetch as $i => $key ) {
+				if ( null === $this->redis && $this->in_runtime( $key, $group ) ) {
+					$result[ $key ] = $this->get( $key, $group );
+					continue;
+				}
 				[ $found, $value ] = $this->decode( $redis_keys[ $i ], is_array( $raw ) ? ( $raw[ $i ] ?? false ) : false );
 				if ( $found ) {
 					++$this->cache_hits;
 					$this->remember( $key, $group, $value );
 					$result[ $key ] = self::copy( $value );
 				} else {
+					$this->forget( $key, $group );
 					++$this->cache_misses;
 				}
 			}
@@ -259,6 +288,9 @@ final class Cache {
 		$this->forget( $key, $group );
 		if ( $this->persistent( $group ) ) {
 			$deleted = $this->redis_call( fn( Redis $r ) => $r->del( $this->redis_key( $key, $group ) ) );
+			if ( false === $deleted && null !== $this->redis ) {
+				$this->failed( 'Redis refused a cache deletion.' );
+			}
 			$existed = $existed || (int) $deleted > 0;
 		}
 		return $existed;
@@ -297,11 +329,15 @@ final class Cache {
 
 	public function flush_group( string $group ): bool {
 		$group = self::group( $group );
-		unset( $this->cache[ $group ] );
+		foreach ( array_keys( $this->cache ) as $runtime_group ) {
+			if ( str_starts_with( (string) $runtime_group, bin2hex( $group ) . ':' ) ) {
+				unset( $this->cache[ $runtime_group ] );
+			}
+		}
 		if ( ! $this->persistent( $group ) ) {
 			return true;
 		}
-		return $this->unlink_matching( self::glob_escape( $this->prefix ) . '*:' . self::glob_escape( $group ) . ':*' );
+		return $this->unlink_matching( self::glob_escape( $this->prefix ) . bin2hex( $group ) . ':*' );
 	}
 
 	/**
@@ -340,7 +376,9 @@ final class Cache {
 	/** Stop using Redis for the rest of this request; later writes stay in the runtime copy. */
 	public function disconnect(): void {
 		$this->close();
-		$this->redis = null;
+		$this->redis                          = null;
+		$GLOBALS['shouse_object_cache_redis'] = null;
+		$this->mark_stale();
 	}
 
 	/** Whether Redis is answering, for the Integrations card and WP-CLI. */
@@ -382,22 +420,55 @@ final class Cache {
 	}
 
 	private function change( int|string $key, int $offset, string $group ): int|false {
+		$group = self::group( $group );
+		$key   = (string) $key;
+		if ( $this->persistent( $group ) ) {
+			$redis_key = $this->redis_key( $key, $group );
+			$value     = $this->redis_call(
+				function ( Redis $r ) use ( $redis_key, $offset ): int|false {
+					for ( $attempt = 0; $attempt < self::CHANGE_RETRIES; $attempt++ ) {
+						if ( ! $r->watch( $redis_key ) ) {
+							throw new RuntimeException( 'Redis refused WATCH.' );
+						}
+						[ $found, $current ] = $this->decode( $redis_key, $r->get( $redis_key ) );
+						if ( ! $found ) {
+							$r->unwatch();
+							return false;
+						}
+						$next = max( 0, ( is_numeric( $current ) ? (int) $current : 0 ) + $offset );
+						$pipe = $r->multi();
+						if ( false === $pipe ) {
+							throw new RuntimeException( 'Redis refused MULTI.' );
+						}
+						// XX also prevents resurrection when the key expires on Redis older than 6.0.9.
+						$pipe->set( $redis_key, $this->encode( $redis_key, $next ), [ 'XX', 'KEEPTTL' ] );
+						$result = $pipe->exec();
+						if ( is_array( $result ) ) {
+							return ! empty( $result[0] ) ? $next : false;
+						}
+						usleep( min( 5000, 50 * ( $attempt + 1 ) ) + random_int( 0, 200 ) );
+					}
+					$this->last_error = 'Cache counter changed too often; retry the operation.';
+					return false;
+				}
+			);
+			if ( false !== $value ) {
+				$this->remember( $key, $group, $value );
+				return (int) $value;
+			}
+			if ( null !== $this->redis ) {
+				$this->forget( $key, $group );
+				return false;
+			}
+		}
+		// No Redis (including a failure above): preserve WordPress's request-local behaviour.
 		$found = false;
 		$value = $this->get( $key, $group, false, $found );
 		if ( ! $found ) {
 			return false;
 		}
-		$value = is_numeric( $value ) ? (int) $value + $offset : $offset;
-		$value = max( 0, $value );
-		$group = self::group( $group );
-		if ( $this->persistent( $group ) ) {
-			$redis_key = $this->redis_key( (string) $key, $group );
-			if ( ! $this->redis_call( fn( Redis $r ) => $r->set( $redis_key, $this->encode( $redis_key, $value ), [ 'KEEPTTL' ] ) ) ) {
-				$this->forget( (string) $key, $group );
-				return false;
-			}
-		}
-		$this->remember( (string) $key, $group, $value );
+		$value = max( 0, ( is_numeric( $value ) ? (int) $value : 0 ) + $offset );
+		$this->remember( $key, $group, $value );
 		return $value;
 	}
 
@@ -408,7 +479,10 @@ final class Cache {
 		$this->scan(
 			$pattern,
 			function ( array $keys ): void {
-				$this->redis_call( fn( Redis $r ) => $r->unlink( $keys ) );
+				$deleted = $this->redis_call( fn( Redis $r ) => $r->unlink( $keys ) );
+				if ( false === $deleted && null !== $this->redis ) {
+					$this->failed( 'Redis refused UNLINK.' );
+				}
 			}
 		);
 		return null !== $this->redis;
@@ -422,7 +496,9 @@ final class Cache {
 		do {
 			$keys = $this->redis_call(
 				function ( Redis $r ) use ( &$iterator, $pattern ) {
-					$r->setOption( Redis::OPT_SCAN, Redis::SCAN_RETRY );
+					if ( ! $r->setOption( Redis::OPT_SCAN, Redis::SCAN_RETRY ) ) {
+						throw new RuntimeException( 'Redis refused the SCAN option.' );
+					}
 					return $r->scan( $iterator, $pattern, self::SCAN_BATCH );
 				}
 			);
@@ -436,17 +512,36 @@ final class Cache {
 	 * Run a Redis command. On a connection error, stop using Redis for the rest of the request.
 	 *
 	 * @param callable(Redis): mixed $command Command.
+	 * @phpstan-impure
 	 */
 	private function redis_call( callable $command ): mixed {
 		if ( null === $this->redis ) {
 			return false;
 		}
 		try {
-			return $command( $this->redis );
+			$this->redis->clearLastError();
+			$result = $command( $this->redis );
+			$error  = $this->redis->getLastError();
+			if ( is_string( $error ) && '' !== $error ) {
+				throw new RuntimeException( $error );
+			}
+			return $result;
 		} catch ( Throwable $e ) {
-			$this->last_error = $e->getMessage();
-			$this->redis      = null;
+			$this->failed( $e->getMessage() );
 			return false;
+		}
+	}
+
+	private function failed( string $message ): void {
+		$this->last_error                     = $message;
+		$this->redis                          = null;
+		$GLOBALS['shouse_object_cache_redis'] = null;
+		$this->mark_stale();
+	}
+
+	private function mark_stale(): void {
+		if ( function_exists( 'shouse_object_cache_mark_stale' ) ) {
+			shouse_object_cache_mark_stale();
 		}
 	}
 
@@ -475,23 +570,32 @@ final class Cache {
 	}
 
 	private function redis_key( string $key, string $group ): string {
-		return $this->prefix . ( isset( $this->global_groups[ $group ] ) ? 'g' : $this->blog_prefix ) . ':' . $group . ':' . $key;
+		return $this->prefix . bin2hex( $group ) . ':' . $this->generation . ':' . $this->scope( $group ) . ':' . bin2hex( $key );
+	}
+
+	private function scope( string $group ): string {
+		return isset( $this->global_groups[ $group ] ) ? 'g' : $this->blog_prefix;
+	}
+
+	private function runtime_group( string $group ): string {
+		return bin2hex( $group ) . ':' . $this->scope( $group );
 	}
 
 	private function persistent( string $group ): bool {
-		return ! isset( $this->non_persistent_groups[ $group ] );
+		return null !== $this->redis && ! isset( $this->non_persistent_groups[ $group ] );
 	}
 
 	private function in_runtime( string $key, string $group ): bool {
-		return isset( $this->cache[ $group ] ) && array_key_exists( $key, $this->cache[ $group ] );
+		$runtime_group = $this->runtime_group( $group );
+		return isset( $this->cache[ $runtime_group ] ) && array_key_exists( $key, $this->cache[ $runtime_group ] );
 	}
 
 	private function remember( string $key, string $group, mixed $data ): void {
-		$this->cache[ $group ][ $key ] = is_object( $data ) ? clone $data : $data;
+		$this->cache[ $this->runtime_group( $group ) ][ $key ] = self::copy( $data );
 	}
 
 	private function forget( string $key, string $group ): void {
-		unset( $this->cache[ $group ][ $key ] );
+		unset( $this->cache[ $this->runtime_group( $group ) ][ $key ] );
 	}
 
 	/** Objects are handed out as copies, as WP_Object_Cache does, so callers cannot change the cached one. */

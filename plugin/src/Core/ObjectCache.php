@@ -161,7 +161,7 @@ final class ObjectCache {
 		if ( null !== $cache && $cache->redis_status() ) {
 			$status = 'good';
 			$label  = __( 'The SafeHouse object cache is connected to Redis', 'shouse' );
-			$text   = __( 'Database results are kept in Redis between requests. Every cached value is signed, so other sites on a shared Redis cannot plant data.', 'shouse' );
+			$text   = __( 'Database results are kept in Redis between requests. Values are signed; WordPress user, session and permission-option data stay outside persistent Redis. Use isolated Redis ACL credentials: signatures do not prevent replay of old cache data.', 'shouse' );
 		} else {
 			$status = 'critical';
 			$label  = __( 'The SafeHouse object cache cannot reach Redis', 'shouse' );

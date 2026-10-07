@@ -108,7 +108,9 @@ final class ObjectCacheCommand {
 		if ( null === ObjectCache::active() ) {
 			WP_CLI::error( 'The SafeHouse object cache is not running in this process.' );
 		}
-		wp_cache_flush();
+		if ( ! wp_cache_flush() ) {
+			WP_CLI::error( 'Object cache could not be flushed: ' . ObjectCache::active()?->last_error() );
+		}
 		WP_CLI::success( 'Object cache flushed.' );
 	}
 }

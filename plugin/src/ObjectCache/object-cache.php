@@ -9,8 +9,8 @@
  * Stale data guard: while Redis is unusable, writes go to the database only, so whatever Redis still
  * holds (if it keeps data across restarts) may be out of date when it comes back. Every request that
  * runs without Redis (including WP-CLI on a PHP without PhpRedis) leaves a row in the options table;
- * the first request that reaches Redis again drops this site's keys before reading any, then removes
- * the row. The check is one primary-key lookup per request.
+ * recovery drops this site's keys before reading any and removes only the marker it actually saw.
+ * The database generation prevents older in-flight requests from refilling the recovered namespace.
  *
  * @package SafeHouse
  */
@@ -25,30 +25,49 @@ $shouse_db                             = $GLOBALS['wpdb'] ?? null;
 
 if ( null === $shouse_redis ) {
 	$GLOBALS['shouse_object_cache_error'] = $shouse_redis_error;
-	if ( is_object( $shouse_db ) ) {
-		$shouse_suppress = $shouse_db->suppress_errors( true );
-		$shouse_db->query( $shouse_db->prepare( "INSERT IGNORE INTO {$shouse_db->options} (option_name, option_value, autoload) VALUES (%s, %s, 'off')", 'shouse_object_cache_stale', (string) time() ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- runs before the cache exists.
-		$shouse_db->suppress_errors( $shouse_suppress );
-	}
+	shouse_object_cache_mark_stale();
 	return;
 }
 
 require_once __DIR__ . '/Cache.php';
-if ( ! class_exists( 'WP_Object_Cache', false ) ) {
-	class_alias( SafeHouse\ObjectCache\Cache::class, 'WP_Object_Cache' ); // Code that checks `instanceof WP_Object_Cache` keeps working.
-}
 
+$shouse_guard_ok = false;
 if ( is_object( $shouse_db ) ) {
+	$shouse_table    = shouse_object_cache_state_table();
 	$shouse_suppress = $shouse_db->suppress_errors( true );
-	$shouse_stale    = $shouse_db->get_var( $shouse_db->prepare( "SELECT option_value FROM {$shouse_db->options} WHERE option_name = %s", 'shouse_object_cache_stale' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-	if ( null !== $shouse_stale ) {
-		( new SafeHouse\ObjectCache\Cache( $shouse_redis, shouse_object_cache_prefix(), shouse_object_cache_secret() ) )->flush();
-		$shouse_db->query( $shouse_db->prepare( "DELETE FROM {$shouse_db->options} WHERE option_name = %s", 'shouse_object_cache_stale' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	$shouse_stale    = $shouse_db->get_var( $shouse_db->prepare( "SELECT option_value FROM {$shouse_table} WHERE option_name = %s", 'shouse_object_cache_stale' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	$shouse_guard_ok = '' === $shouse_db->last_error;
+	if ( $shouse_guard_ok && null !== $shouse_stale ) {
+		$shouse_guard    = new SafeHouse\ObjectCache\Cache( $shouse_redis, shouse_object_cache_prefix(), shouse_object_cache_secret() );
+		$shouse_guard_ok = false !== shouse_object_cache_generation( true ) && $shouse_guard->flush();
+		if ( $shouse_guard_ok ) {
+			$shouse_guard_ok = 1 === $shouse_db->query( $shouse_db->prepare( "DELETE FROM {$shouse_table} WHERE option_name = %s AND option_value = %s", 'shouse_object_cache_stale', $shouse_stale ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- do not erase a concurrent failed request's marker.
+		} else {
+			$GLOBALS['shouse_object_cache_error'] = $shouse_guard->last_error();
+		}
 	}
 	$shouse_db->suppress_errors( $shouse_suppress );
 }
 
-$GLOBALS['shouse_object_cache_redis'] = $shouse_redis;
-unset( $shouse_redis, $shouse_redis_error, $shouse_db, $shouse_suppress, $shouse_stale );
+$shouse_generation = $shouse_guard_ok ? shouse_object_cache_generation() : false;
+if ( false === $shouse_generation ) {
+	$GLOBALS['shouse_object_cache_error'] ??= 'The object cache recovery guard could not be completed.';
+	shouse_object_cache_mark_stale();
+	try {
+		$shouse_redis->close();
+	} catch ( Throwable ) {
+		// A failed connection must never stop WordPress from loading its native cache.
+		unset( $shouse_redis );
+	}
+	return; // No alias/functions: WordPress must be free to load its native cache and database transients.
+}
+
+if ( ! class_exists( 'WP_Object_Cache', false ) ) {
+	class_alias( SafeHouse\ObjectCache\Cache::class, 'WP_Object_Cache' ); // Code that checks `instanceof WP_Object_Cache` keeps working.
+}
+
+$GLOBALS['shouse_object_cache_redis']      = $shouse_redis;
+$GLOBALS['shouse_object_cache_generation'] = $shouse_generation;
+unset( $shouse_redis, $shouse_redis_error, $shouse_db, $shouse_suppress, $shouse_stale, $shouse_table, $shouse_guard, $shouse_guard_ok, $shouse_generation );
 
 require_once __DIR__ . '/functions.php';

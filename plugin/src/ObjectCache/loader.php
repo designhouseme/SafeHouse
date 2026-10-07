@@ -30,8 +30,14 @@ defined( 'ABSPATH' ) || exit;
 	}
 	$db = $GLOBALS['wpdb'] ?? null;
 	if ( is_object( $db ) ) {
-		$suppress = $db->suppress_errors( true );
-		$db->query( $db->prepare( "INSERT IGNORE INTO {$db->options} (option_name, option_value, autoload) VALUES (%s, %s, 'off')", 'shouse_object_cache_stale', (string) time() ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- runs before any cache exists.
-		$db->suppress_errors( $suppress );
+		$mark = static function () use ( $db ): void {
+			$table    = $db->base_prefix . 'options';
+			$token    = bin2hex( random_bytes( 16 ) );
+			$suppress = $db->suppress_errors( true );
+			$db->query( $db->prepare( "INSERT INTO {$table} (option_name, option_value, autoload) VALUES (%s, %s, 'off'), (%s, %s, 'off') ON DUPLICATE KEY UPDATE option_value = VALUES(option_value)", 'shouse_object_cache_stale', $token, 'shouse_object_cache_generation', $token ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- runs before any cache exists; trusted generation isolates in-flight requests.
+			$db->suppress_errors( $suppress );
+		};
+		$mark();
+		register_shutdown_function( $mark );
 	}
 } )();
