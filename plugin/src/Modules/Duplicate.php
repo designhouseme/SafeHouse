@@ -21,6 +21,8 @@ final class Duplicate extends AbstractModule {
 
 	private const SKIP_TYPES = [ 'product', 'product_variation', 'shop_order', 'shop_coupon', 'attachment', 'revision', 'nav_menu_item', 'customize_changeset', 'oembed_cache', 'user_request', 'wp_navigation', 'wp_font_family', 'wp_font_face', 'wp_global_styles' ];
 	private const SKIP_META  = [ '_edit_lock', '_edit_last', '_wp_old_slug', '_wp_old_date', '_wp_trash_meta_status', '_wp_trash_meta_time', '_wp_desired_post_slug', '_encloseme', '_pingme' ];
+	/** Core presentation fields editable with the post, unless a registered policy says otherwise. */
+	private const CORE_META = [ '_thumbnail_id', '_wp_page_template' ];
 
 	public function id(): string {
 		return 'duplicate';
@@ -94,14 +96,19 @@ final class Duplicate extends AbstractModule {
 		}
 
 		foreach ( get_object_taxonomies( $post->post_type ) as $taxonomy ) {
+			$object = get_taxonomy( $taxonomy );
+			if ( ! $object || ! current_user_can( $object->cap->assign_terms ) ) {
+				continue;
+			}
 			$terms = wp_get_object_terms( $post->ID, $taxonomy, [ 'fields' => 'ids' ] );
 			if ( is_array( $terms ) && $terms ) {
 				wp_set_object_terms( $copy_id, array_map( 'intval', $terms ), $taxonomy );
 			}
 		}
 
+		$registered = array_merge( get_registered_meta_keys( 'post' ), get_registered_meta_keys( 'post', $post->post_type ) );
 		foreach ( get_post_meta( $post->ID ) as $key => $values ) {
-			if ( in_array( $key, self::SKIP_META, true ) ) {
+			if ( in_array( $key, self::SKIP_META, true ) || ! $this->can_copy_meta( $post->ID, $copy_id, $key, $registered ) ) {
 				continue;
 			}
 			foreach ( (array) $values as $value ) {
@@ -112,6 +119,36 @@ final class Duplicate extends AbstractModule {
 
 		wp_safe_redirect( (string) get_edit_post_link( $copy_id, 'raw' ) );
 		exit;
+	}
+
+	/**
+	 * Unregistered protected fields can carry privileged state belonging to another plugin.
+	 * Only core's presentation fields have a known safe default; registered fields retain their
+	 * own authorization callbacks on both the source and destination.
+	 *
+	 * @param array<string, array<string, mixed>> $registered Registered post metadata.
+	 */
+	private function can_copy_meta( int $source, int $destination, string $key, array $registered ): bool {
+		$default_hook = '';
+		if ( ! isset( $registered[ $key ] ) && is_protected_meta( $key, 'post' ) ) {
+			if ( ! in_array( $key, self::CORE_META, true ) ) {
+				return false;
+			}
+			// Core saves these with the post. Supply that default only in the absence of a
+			// metadata policy; still pass through map_meta_cap/user_has_cap for both posts.
+			$hook = 'auth_post_meta_' . $key;
+			if ( false === has_filter( $hook ) ) {
+				$default_hook = $hook;
+				add_filter( $default_hook, '__return_true', PHP_INT_MIN );
+			}
+		}
+		try {
+			return current_user_can( 'edit_post_meta', $source, $key ) && current_user_can( 'edit_post_meta', $destination, $key );
+		} finally {
+			if ( '' !== $default_hook ) {
+				remove_filter( $default_hook, '__return_true', PHP_INT_MIN );
+			}
+		}
 	}
 
 	private function allowed( WP_Post $post ): bool {
