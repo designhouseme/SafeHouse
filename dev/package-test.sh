@@ -3,6 +3,7 @@
 # Plugin Check, safe mode, SHOUSE_MODULES pinning, SHOUSE_LOCK_SETTINGS, deactivation and uninstall cleanup.
 set -uo pipefail
 cd "$(dirname "$0")/.."
+source dev/env.sh
 T=build/updtest
 mkdir -p "$T/www/shouse" "$T/pkgs"
 export SHOUSE_SIGNING_KEY=$PWD/$T/dev-signing.key SHOUSE_RELEASE_URL=http://updates/shouse
@@ -19,7 +20,7 @@ ZIP=$(ls "$T"/pkgs/pkg/shouse-[0-9]*.zip)
 dc down -v >/dev/null 2>&1
 dc up -d >/dev/null 2>&1
 until curl -s -o /dev/null "$U/wp-login.php"; do sleep 2; done
-wp core install --url=$U --title=pkgtest --admin_user=admin --admin_password=admin --admin_email=a@example.test --skip-email >/dev/null
+wp core install --url=$U --title=pkgtest --admin_user=admin --admin_password="$SHOUSE_DEV_ADMIN_PASSWORD" --admin_email=a@example.test --skip-email >/dev/null
 wp plugin install "/pkgs/pkg/$(basename "$ZIP")" --activate >/dev/null
 check "installed from zip" active "$(wp plugin get shouse --field=status)"
 check "no PHP notices on activation" 0 "$(dc exec -T wordpress sh -c 'cat wp-content/debug.log 2>/dev/null | grep -ci shouse')"

@@ -5,7 +5,7 @@ name: shouse-dev
 x-wp-env: &wp-env
   WORDPRESS_DB_HOST: db:3306
   WORDPRESS_DB_USER: wordpress
-  WORDPRESS_DB_PASSWORD: wordpress
+  WORDPRESS_DB_PASSWORD: ${SHOUSE_DEV_DB_PASSWORD:?Source dev/env.sh first}
   WORDPRESS_DB_NAME: wordpress
   WORDPRESS_DEBUG: "1"
   WORDPRESS_CONFIG_EXTRA: |
@@ -25,15 +25,15 @@ services:
   mailpit:
     image: axllent/mailpit:v1.27
     ports:
-      - "${MAILPIT_UI_PORT:-8025}:8025"
+      - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"
 
   db:
     image: mariadb:11.4
     environment:
       MARIADB_DATABASE: wordpress
       MARIADB_USER: wordpress
-      MARIADB_PASSWORD: wordpress
-      MARIADB_ROOT_PASSWORD: wordpress
+      MARIADB_PASSWORD: ${SHOUSE_DEV_DB_PASSWORD:?Source dev/env.sh first}
+      MARIADB_ROOT_PASSWORD: ${SHOUSE_DEV_DB_ROOT_PASSWORD:?Source dev/env.sh first}
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
@@ -48,7 +48,7 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "${WP_PORT:-8894}:80"
+      - "127.0.0.1:${WP_PORT:-8894}:80"
     environment: *wp-env
     volumes:
       - wp_core:/var/www/html

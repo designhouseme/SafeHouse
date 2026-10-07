@@ -24,13 +24,20 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Lint (PHPCS, PHPStan)
         run: ./dev/lint.sh
+      - name: Security regressions (WordPress, Redis and signed data)
+        run: ./dev/security-test.sh
+      - name: Minimum supported WordPress and PHP
+        env:
+          SHOUSE_SECURITY_WP_IMAGE: wordpress:6.6-php8.1-apache
+          SHOUSE_SECURITY_CLI_IMAGE: wordpress:cli-php8.1
+        run: ./dev/security-test.sh --wp-only
       - name: Dry build, signed with a throwaway key
         run: |
           export SHOUSE_SIGNING_KEY="$RUNNER_TEMP/throwaway/signing.key"
@@ -38,8 +45,27 @@ jobs:
           version=$(sed -n "s/^const SHOUSE_VERSION = '\(.*\)';/\1/p" plugin/shouse.php)
           ./dev/release.sh snapshot "$version" "$RUNNER_TEMP/dry"
 
+  integration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Disposable OpenLiteSpeed and WooCommerce site
+        run: ./dev/ols/setup.sh
+      - name: Real cookie bypass, old sessions and CLI purge lifecycle
+        run: ./dev/ols/litespeed-security-test.sh
+      - name: Cloudflare transport and retry integration
+        run: ./dev/ols/cloudflare-test.sh
+      - name: Remove disposable services
+        if: always()
+        run: |
+          source dev/env.sh
+          docker compose -f dev/ols/docker-compose.yml down -v --remove-orphans
+
   publish:
-    needs: check
+    needs: [check, integration]
     if: github.ref_type == 'tag'
     runs-on: ubuntu-24.04
     timeout-minutes: 20

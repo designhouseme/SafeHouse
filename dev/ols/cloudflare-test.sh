@@ -3,8 +3,13 @@
 # the Cloudflare API (cloudflare-mock.php) on the harness network. No call reaches Cloudflare.
 set -uo pipefail
 cd "$(dirname "$0")"
-D=$(cd ../.. && pwd)/build/olstest/cfmock
-mkdir -p "$D"
+source ../env.sh
+mock="shouse-cfmock-$$-$RANDOM"
+ols_container=$(docker compose ps -q ols)
+[ -n "$ols_container" ] || { echo 'FAIL: OLS is not running'; exit 1; }
+network=$(docker inspect --format '{{range $name, $config := .NetworkSettings.Networks}}{{println $name}}{{end}}' "$ols_container" | head -1)
+[ -n "$network" ] || { echo 'FAIL: OLS has no network'; exit 1; }
+D=$(mktemp -d)
 : > "$D/requests.jsonl"
 echo ok > "$D/mode"
 ZONE=0123456789abcdef0123456789abcdef
@@ -13,17 +18,18 @@ fails=0
 check() { if [ "$2" = "$3" ]; then echo "ok    $1"; else echo "FAIL  $1 (expected '$2', got '$3')"; fails=$((fails + 1)); fi; }
 calls() { grep -c . "$D/requests.jsonl"; }
 last() { tail -1 "$D/requests.jsonl"; }
-fresh() { wp transient delete shouse_cloudflare_last >/dev/null; }
+fresh() { wp eval 'global $wpdb; $wpdb->delete($wpdb->options, ["option_name" => "shouse_queue_rate_" . hash("sha256", "cloudflare:" . SHOUSE_CLOUDFLARE_ZONE)]); $wpdb->query($wpdb->prepare("UPDATE %i SET available_at=0,locked_until=0 WHERE queue=%s", SafeHouse\Core\Queue::table(), "cloudflare"));' >/dev/null; }
 
-docker rm -f shouse-cfmock >/dev/null 2>&1
-docker run -d --name shouse-cfmock --network shouse-ols_default -v "$PWD":/mock:ro -v "$D":/data php:8.3-cli php -S 0.0.0.0:8080 /mock/cloudflare-mock.php >/dev/null
+docker run -d --name "$mock" --network "$network" -v "$PWD":/mock:ro -v "$D":/data php:8.3-cli php -S 0.0.0.0:8080 /mock/cloudflare-mock.php >/dev/null || { rm -rf "$D"; echo 'FAIL: cannot start the dedicated mock'; exit 1; }
 backup=$(wp option get shouse_settings --format=json)
 cleanup() {
-	docker rm -f shouse-cfmock >/dev/null 2>&1
+	docker rm -f "$mock" >/dev/null 2>&1
 	for c in SHOUSE_CLOUDFLARE_TOKEN SHOUSE_CLOUDFLARE_ZONE SHOUSE_CLOUDFLARE_API; do wp config delete "$c" >/dev/null; done
 	wp option update shouse_settings "$backup" --format=json >/dev/null
 	wp option delete shouse_cloudflare_result shouse_cloudflare_pending >/dev/null
-	wp cron event delete shouse_cloudflare_purge >/dev/null
+	wp cron event delete shouse_cloudflare_purge >/dev/null 2>&1 || true
+	wp eval 'global $wpdb; $wpdb->delete(SafeHouse\Core\Queue::table(), ["queue"=>"cloudflare"]);' >/dev/null
+	rm -rf "$D"
 }
 trap cleanup EXIT
 
@@ -32,22 +38,22 @@ wp shouse module enable cloudflare >/dev/null
 check "unavailable without token and zone" "yes no" "$(wp shouse status | awk '$1 == "cloudflare" { print $2, $3 }')"
 wp config set SHOUSE_CLOUDFLARE_TOKEN test-token-123 >/dev/null
 wp config set SHOUSE_CLOUDFLARE_ZONE "$ZONE" >/dev/null
-wp config set SHOUSE_CLOUDFLARE_API http://shouse-cfmock:8080/client/v4 >/dev/null
+wp config set SHOUSE_CLOUDFLARE_API "http://$mock:8080/client/v4" >/dev/null
 check "runs with them"                      "yes yes" "$(wp shouse status | awk '$1 == "cloudflare" { print $2, $3 }')"
 
-echo "== a post change clears its own pages"
+echo "== a post change covers old URLs and arbitrary listings"
 fresh; : > "$D/requests.jsonl"
 wp post update 1 --post_title="Cloudflare $RANDOM" >/dev/null
 check "one call"                            1 "$(calls)"
 check "to this zone's purge endpoint, with the token" yes "$(last | grep -q "/zones/$ZONE/purge_cache" && last | grep -q 'Bearer test-token-123' && echo yes || echo no)"
-check "the post's address and the home page, not everything" yes "$(last | python3 -c 'import sys, json; b = json.loads(sys.stdin.read())["body"]; f = b.get("files", []); print("yes" if f and "purge_everything" not in b and any("p=1" in u or "hello-world" in u for u in f) and any(u.rstrip("/").endswith(":8896") for u in f) else "no: %s" % b)')"
+check "whole zone covers old URLs and arbitrary listings" yes "$(last | python3 -c 'import sys,json; print("yes" if json.load(sys.stdin)["body"].get("purge_everything") is True else "no")')"
 
 echo "== at most one call every 30 seconds"
 wp post update 1 --post_title="Cloudflare again $RANDOM" >/dev/null
 check "a second change right after waits"   1   "$(calls)"
-check "and is queued for cron"              1   "$(wp cron event list --hook=shouse_cloudflare_purge --format=count)"
+check "and is queued for cron"              1   "$(wp cron event list --hook=shouse_queue --format=count)"
 fresh
-wp cron event run shouse_cloudflare_purge >/dev/null
+wp cron event run shouse_queue >/dev/null
 check "cron sends it"                       2   "$(calls)"
 
 echo "== site-wide changes and comments"
@@ -69,6 +75,9 @@ check "the refusal is logged"              yes "$(wp shouse log --limit=5 | grep
 check "and shows in Site Health"            recommended "$(wp eval 'echo SafeHouse\Plugin::instance()->module( "cloudflare" )->site_health_result()["status"];')"
 check "the token never reaches the activity log" 0 "$(wp eval 'global $wpdb; echo (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE message LIKE %s OR context LIKE %s", $wpdb->prefix . "shouse_log", "%test-token-123%", "%test-token-123%" ) );')"
 
+echo ok > "$D/mode"; fresh
+wp cron event run shouse_queue >/dev/null
+check "failed purge is retried and acknowledged" 0 "$(wp eval 'global $wpdb; echo $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM %i WHERE queue=%s", SafeHouse\Core\Queue::table(), "cloudflare"));')"
 echo
 [ "$fails" -eq 0 ] && echo "All Cloudflare checks passed." || echo "$fails Cloudflare check(s) failed."
 exit "$fails"

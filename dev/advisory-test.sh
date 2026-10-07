@@ -5,6 +5,7 @@
 # Uses throwaway keys in build/updtest, never a production key. Run ./dev/update-test.sh once first.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+source dev/env.sh
 T=build/updtest
 A=$T/www/shouse/advisories
 mkdir -p "$T/pkgs" "$A"
@@ -44,7 +45,7 @@ cat > "$T/feed.json" <<EOF
   "cvss": { "score": 9.0, "rating": "Critical" }, "published": "2026-10-01 00:00:00", "references": [], "copyrights": { "message": "" } }
 }
 EOF
-php dev/cve-watch.php --feed="$T/feed.json" --since=2026-09-01 --dry-run --advisories="$A" --advisory-key="$T/dev-advisory.key" >/dev/null 2>&1
+php dev/cve-watch.php --feed="$T/feed.json" --since=2026-09-01 --dry-run --advisories="$A" --advisory-key="$T/dev-advisory.key" --min-advisories=1 >/dev/null 2>&1
 
 # 1. Matching: Akismet critical, core warning, theme clean.
 wp option delete shouse_vulnerabilities >/dev/null
@@ -67,7 +68,11 @@ echo implode( ",", array_map( "intval", [ $f( "4.3.0", $r ), $f( "4.3.1", $r ), 
 [ "$ranges" = "1,1,0,0,1,0" ] && pass "version ranges" || fail "version ranges: $ranges"
 
 # 4. Tampered shard: its hash no longer matches the signed index.
-shard=$(php -r 'echo substr( md5( "plugin:akismet" ), 0, 2 );')
+shard=sha256/$(python3 - "$A/index.json" <<'PY'
+import hashlib, json, sys
+print(json.load(open(sys.argv[1]))['shards'][hashlib.md5(b'plugin:akismet').hexdigest()[:2]])
+PY
+)
 cp "$A/$shard.json" "$A/$shard.json.orig"
 printf ' ' >> "$A/$shard.json"
 wp option delete shouse_vulnerabilities >/dev/null
@@ -76,8 +81,11 @@ mv "$A/$shard.json.orig" "$A/$shard.json"
 
 # 5. Index signed with the release key: the advisory channel must not trust it.
 cp "$A/index.json.sig" "$A/index.json.sig.orig"
+cp "$A/feed.json" "$A/feed.json.orig"
 php dev/release-tool.php sign "$T/dev-signing.key" "$A/index.json" >/dev/null
+php dev/release-tool.php envelope "$A/index.json" "$A/feed.json" >/dev/null
 wp shouse vulnerabilities --refresh 2>&1 | grep -q "signature is invalid" && pass "index signed with the release key rejected" || fail "release key accepted for advisories"
 mv "$A/index.json.sig.orig" "$A/index.json.sig"
+mv "$A/feed.json.orig" "$A/feed.json"
 wp shouse vulnerabilities --refresh >/dev/null
 echo "All advisory tests passed."

@@ -3,6 +3,7 @@
 # A page counts as served from cache when LiteSpeed answers "X-LiteSpeed-Cache: hit".
 set -uo pipefail
 cd "$(dirname "$0")"
+source ../env.sh
 U=http://localhost:${OLS_PORT:-8896}
 T=../../build/olstest
 mkdir -p "$T"
@@ -34,9 +35,10 @@ check "search never cached"                 -    "$(twice "$U/?s=test")"
 check "POST never cached"                   -    "$(twice -X POST -d x=1 "$U/")"
 
 echo "== personal visitors reach WordPress"
-check "WordPress login cookie alone still gets the cached page (why the vary cookie exists)" hit "$(cache -H 'Cookie: wordpress_logged_in_x=1' "$U/")"
+login_cookie=$(wp eval 'echo LOGGED_IN_COOKIE;')
+check "WordPress login cookie alone bypasses cache" - "$(cache -H "Cookie: $login_cookie=1" "$U/")"
 J=$T/admin.jar; rm -f "$J"
-curl -s -o /dev/null -c "$J" -b "wordpress_test_cookie=WP%20Cookie%20check" -d "log=admin&pwd=admin&testcookie=1" "$U/wp-login.php"
+curl -s -o /dev/null -c "$J" -b "wordpress_test_cookie=WP%20Cookie%20check" -d "log=admin&pwd=$SHOUSE_DEV_ADMIN_PASSWORD&testcookie=1" "$U/wp-login.php"
 check "login sets the vary cookie"          1 "$(grep -c '_lscache_vary' "$J")"
 check "logged-in: home never from cache"    - "$(twice -b "$J" "$U/")"
 logout=$(curl -s -b "$J" "$U/wp-admin/" | grep -o 'wp-login.php?action=logout[^"]*' | head -1 | sed 's/&amp;/\&/g')
@@ -63,9 +65,8 @@ check "post updated through the REST API"  200 "$(curl -s -o /dev/null -w '%{htt
 check "editing a post through the REST API clears the cache" miss "$(cache "$U/")"
 cache "$U/" >/dev/null
 wp post update 1 --post_title="Changed from CLI $RANDOM" >/dev/null
-check "a CLI change waits for the next request..." hit "$(cache "$U/")"
-purge_now
-check "...and is applied by it"             miss "$(cache "$U/")"
+sleep 1 # The CLI shutdown dispatches a nonblocking request to the global purge receiver.
+check "a CLI change triggers its own purge request" miss "$(cache "$U/")"
 
 echo "== maintenance mode"
 cache "$U/" >/dev/null

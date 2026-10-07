@@ -5,6 +5,7 @@
 # KEEP=1 leaves the stack running. WOO_VERSION / WF_VERSION pin plugin versions for old WordPress.
 set -euo pipefail
 cd "$(dirname "$0")"
+source ./env.sh
 WPV=${1:?usage: matrix.sh <wp-version|latest> <php-version> [port]}
 PHPV=${2:?php version}
 PORT=${3:-8896}

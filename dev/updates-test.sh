@@ -12,7 +12,8 @@ mkdir -p "$T"
 rm -rf "$STATE"
 fails=0
 check() { if [ "$2" = "$3" ]; then echo "ok    $1"; else echo "FAIL  $1 (expected '$2', got '$3')"; fails=$((fails + 1)); fi; }
-wr() { npx --yes wrangler@4 "$@" >/dev/null 2>&1; }
+if [ -n "${SHOUSE_WRANGLER:-}" ]; then WRANGLER=("$SHOUSE_WRANGLER"); else WRANGLER=(npx --yes wrangler@4.147.0); fi
+wr() { "${WRANGLER[@]}" "$@" >/dev/null 2>&1; }
 put() { # key file content-type cache-control
 	wr r2 object put "shouse-updates/$1" --file "$2" --content-type "$3" --cache-control "$4" --local --persist-to "$STATE" || { echo "could not put $1"; exit 1; }
 }
@@ -29,7 +30,7 @@ put shouse/shouse-9.9.9.zip "$T/release.zip" application/zip 'public, max-age=31
 put shouse/advisories/0a.json "$T/shard.json" application/json 'public, max-age=300'
 put shouse/secret.txt "$T/shard.json" text/plain 'no-store'
 
-npx --yes wrangler@4 dev --local --port "$PORT" --persist-to "$STATE" > "$T/dev.log" 2>&1 &
+"${WRANGLER[@]}" dev --local --ip 127.0.0.1 --port "$PORT" --persist-to "$STATE" > "$T/dev.log" 2>&1 &
 dev=$!
 trap 'kill $dev 2>/dev/null; wait $dev 2>/dev/null' EXIT
 for _ in $(seq 60); do [ "$(code "$U/")" != 000 ] && break; sleep 1; done
@@ -47,6 +48,7 @@ check "advisory shard"                   200 "$(code "$U/shouse/advisories/0a.js
 check "HEAD has the length"              4096 "$(header content-length -I "$U/shouse/shouse-9.9.9.zip")"
 etag=$(header etag "$U/shouse/manifest.json")
 check "If-None-Match answers 304"        304 "$(code -H "If-None-Match: $etag" "$U/shouse/manifest.json")"
+check "If-Match mismatch answers 412"    412 "$(code -H 'If-Match: "wrong"' "$U/shouse/manifest.json")"
 check "range request"                    206 "$(code -H 'Range: bytes=0-99' "$U/shouse/shouse-9.9.9.zip")"
 check "range header"                     'bytes 0-99/4096' "$(header content-range -H 'Range: bytes=0-99' "$U/shouse/shouse-9.9.9.zip")"
 check "range from the end"               'bytes 3996-4095/4096' "$(header content-range -H 'Range: bytes=-100' "$U/shouse/shouse-9.9.9.zip")"

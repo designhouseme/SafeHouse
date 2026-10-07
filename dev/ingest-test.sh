@@ -14,10 +14,11 @@ RTOKEN=release-token-0123456789abcdef0123456789abcdef
 mkdir -p "$T"
 rm -rf "$STATE"
 fails=0
+if [ -n "${SHOUSE_WRANGLER:-}" ]; then WRANGLER=("$SHOUSE_WRANGLER"); else WRANGLER=(npx --yes wrangler@4.147.0); fi
 check() { if [ "$2" = "$3" ]; then echo "ok    $1"; else echo "FAIL  $1 (expected '$2', got '$3')"; fails=$((fails + 1)); fi; }
 code() { curl -s -o /dev/null -w '%{http_code}' "$@"; }
 put() { code -X PUT -H "Authorization: Bearer ${3:-$TOKEN}" --data-binary "@$2" "$U/$1"; }
-stored() { npx --yes wrangler@4 r2 object get "shouse-updates/$1" --local --persist-to "$STATE" --pipe 2>/dev/null; }
+stored() { "${WRANGLER[@]}" r2 object get "shouse-updates/$1" --local --persist-to "$STATE" --pipe 2>/dev/null; }
 
 printf '{"a":1}' > "$T/shard.json"
 printf 'c2ln\n' > "$T/index.json.sig"
@@ -27,7 +28,7 @@ head -c $((21 * 1024 * 1024)) /dev/zero > "$T/huge"
 head -c 4096 /dev/urandom > "$T/a.zip"
 head -c 4096 /dev/urandom > "$T/b.zip"
 
-npx --yes wrangler@4 dev --local --port "$PORT" --persist-to "$STATE" --var "INGEST_TOKEN:$TOKEN" --var "RELEASE_TOKEN:$RTOKEN" > "$T/dev.log" 2>&1 &
+"${WRANGLER[@]}" dev --local --ip 127.0.0.1 --port "$PORT" --persist-to "$STATE" --var "INGEST_TOKEN:$TOKEN" --var "RELEASE_TOKEN:$RTOKEN" > "$T/dev.log" 2>&1 &
 dev=$!
 trap 'kill $dev 2>/dev/null; wait $dev 2>/dev/null' EXIT
 for _ in $(seq 60); do [ "$(code "$U/")" != 000 ] && break; sleep 1; done
@@ -49,7 +50,7 @@ check "shard"                            201 "$(put shouse/advisories/0a.json "$
 check "shard content"                    '{"a":1}' "$(stored shouse/advisories/0a.json)"
 check "signature"                        201 "$(put shouse/advisories/index.json.sig "$T/index.json.sig")"
 check "index"                            201 "$(put shouse/advisories/index.json "$T/shard.json")"
-npx --yes wrangler@4 r2 object get shouse-updates/shouse/advisories/index.json.sig --local --persist-to "$STATE" --file "$T/got.sig" >/dev/null 2>&1
+"${WRANGLER[@]}" r2 object get shouse-updates/shouse/advisories/index.json.sig --local --persist-to "$STATE" --file "$T/got.sig" >/dev/null 2>&1
 check "signature bytes intact"           "$(cat "$T/index.json.sig")" "$(cat "$T/got.sig" 2>/dev/null)"
 
 echo "== release channel"
@@ -65,10 +66,24 @@ check "latest zip"                       201 "$(put shouse/shouse-latest.zip "$T
 check "latest zip replaced"              201 "$(put shouse/shouse-latest.zip "$T/b.zip" "$RTOKEN")"
 check "manifest signature"               201 "$(put shouse/manifest.json.sig "$T/index.json.sig" "$RTOKEN")"
 check "manifest"                         201 "$(put shouse/manifest.json "$T/shard.json" "$RTOKEN")"
+check "atomic release"                   201 "$(put shouse/release.json "$T/shard.json" "$RTOKEN")"
+check "atomic advisory"                  201 "$(put shouse/advisories/feed.json "$T/shard.json")"
+hash=$(shasum -a 256 "$T/shard.json" | cut -d' ' -f1)
+check "immutable shard"                  201 "$(put "shouse/advisories/sha256/$hash.json" "$T/shard.json")"
+check "immutable shard re-run"           200 "$(put "shouse/advisories/sha256/$hash.json" "$T/shard.json")"
+check "hash-address mismatch"            400 "$(put "shouse/advisories/sha256/$hash.json" "$T/a.zip")"
+# Both requests race against a previously absent key. The binding must accept only one writer.
+put shouse/shouse-9.9.6.zip "$T/a.zip" "$RTOKEN" > "$T/race-a" &
+race_a=$!
+put shouse/shouse-9.9.6.zip "$T/b.zip" "$RTOKEN" > "$T/race-b" &
+race_b=$!
+wait "$race_a" "$race_b"
+statuses=$(printf '%s\n' "$(cat "$T/race-a")" "$(cat "$T/race-b")" | sort | tr '\n' ' ')
+check "concurrent immutable writes"      '201 409 ' "$statuses"
 
 echo "== read back through the update host Worker"
 cd ..
-npx --yes wrangler@4 dev --local --port ${READ_PORT:-8909} --persist-to "ingest/$STATE" > "ingest/$T/read.log" 2>&1 &
+"${WRANGLER[@]}" dev --local --ip 127.0.0.1 --port ${READ_PORT:-8909} --persist-to "ingest/$STATE" > "ingest/$T/read.log" 2>&1 &
 reader=$!
 trap 'kill $dev $reader 2>/dev/null; wait $dev $reader 2>/dev/null' EXIT
 R=http://localhost:${READ_PORT:-8909}
@@ -81,6 +96,9 @@ check "release zip type"                 application/zip "$(curl -s -D - -o /dev
 check "release zip immutable"            'public, max-age=31536000, immutable' "$(curl -s -D - -o /dev/null "$R/shouse/shouse-9.9.9.zip" | tr -d '\r' | grep -i '^cache-control:' | cut -d' ' -f2-)"
 check "latest zip short cache"           'public, max-age=300' "$(curl -s -D - -o /dev/null "$R/shouse/shouse-latest.zip" | tr -d '\r' | grep -i '^cache-control:' | cut -d' ' -f2-)"
 check "manifest served"                  '{"a":1}' "$(curl -s "$R/shouse/manifest.json")"
+check "atomic release served"            '{"a":1}' "$(curl -s "$R/shouse/release.json")"
+check "atomic advisory served"           '{"a":1}' "$(curl -s "$R/shouse/advisories/feed.json")"
+check "immutable shard served"           '{"a":1}' "$(curl -s "$R/shouse/advisories/sha256/$hash.json")"
 
 echo
 [ "$fails" -eq 0 ] && echo "All ingest checks passed." || echo "$fails check(s) failed. Logs: $T/dev.log, $T/read.log"

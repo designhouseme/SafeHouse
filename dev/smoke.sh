@@ -4,6 +4,7 @@
 # Exit code = number of failed checks.
 set -uo pipefail
 cd "$(dirname "$0")"
+source ./env.sh
 U=http://localhost:${WP_PORT:-8894}
 wp() { ./wp.sh "$@" 2>/dev/null; }
 code() { curl -s -o /dev/null -w "%{http_code}" "$@"; }
@@ -101,7 +102,7 @@ check "lost password without proof"       200 "$(code -d "user_login=admin" "$U/
 check "lost password with proof"          302 "$(code -d "user_login=admin&shouse_url=&shouse_proof=$proof" "$U/wp-login.php?action=lostpassword")"
 check "comment without proof refused"     403 "$(code -d "comment_post_ID=1&author=a&email=a@b.test&comment=bot$n" "$U/wp-comments-post.php")"
 check "comment with proof accepted"       302 "$(code -d "comment_post_ID=1&author=a&email=a@b.test&comment=human$n&shouse_url=&shouse_proof=$proof" "$U/wp-comments-post.php")"
-check "login has no honeypot"             302 "$(code -b "wordpress_test_cookie=WP%20Cookie%20check" -d "log=admin&pwd=admin&testcookie=1" "$U/wp-login.php")"
+check "login has no honeypot"             302 "$(code -b "wordpress_test_cookie=WP%20Cookie%20check" -d "log=admin&pwd=$SHOUSE_DEV_ADMIN_PASSWORD&testcookie=1" "$U/wp-login.php")"
 check "admin password reset unaffected"   true "$(wp eval 'var_export(true === retrieve_password("admin"));')"
 if [ "$has_woo" = 1 ]; then
 	woo_register() { # <email> <extra fields>
@@ -121,7 +122,7 @@ T=XXXX.DUMMY.TOKEN.XXXX
 wpconf() { wp config "$@" >/dev/null; sleep 3; }
 wp config set SHOUSE_TURNSTILE_SITE_KEY 1x00000000000000000000AA >/dev/null
 wpconf set SHOUSE_TURNSTILE_SECRET_KEY 1x0000000000000000000000000000000AA
-wlogin() { code -b "wordpress_test_cookie=WP%20Cookie%20check" -d "log=admin&pwd=admin&testcookie=1$1" "$U/wp-login.php"; }
+wlogin() { code -b "wordpress_test_cookie=WP%20Cookie%20check" -d "log=admin&pwd=$SHOUSE_DEV_ADMIN_PASSWORD&testcookie=1$1" "$U/wp-login.php"; }
 check "widget on wp-login"                1   "$(curl -s "$U/wp-login.php" | grep -c 'class="shouse-turnstile"')"
 check "login without token refused"       200 "$(wlogin "")"
 check "login with token accepted"         302 "$(wlogin "&cf-turnstile-response=$T")"

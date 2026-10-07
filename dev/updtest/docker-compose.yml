@@ -5,7 +5,7 @@ name: shouse-updtest
 x-wp-env: &wp-env
   WORDPRESS_DB_HOST: db:3306
   WORDPRESS_DB_USER: wordpress
-  WORDPRESS_DB_PASSWORD: wordpress
+  WORDPRESS_DB_PASSWORD: ${SHOUSE_DEV_DB_PASSWORD:?Source dev/env.sh first}
   WORDPRESS_DB_NAME: wordpress
   WORDPRESS_DEBUG: "1"
   WORDPRESS_CONFIG_EXTRA: |
@@ -28,8 +28,8 @@ services:
     environment:
       MARIADB_DATABASE: wordpress
       MARIADB_USER: wordpress
-      MARIADB_PASSWORD: wordpress
-      MARIADB_ROOT_PASSWORD: wordpress
+      MARIADB_PASSWORD: ${SHOUSE_DEV_DB_PASSWORD:?Source dev/env.sh first}
+      MARIADB_ROOT_PASSWORD: ${SHOUSE_DEV_DB_ROOT_PASSWORD:?Source dev/env.sh first}
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s
@@ -42,7 +42,7 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "8895:80"
+      - "127.0.0.1:${UPDTEST_PORT:-8895}:80"
     environment: *wp-env
     volumes:
       - wp_core:/var/www/html

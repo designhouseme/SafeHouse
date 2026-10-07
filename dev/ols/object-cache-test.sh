@@ -3,6 +3,7 @@
 # WordPress core's own object cache tests run separately: ./dev/ols/object-cache-core-test.sh.
 set -uo pipefail
 cd "$(dirname "$0")"
+source ../env.sh
 U=http://localhost:${OLS_PORT:-8896}
 WPC=/var/www/vhosts/localhost/html/wp-content
 T=../../build/olstest
@@ -14,6 +15,7 @@ check() { if [ "$2" = "$3" ]; then echo "ok    $1"; else echo "FAIL  $1 (expecte
 fresh() { echo "$U/?oc=$RANDOM$RANDOM"; } # a new URL every time: never a page-cache hit, always WordPress
 title() { curl -s "$(fresh)" | grep -o '<title>[^<]*' | head -1 | sed 's/<title>//'; }
 keys() { rc --scan | grep -c -F "$1"; } # fixed-string match: WP_CACHE_KEY_SALT may hold * ? [ characters
+cache_key() { wp eval "echo (new ReflectionMethod(SafeHouse\\ObjectCache\\Cache::class, 'redis_key'))->invoke(shouse_object_cache(), '$1', '${2:-default}');"; }
 
 wp shouse module disable litespeed >/dev/null
 wp shouse object-cache disable >/dev/null
@@ -30,16 +32,16 @@ wp option update blogname "$name" >/dev/null
 check "a change made in WP-CLI shows on the site" "$name" "$(title | cut -c1-${#name})"
 
 echo "== signed values"
-rc SET "${prefix}1:default:shouse-forged" 'O:8:"stdClass":1:{s:1:"x";i:1;}' >/dev/null
+rc SET "$(cache_key shouse-forged)" 'O:8:"stdClass":1:{s:1:"x";i:1;}' >/dev/null
 check "a value planted in Redis is a miss, never unserialized" "bool(false)" "$(wp eval '$f = null; wp_cache_get( "shouse-forged", "default", false, $f ); var_dump( $f );' | tr -d '\n')"
 wp eval 'wp_cache_set( "shouse-a", "hello" );' >/dev/null
-rc COPY "${prefix}1:default:shouse-a" "${prefix}1:default:shouse-b" >/dev/null
+rc COPY "$(cache_key shouse-a)" "$(cache_key shouse-b)" >/dev/null
 check "a signed value copied to another key is a miss" "bool(false)" "$(wp eval 'var_dump( wp_cache_get( "shouse-b" ) );' | tr -d '\n')"
 check "the original key still reads"         hello "$(wp eval 'echo wp_cache_get( "shouse-a" );')"
 
 echo "== groups (WordPress's own tests skip this for external caches)"
 check "flushing a group clears it in Redis and keeps the others" "miss|v" "$(wp eval 'wp_cache_set( "k", "v", "grp-a" ); wp_cache_set( "k", "v", "grp-b" ); wp_cache_flush_group( "grp-a" ); wp_cache_flush_runtime(); echo false === wp_cache_get( "k", "grp-a" ) ? "miss" : "hit", "|", wp_cache_get( "k", "grp-b" );')"
-check "non-persistent groups never reach Redis" 0 "$(wp eval 'wp_cache_add_non_persistent_groups( "np-test" ); wp_cache_set( "k", "v", "np-test" );' >/dev/null; keys "${prefix}1:np-test:")"
+check "non-persistent groups never reach Redis" 0 "$(wp eval 'wp_cache_add_non_persistent_groups( "np-test" ); wp_cache_set( "k", "v", "np-test" );' >/dev/null; keys "$(cache_key k np-test)")"
 check "code checking for WP_Object_Cache still works" yes "$(wp eval 'global $wp_object_cache; echo $wp_object_cache instanceof WP_Object_Cache ? "yes" : "no";')"
 
 echo "== WooCommerce order through the Store API"

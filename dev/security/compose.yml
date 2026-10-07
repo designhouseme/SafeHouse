@@ -1,0 +1,56 @@
+x-wp-env: &wp-env
+  WORDPRESS_DB_HOST: db
+  WORDPRESS_DB_NAME: security
+  WORDPRESS_DB_USER: security
+  WORDPRESS_DB_PASSWORD: ${SHOUSE_DEV_DB_PASSWORD:?Source dev/env.sh}
+  WORDPRESS_CONFIG_EXTRA: |
+    define( 'WP_ENVIRONMENT_TYPE', 'local' );
+    define( 'DISABLE_WP_CRON', true );
+    define( 'SHOUSE_DISABLE_UPDATES', true );
+    define( 'WP_HTTP_BLOCK_EXTERNAL', true );
+services:
+  shouse-download-fixture:
+    image: ${SHOUSE_SECURITY_CLI_IMAGE:-wordpress:cli-php8.3}
+    entrypoint: [php, /tests/download-fixture-server.php]
+    volumes:
+      - ..:/tests:ro
+  db:
+    image: mariadb:11.4
+    environment:
+      MARIADB_DATABASE: security
+      MARIADB_USER: security
+      MARIADB_PASSWORD: ${SHOUSE_DEV_DB_PASSWORD:?Source dev/env.sh}
+      MARIADB_ROOT_PASSWORD: ${SHOUSE_DEV_DB_ROOT_PASSWORD:?Source dev/env.sh}
+    healthcheck:
+      test: [CMD, healthcheck.sh, --connect, --innodb_initialized]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - database:/var/lib/mysql
+  wordpress:
+    image: ${SHOUSE_SECURITY_WP_IMAGE:-wordpress:php8.3-apache}
+    depends_on:
+      db:
+        condition: service_healthy
+    environment: *wp-env
+    volumes:
+      - wordpress:/var/www/html
+      - ../../plugin:/var/www/html/wp-content/plugins/shouse:ro
+      - ./mu-plugins:/var/www/html/wp-content/mu-plugins:ro
+  cli:
+    image: ${SHOUSE_SECURITY_CLI_IMAGE:-wordpress:cli-php8.3}
+    user: '33:33'
+    profiles: [cli]
+    environment: *wp-env
+    volumes:
+      - wordpress:/var/www/html
+      - ../../plugin:/var/www/html/wp-content/plugins/shouse:ro
+      - ./mu-plugins:/var/www/html/wp-content/mu-plugins:ro
+      - ..:/tests:ro
+networks:
+  default:
+    internal: true
+volumes:
+  database:
+  wordpress:

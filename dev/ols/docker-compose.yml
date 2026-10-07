@@ -3,15 +3,15 @@ name: shouse-ols
 # OpenLiteSpeed + WordPress + WooCommerce for the LiteSpeed page cache module, with the repo mounted
 # as the plugin like on the main dev site. OLS caches only what PHP marks with X-LiteSpeed-Cache-Control
 # (checkPublicCache 1, enableCache 0), which is how the module works on LiteSpeed hosts.
-# Setup: ./dev/ols/setup.sh    Site: http://localhost:8896 (admin/admin)
-# OLS listens on 8896 inside the container too, so WordPress can reach itself (loopback, Site Health).
+# Setup: ./dev/ols/setup.sh    Site: http://localhost:8896 (credentials in build/dev-credentials.env)
+# OLS listens on OLS_PORT inside the container too, so loopback works with isolated project ports.
 # WP-CLI runs inside the ols container (dev/ols/wp.sh) with the same lsphp, which has PhpRedis.
 
 x-db-env: &db-env
   MARIADB_DATABASE: wordpress
   MARIADB_USER: wordpress
-  MARIADB_PASSWORD: wordpress
-  MARIADB_ROOT_PASSWORD: wordpress
+  MARIADB_PASSWORD: ${SHOUSE_DEV_DB_PASSWORD:?Source dev/env.sh first}
+  MARIADB_ROOT_PASSWORD: ${SHOUSE_DEV_DB_ROOT_PASSWORD:?Source dev/env.sh first}
 
 services:
   redis:
@@ -33,11 +33,13 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "${OLS_PORT:-8896}:8896"
-    command: ["sh", "-c", "sed -i 's/^\\( *address *\\)\\*:80$/\\1*:8896/' /usr/local/lsws/conf/httpd_config.conf && /usr/local/lsws/bin/lswsctrl restart"]
+      - "127.0.0.1:${OLS_PORT:-8896}:${OLS_PORT:-8896}"
+    # The shared host UID can already exceed the image's low per-user PHP process limit.
+    command: ["sh", "-c", "sed -i 's/^\\( *address *\\)\\*:80$/\\1*:${OLS_PORT:-8896}/' /usr/local/lsws/conf/httpd_config.conf && sed -i -E 's/(procSoftLimit|procHardLimit)([[:space:]]+)[0-9]+/\\1\\210000/' /usr/local/lsws/conf/httpd_config.conf && /usr/local/lsws/bin/lswsctrl restart"]
     volumes:
       - wp:/var/www/vhosts/localhost/html
       - ../../plugin:/var/www/vhosts/localhost/html/wp-content/plugins/shouse
+      - ..:/tests:ro
       - ../../build/wp-cli.phar:/usr/local/bin/wp-cli.phar:ro
 
 volumes:
