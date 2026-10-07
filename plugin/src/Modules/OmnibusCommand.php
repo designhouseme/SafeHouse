@@ -20,8 +20,8 @@ final class OmnibusCommand {
 	/**
 	 * List reduced products, the lowest price shown for each and where it comes from.
 	 *
-	 * "history" means the recorded prices; "regular" means nothing was on record from before the current
-	 * price, so the regular price is shown.
+	 * "history" means a complete recorded window; "partial" means a shorter observed period.
+	 * "none" means there is no evidenced minimum; no regular-price estimate is substituted.
 	 *
 	 * ## OPTIONS
 	 *
@@ -35,6 +35,9 @@ final class OmnibusCommand {
 	 * @param array<string, string> $assoc_args Named arguments.
 	 */
 	public function status( array $args, array $assoc_args ): void {
+		if ( '' !== Omnibus::recording_error() ) {
+			WP_CLI::warning( Omnibus::recording_error() );
+		}
 		$rows = [];
 		foreach ( wc_get_product_ids_on_sale() as $id ) {
 			$product = wc_get_product( $id );
@@ -89,7 +92,7 @@ final class OmnibusCommand {
 			$lowest = Omnibus::lowest( $product );
 			WP_CLI::log(
 				null === $lowest
-					? 'No lowest price: nothing on record and no regular price.'
+					? 'No lowest price: verified history is unavailable.'
 					: sprintf( 'Lowest price before the current one: %s (%s)%s.', wc_format_decimal( $lowest[0] ), $lowest[1], $product->is_on_sale() ? '' : '; not shown, the product is not reduced' )
 			);
 		}

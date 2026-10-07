@@ -26,12 +26,12 @@ final class Omnibus extends AbstractModule {
 
 	public const WINDOW = 30 * DAY_IN_SECONDS;
 
-	private const DB_VERSION = '1';
-	private const DB_OPTION  = 'shouse_omnibus_db_version';
+	private const DB_VERSION   = '2';
+	private const DB_OPTION    = 'shouse_omnibus_db_version';
+	private const ERROR_OPTION = 'shouse_omnibus_error';
 	/** When recording started (Unix time). Reset whenever the module is switched back on. */
 	private const SINCE_OPTION = 'shouse_omnibus_since';
 	private const KEEP         = YEAR_IN_SECONDS;
-	private const MAX_ROWS     = 1000;
 
 	/** Product types whose `_price` WooCommerce derives from their children: only the children are tracked. */
 	private const DERIVED_TYPES = [ 'variable', 'grouped', 'variable-subscription' ];
@@ -46,7 +46,8 @@ final class Omnibus extends AbstractModule {
 	];
 
 	/** @var array<int, array{0: float, 1: string}|null> Lowest price and its source per product, for this request. */
-	private static array $memo = [];
+	private static array $memo           = [];
+	private static string $runtime_error = '';
 
 	public function id(): string {
 		return 'omnibus';
@@ -78,7 +79,7 @@ final class Omnibus extends AbstractModule {
 	}
 
 	public function description(): string {
-		return __( 'Records every price change of products and variations, and next to each reduced price shows the lowest price from the 30 days before the reduction, as the EU Omnibus Directive requires. A product that is already reduced when recording starts shows its regular price there until its price next changes.', 'shouse' );
+		return __( 'Records price changes of products and variations and shows the lowest recorded price before a reduction. Missing or incomplete history is clearly identified; a regular price is never substituted for historical evidence.', 'shouse' );
 	}
 
 	public function fields(): array {
@@ -126,6 +127,7 @@ final class Omnibus extends AbstractModule {
 		if ( $is_enabled && ! $was_enabled ) {
 			// Prices may have changed while nothing was recording: what is on record now is known from this moment only.
 			update_option( self::SINCE_OPTION, time(), false );
+			self::$memo = [];
 		}
 	}
 
@@ -162,11 +164,11 @@ final class Omnibus extends AbstractModule {
 	 * @param mixed $value   New value.
 	 */
 	public function changed( mixed $meta_id, mixed $post_id, mixed $key, mixed $value ): void {
-		if ( '_price' !== $key || ! is_numeric( $value ) || (float) $value <= 0 || ! self::tracked( (int) $post_id ) ) {
+		if ( '_price' !== $key || ! is_numeric( $value ) || (float) $value < 0 || ! self::tracked( (int) $post_id ) ) {
 			return;
 		}
 		$last = self::last( (int) $post_id );
-		if ( null === $last || ! self::same( $last['price'], (float) $value ) ) {
+		if ( null === $last || $last['time'] < self::since() || ! self::same( $last['price'], (float) $value ) ) {
 			self::insert( (int) $post_id, (float) $value, time() );
 		}
 	}
@@ -182,18 +184,27 @@ final class Omnibus extends AbstractModule {
 		}
 	}
 
-	/** Daily: drop rows older than a year, except each product's last one before that, which still applied after it. */
+	/** Keep a year's history and the entire window preceding each product's current recorded price. */
 	public function purge(): void {
 		global $wpdb;
-		$table = self::table();
-		$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-			$wpdb->prepare(
-				'DELETE h FROM %i h JOIN ( SELECT product_id, MAX(id) AS keep_id FROM %i WHERE recorded_at < %s GROUP BY product_id ) k ON h.product_id = k.product_id AND h.id < k.keep_id',
-				$table,
-				$table,
-				self::time( time() - self::KEEP )
-			)
-		);
+		$after = 0;
+		do {
+			$ids = $wpdb->get_col( $wpdb->prepare( 'SELECT DISTINCT product_id FROM %i WHERE product_id > %d ORDER BY product_id LIMIT 200', self::table(), $after ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			foreach ( $ids as $id ) {
+				$after = (int) $id;
+				$last  = self::last( $after );
+				$start = null === $last ? null : self::current_start( $after, $last['price'], 0 );
+				if ( null === $start ) {
+					continue;
+				}
+				$cutoff = min( time() - self::KEEP, $start['time'] - self::WINDOW );
+				$keep   = $wpdb->get_row( $wpdb->prepare( 'SELECT id, recorded_at FROM %i WHERE product_id = %d AND recorded_at <= %s ORDER BY recorded_at DESC, id DESC LIMIT 1', self::table(), $after, self::time( $cutoff ) ), ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+				if ( is_array( $keep ) ) {
+					$wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE product_id = %d AND (recorded_at < %s OR (recorded_at = %s AND id < %d))', self::table(), $after, $keep['recorded_at'], $keep['recorded_at'], (int) $keep['id'] ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+				}
+			}
+			$more = count( $ids ) === 200;
+		} while ( $more );
 	}
 
 	/**
@@ -218,26 +229,79 @@ final class Omnibus extends AbstractModule {
 		} else {
 			$found = self::lowest( $product );
 		}
-		if ( null === $found || $found[0] <= 0 ) {
-			return $html;
+		if ( null === $found ) {
+			return $html . '<small class="shouse-omnibus" style="display:block">' . esc_html__( 'Lowest price before this reduction: unavailable because the recorded history is incomplete.', 'shouse' ) . '</small>';
 		}
-		return $html . $this->line( $target, $found[0] );
+		return $html . $this->line( $target, $found[0], $found[1] );
 	}
 
 	/**
-	 * Lowest price for one product or variation, and where it came from: "history", or "regular" when nothing
-	 * is on record from before the current price (the product was already reduced when recording started).
+	 * Lowest evidenced price: "history" for a complete window, "partial" for a shorter recorded period.
+	 * No estimate is made when the current price or its predecessor was never recorded.
 	 *
 	 * @return array{0: float, 1: string}|null
 	 */
 	public static function lowest( WC_Product $product ): ?array {
 		$id = $product->get_id();
 		if ( ! array_key_exists( $id, self::$memo ) ) {
-			$found             = self::lowest_before( self::history( $id ), (float) $product->get_price( 'edit' ), time() );
-			$regular           = (float) $product->get_regular_price( 'edit' );
-			self::$memo[ $id ] = null !== $found ? [ $found, 'history' ] : ( $regular > 0 ? [ $regular, 'regular' ] : null );
+			self::$memo[ $id ] = self::recorded_lowest( $product );
 		}
 		return self::$memo[ $id ];
+	}
+
+	/** @return array{0: float, 1: string}|null */
+	private static function recorded_lowest( WC_Product $product ): ?array {
+		if ( '' !== self::recording_error() || ! is_numeric( $product->get_price( 'edit' ) ) ) {
+			return null;
+		}
+		global $wpdb;
+		$id    = $product->get_id();
+		$since = self::since();
+		$start = self::current_start( $id, (float) $product->get_price( 'edit' ), $since );
+		if ( null === $start ) {
+			return null;
+		}
+		$opens = $start['time'] - self::WINDOW;
+		$stamp = self::time( $start['time'] );
+		// Aggregate the actual interval, regardless of how many changes it contains. IDs break ties
+		// between changes observed in the same second, including an outgoing and incoming price.
+		$minimum = $wpdb->get_var( $wpdb->prepare( 'SELECT MIN(price) FROM %i WHERE product_id = %d AND recorded_at >= %s AND (recorded_at < %s OR (recorded_at = %s AND id < %d))', self::table(), $id, self::time( max( $since, $opens ) ), $stamp, $stamp, $start['id'] ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		if ( self::query_failed() ) {
+			return null;
+		}
+		$boundary = $wpdb->get_var( $wpdb->prepare( 'SELECT price FROM %i WHERE product_id = %d AND recorded_at >= %s AND recorded_at <= %s ORDER BY recorded_at DESC, id DESC LIMIT 1', self::table(), $id, self::time( $since ), self::time( $opens ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		if ( self::query_failed() || ( null === $minimum && null === $boundary ) ) {
+			return null;
+		}
+		$found = null === $minimum ? (float) $boundary : (float) $minimum;
+		if ( null !== $boundary ) {
+			$found = min( $found, (float) $boundary );
+		}
+		return [ $found, null === $boundary ? 'partial' : 'history' ];
+	}
+
+	/**
+	 * Start of the final uninterrupted run of the current recorded price.
+	 *
+	 * @return array{id: int, time: int}|null
+	 */
+	private static function current_start( int $product_id, float $current, int $since ): ?array {
+		global $wpdb;
+		$last = self::last( $product_id );
+		if ( null === $last || ! self::same( $last['price'], $current ) || $last['time'] < $since ) {
+			return null;
+		}
+		$previous = $wpdb->get_row( $wpdb->prepare( 'SELECT id, recorded_at FROM %i WHERE product_id = %d AND recorded_at >= %s AND recorded_at <= %s AND ABS(price - %f) >= 0.0000005 ORDER BY recorded_at DESC, id DESC LIMIT 1', self::table(), $product_id, self::time( $since ), self::time( time() ), $current ), ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		if ( self::query_failed() ) {
+			return null;
+		}
+		$after = is_array( $previous ) ? (string) $previous['recorded_at'] : self::time( $since );
+		$id    = is_array( $previous ) ? (int) $previous['id'] : 0;
+		$row   = $wpdb->get_row( $wpdb->prepare( 'SELECT id, recorded_at FROM %i WHERE product_id = %d AND (recorded_at > %s OR (recorded_at = %s AND id > %d)) ORDER BY recorded_at, id LIMIT 1', self::table(), $product_id, $after, $after, $id ), ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		return is_array( $row ) ? [
+			'id'   => (int) $row['id'],
+			'time' => (int) strtotime( $row['recorded_at'] . ' UTC' ),
+		] : null;
 	}
 
 	/**
@@ -250,7 +314,10 @@ final class Omnibus extends AbstractModule {
 	 */
 	public static function lowest_before( array $rows, float $current, int $now ): ?float {
 		$count = count( $rows );
-		$start = $now; // When the history does not end with the current price, it took effect unseen: count up to now.
+		if ( 0 === $count || ! self::same( $rows[ $count - 1 ]['price'], $current ) ) {
+			return null; // An unseen change has no evidenced start time.
+		}
+		$start = $now;
 		while ( $count > 0 && self::same( $rows[ $count - 1 ]['price'], $current ) ) {
 			--$count;
 			$start = $rows[ $count ]['time'];
@@ -273,9 +340,9 @@ final class Omnibus extends AbstractModule {
 	 */
 	public static function history( int $product_id ): array {
 		global $wpdb;
-		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT price, recorded_at FROM %i WHERE product_id = %d ORDER BY id DESC LIMIT %d', self::table(), $product_id, self::MAX_ROWS ), ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT price, recorded_at FROM %i WHERE product_id = %d ORDER BY recorded_at, id', self::table(), $product_id ), ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		$out  = [];
-		foreach ( array_reverse( (array) $rows ) as $row ) {
+		foreach ( (array) $rows as $row ) {
 			$out[] = [
 				'time'  => (int) strtotime( $row['recorded_at'] . ' UTC' ),
 				'price' => (float) $row['price'],
@@ -294,9 +361,10 @@ final class Omnibus extends AbstractModule {
 		return $wpdb->prefix . 'shouse_price_history';
 	}
 
-	public static function maybe_install(): void {
-		if ( get_option( self::DB_OPTION ) === self::DB_VERSION ) {
-			return;
+	public static function maybe_install( bool $check = false ): bool {
+		$version = get_option( self::DB_OPTION );
+		if ( ! $check && $version === self::DB_VERSION ) {
+			return true;
 		}
 		global $wpdb;
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -308,15 +376,56 @@ final class Omnibus extends AbstractModule {
 				price decimal(20,6) NOT NULL,
 				recorded_at datetime NOT NULL,
 				PRIMARY KEY  (id),
-				KEY product_id (product_id,id)
+				KEY product_id (product_id,id),
+				KEY product_time (product_id,recorded_at,id)
 			) {$wpdb->get_charset_collate()};"
 		);
-		add_option( self::SINCE_OPTION, time(), '', false );
+		$columns = $wpdb->get_results( $wpdb->prepare( 'SHOW COLUMNS FROM %i', $table ), ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$indexes = $wpdb->get_results( $wpdb->prepare( 'SHOW INDEX FROM %i WHERE Key_name = %s', $table, 'product_time' ), ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$types   = array_column( (array) $columns, 'Type', 'Field' );
+		if ( array_diff( [ 'id', 'product_id', 'price', 'recorded_at' ], array_keys( $types ) ) || 'decimal(20,6)' !== ( $types['price'] ?? '' ) || 'datetime' !== ( $types['recorded_at'] ?? '' ) || [ 'product_id', 'recorded_at', 'id' ] !== array_column( (array) $indexes, 'Column_name' ) ) {
+			self::set_recording_error( __( 'Price history storage could not be created or upgraded. Fix database permissions, then restart recording.', 'shouse' ) );
+			return false;
+		}
+		if ( $version !== self::DB_VERSION ) {
+			// Older versions guessed timestamps for outgoing prices. Retain those rows for inspection,
+			// but begin a new evidenced period instead of presenting guessed history to shoppers.
+			update_option( self::SINCE_OPTION, time(), false );
+		}
 		update_option( self::DB_OPTION, self::DB_VERSION, false );
+		return true;
+	}
+
+	public static function recording_error(): string {
+		return '' !== self::$runtime_error ? self::$runtime_error : (string) get_option( self::ERROR_OPTION, '' );
+	}
+
+	/** @phpstan-impure Database calls change this state between reads. */
+	private static function query_failed(): bool {
+		global $wpdb;
+		return '' !== $wpdb->last_error;
+	}
+
+	public function tasks(): array {
+		return [ 'restart_recording' => __( 'Restart recording after fixing storage', 'shouse' ) ];
+	}
+
+	public function handle_task( string $task ): string {
+		if ( 'restart_recording' !== $task || ! self::maybe_install( true ) ) {
+			return __( 'Price history storage is still unavailable. Recording was not restarted.', 'shouse' );
+		}
+		update_option( self::SINCE_OPTION, time(), false );
+		delete_option( self::ERROR_OPTION );
+		self::$memo          = [];
+		self::$runtime_error = '';
+		return __( 'Recording restarted. Earlier incomplete history will not be used for price claims.', 'shouse' );
 	}
 
 	public function render_panel(): void {
 		echo '<div class="shouse-panel">';
+		if ( '' !== self::recording_error() ) {
+			echo '<p class="shouse-note">' . esc_html( self::recording_error() ) . '</p>';
+		}
 		if ( get_option( self::DB_OPTION ) !== self::DB_VERSION ) {
 			echo '<p>' . esc_html__( 'Nothing recorded yet. Recording starts when the module is on and WooCommerce is active.', 'shouse' ) . '</p></div>';
 			return;
@@ -335,14 +444,31 @@ final class Omnibus extends AbstractModule {
 				)
 			)
 		);
-		echo '<p class="description">' . esc_html__( 'A product that was already reduced when recording started has no earlier price on record, so its regular price is shown as the lowest price until its price next changes. `wp shouse omnibus status` lists every reduced product and where its figure comes from.', 'shouse' ) . '</p>';
+		$incomplete = 0;
+		if ( function_exists( 'wc_get_product_ids_on_sale' ) ) {
+			foreach ( wc_get_product_ids_on_sale() as $id ) {
+				$product = wc_get_product( $id );
+				if ( ! $product instanceof WC_Product || $product->is_type( self::DERIVED_TYPES ) || ! $product->is_on_sale() ) {
+					continue;
+				}
+				$lowest = self::lowest( $product );
+				if ( null === $lowest || 'history' !== $lowest[1] ) {
+					++$incomplete;
+				}
+			}
+		}
+		if ( $incomplete > 0 ) {
+			/* translators: %d: number of reduced products with missing or incomplete history. */
+			echo '<p class="shouse-note">' . esc_html( sprintf( __( '%d reduced products have missing or incomplete price history. Review them before making historical price claims.', 'shouse' ), $incomplete ) ) . '</p>';
+		}
+		echo '<p class="description">' . esc_html__( 'Missing history is shown as unavailable. A shorter recorded period is labelled as partial history, never as a verified 30-day minimum. Review reduced products with `wp shouse omnibus status`; resolve missing history before relying on a price claim.', 'shouse' ) . '</p>';
 		echo '</div>';
 	}
 
 	/**
 	 * Put the price being replaced on record when the history does not already end with it: the first change
-	 * after recording started, or a change made while nothing was listening. It is stamped as early as it is
-	 * known to apply, which can only lower the figure shown, never raise it.
+	 * after recording started, or a change made while nothing was listening. It is known only at this
+	 * observation: an activation time or earlier unrelated row cannot justify backdating it.
 	 *
 	 * @param int        $post_id  Product or variation.
 	 * @param list<int>  $meta_ids Rows about to change.
@@ -352,16 +478,15 @@ final class Omnibus extends AbstractModule {
 			return;
 		}
 		$meta = get_metadata_by_mid( 'post', $meta_ids[0] );
-		if ( ! is_object( $meta ) || ! is_numeric( $meta->meta_value ) || (float) $meta->meta_value <= 0 ) {
+		if ( ! is_object( $meta ) || ! is_numeric( $meta->meta_value ) || (float) $meta->meta_value < 0 ) {
 			return;
 		}
 		$price = (float) $meta->meta_value;
 		$last  = self::last( $post_id );
-		if ( null !== $last && self::same( $last['price'], $price ) ) {
+		if ( null !== $last && $last['time'] >= self::since() && self::same( $last['price'], $price ) ) {
 			return;
 		}
-		$stamp = max( self::since(), null === $last ? 0 : $last['time'] + 1 );
-		self::insert( $post_id, $price, min( $stamp, time() ) );
+		self::insert( $post_id, $price, time() );
 	}
 
 	/** Products and variations with a price of their own. */
@@ -382,25 +507,36 @@ final class Omnibus extends AbstractModule {
 	 * @return array{0: WC_Product, 1: array{0: float, 1: string}|null}
 	 */
 	private static function lowest_of_children( WC_Product_Variable $product ): array {
-		$target = $product;
-		$found  = null;
+		$target  = $product;
+		$found   = null;
+		$partial = false;
 		foreach ( $product->get_visible_children() as $child_id ) {
 			$child = wc_get_product( $child_id );
 			if ( ! $child instanceof WC_Product || ! $child->is_on_sale() ) {
 				continue;
 			}
 			$lowest = self::lowest( $child );
-			if ( null !== $lowest && ( null === $found || $lowest[0] < $found[0] ) ) {
+			if ( null === $lowest ) {
+				return [ $child, null ]; // One unknown variation prevents a minimum claim for the shared line.
+			}
+			$partial = $partial || 'history' !== $lowest[1];
+			if ( null === $found || $lowest[0] < $found[0] ) {
 				$target = $child;
 				$found  = $lowest;
 			}
 		}
+		if ( $partial && null !== $found ) {
+			$found[1] = 'partial';
+		}
 		return [ $target, $found ];
 	}
 
-	private function line( WC_Product $product, float $price ): string {
+	private function line( WC_Product $product, float $price, string $source ): string {
 		$wording = trim( (string) $this->opt( 'label' ) );
-		if ( '' === $wording ) {
+		if ( 'partial' === $source ) {
+			/* translators: %s: a price. */
+			$wording = __( 'Lowest recorded price before the reduction (incomplete 30-day history): %s', 'shouse' );
+		} elseif ( '' === $wording ) {
 			/* translators: %s: a price. */
 			$wording = __( 'Lowest price in the 30 days before the reduction: %s', 'shouse' );
 		} elseif ( ! str_contains( $wording, '%s' ) ) {
@@ -414,7 +550,7 @@ final class Omnibus extends AbstractModule {
 	/** @return array{price: float, time: int}|null */
 	private static function last( int $product_id ): ?array {
 		global $wpdb;
-		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT price, recorded_at FROM %i WHERE product_id = %d ORDER BY id DESC LIMIT 1', self::table(), $product_id ), ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT price, recorded_at FROM %i WHERE product_id = %d AND recorded_at <= %s ORDER BY recorded_at DESC, id DESC LIMIT 1', self::table(), $product_id, self::time( time() ) ), ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		return is_array( $row ) ? [
 			'price' => (float) $row['price'],
 			'time'  => (int) strtotime( $row['recorded_at'] . ' UTC' ),
@@ -423,7 +559,7 @@ final class Omnibus extends AbstractModule {
 
 	private static function insert( int $product_id, float $price, int $time ): void {
 		global $wpdb;
-		$wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$inserted = $wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			self::table(),
 			[
 				'product_id'  => $product_id,
@@ -432,7 +568,16 @@ final class Omnibus extends AbstractModule {
 			],
 			[ '%d', '%f', '%s' ]
 		);
+		if ( false === $inserted ) {
+			self::set_recording_error( __( 'A price change could not be recorded. Historical minimum claims are paused. Fix price history storage, then restart recording.', 'shouse' ) );
+		}
 		unset( self::$memo[ $product_id ] );
+	}
+
+	private static function set_recording_error( string $message ): void {
+		self::$runtime_error = $message;
+		update_option( self::ERROR_OPTION, $message, false );
+		self::$memo = [];
 	}
 
 	/** Prices are stored with six decimals. */

@@ -4,18 +4,20 @@
 # Exit code = number of failed checks.
 set -uo pipefail
 cd "$(dirname "$0")"
-wp() { ./wp.sh "$@" 2>/dev/null; }
+wp() { "${SHOUSE_WP_WRAPPER:-./wp.sh}" "$@" 2>/dev/null; }
 fails=0
 check() { if [ "$2" = "$3" ]; then echo "ok    $1"; else echo "FAIL  $1 (expected '$2', got '$3')"; fails=$((fails + 1)); fi; }
 php() { wp eval "use SafeHouse\Modules\Omnibus; global \$wpdb; \$t = Omnibus::table(); $1"; }
 
 backup=$(wp option get shouse_settings --format=json || echo '{}')
 soon=$(wp option get woocommerce_coming_soon || echo no)
+since=$(wp option get shouse_omnibus_since || echo 0)
 made=()
 cleanup() {
 	[ ${#made[@]} -gt 0 ] && php "foreach ([$(IFS=,; echo "${made[*]}")] as \$id) { \$p = wc_get_product(\$id); \$p && \$p->delete(true); }" >/dev/null
 	wp option update shouse_settings "$backup" --format=json >/dev/null
 	wp option update woocommerce_coming_soon "$soon" >/dev/null
+	wp option update shouse_omnibus_since "$since" >/dev/null
 }
 trap cleanup EXIT
 
@@ -29,7 +31,7 @@ rows() { php "echo (int) \$wpdb->get_var(\$wpdb->prepare('SELECT COUNT(*) FROM %
 all_rows() { php "echo (int) \$wpdb->get_var(\$wpdb->prepare('SELECT COUNT(*) FROM %i', \$t));"; }
 trail() { php "echo implode(' ', array_map(fn(\$r) => (float) \$r['price'], Omnibus::history($1)));"; }
 history() { # id "days:price days:price ..." oldest first; replaces the rows
-	php "\$wpdb->delete(\$t, ['product_id' => $1]); foreach (explode(' ', '$2') as \$e) { [\$d, \$v] = explode(':', \$e); \$wpdb->insert(\$t, ['product_id' => $1, 'price' => \$v, 'recorded_at' => gmdate('Y-m-d H:i:s', time() - \$d * DAY_IN_SECONDS)]); }" >/dev/null
+	php "update_option('shouse_omnibus_since', time() - 1000 * DAY_IN_SECONDS); \$wpdb->delete(\$t, ['product_id' => $1]); foreach (explode(' ', '$2') as \$e) { [\$d, \$v] = explode(':', \$e); \$wpdb->insert(\$t, ['product_id' => $1, 'price' => \$v, 'recorded_at' => gmdate('Y-m-d H:i:s', time() - \$d * DAY_IN_SECONDS)]); }" >/dev/null
 }
 age() { php "\$wpdb->query(\$wpdb->prepare('UPDATE %i SET recorded_at = %s WHERE product_id = %d ORDER BY id DESC LIMIT 1', \$t, gmdate('Y-m-d H:i:s', time() - $2 * DAY_IN_SECONDS), $1));" >/dev/null; }
 lowest() { php "\$r = Omnibus::lowest(wc_get_product($1)); echo \$r ? (float) \$r[0] . ' ' . \$r[1] : 'none';"; }
@@ -51,7 +53,7 @@ check "price in effect when the window opened"      100  "$(calc '[[60,80],[40,1
 check "older prices do not count"                   100  "$(calc '[[60,80],[40,100],[10,90]]' 90)"
 check "earlier sale inside the window counts"       70   "$(calc '[[60,80],[35,100],[20,70],[15,100],[0,90]]' 90)"
 check "a further reduction looks back from itself"  90   "$(calc '[[50,100],[10,90],[0,80]]' 80)"
-check "unseen change: look back from now"           90   "$(calc '[[50,100],[5,90]]' 80)"
+check "unseen change has no evidenced start"        null "$(calc '[[50,100],[5,90]]' 80)"
 check "a raise right before the sale is not enough" 100  "$(calc '[[25,100],[10,120],[0,90]]' 90)"
 
 echo "== recording"
@@ -72,7 +74,8 @@ php "update_option('shouse_omnibus_since', time() - 20 * DAY_IN_SECONDS);" >/dev
 check "nothing recorded before the first change"    0 "$(rows "$id")"
 prices "$id" 120
 check "outgoing price kept, then the new one"       "100 120" "$(trail "$id")"
-age "$id" 10
+check "outgoing observation is not backdated"       1 "$(php "\$r = Omnibus::history($id); echo (int) (\$r[0]['time'] >= time() - 30);")"
+history "$id" "40:100 10:120"
 prices "$id" 120 90
 check "raise then sale shows the price before the raise" "100 history" "$(lowest "$id")"
 check "product page shows it"                       10000 "$(shown "$id")"
@@ -81,8 +84,8 @@ echo "== already reduced when recording starts"
 module disable
 simple 100 80
 module enable
-check "regular price stands in"                     "100 regular" "$(lowest "$id")"
-check "product page shows the regular price"        10000 "$(shown "$id")"
+check "regular price never stands in for history"  "none" "$(lowest "$id")"
+check "product page says history is unavailable"    1 "$(first_line "$id" | grep -c 'unavailable')"
 
 echo "== windows with real saves"
 simple 100
