@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-06T22:01:17+00:00\n"
+"POT-Creation-Date: 2026-10-07T15:16:49+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: shouse\n"
@@ -60,12 +60,12 @@ msgid "Modules"
 msgstr ""
 
 #: src/Admin/Page.php:165
-#: src/Admin/Page.php:419
+#: src/Admin/Page.php:420
 msgid "Integrations"
 msgstr ""
 
 #: src/Admin/Page.php:166
-#: src/Admin/Page.php:218
+#: src/Admin/Page.php:219
 msgid "General"
 msgstr ""
 
@@ -75,194 +75,194 @@ msgstr ""
 msgid "%1$d of %2$d running"
 msgstr ""
 
-#: src/Admin/Page.php:190
+#: src/Admin/Page.php:191
 msgid "Settings are locked by SHOUSE_LOCK_SETTINGS in wp-config.php. Change them in code."
 msgstr ""
 
-#: src/Admin/Page.php:193
+#: src/Admin/Page.php:194
 msgid "SHOUSE_IGNORE_OVERLAPS is on: features run even where another plugin already provides them."
 msgstr ""
 
-#: src/Admin/Page.php:202
+#: src/Admin/Page.php:203
 msgid "Small, audited replacements for single-purpose plugins. Every module is a switch. Features that Wordfence or wp-config already handle are skipped automatically."
 msgstr ""
 
-#: src/Admin/Page.php:221
+#: src/Admin/Page.php:222
 msgid "Alert recipients"
 msgstr ""
 
-#: src/Admin/Page.php:224
+#: src/Admin/Page.php:225
 msgid "Comma-separated. Empty means the site admin address."
 msgstr ""
 
-#: src/Admin/Page.php:228
+#: src/Admin/Page.php:229
 msgid "Proxy in front of the site"
 msgstr ""
 
-#: src/Admin/Page.php:232
+#: src/Admin/Page.php:233
 msgid "None: visitors connect directly"
 msgstr ""
 
-#: src/Admin/Page.php:239
+#: src/Admin/Page.php:240
 msgid "Set in wp-config.php with SHOUSE_TRUSTED_PROXIES."
 msgstr ""
 
-#: src/Admin/Page.php:240
+#: src/Admin/Page.php:241
 msgid "With Cloudflare, SafeHouse takes the visitor address from Cloudflare's header, but only on connections that really come from Cloudflare. Login limits and the activity log depend on it."
 msgstr ""
 
-#: src/Admin/Page.php:277
+#: src/Admin/Page.php:278
 msgid "Unavailable"
 msgstr ""
 
-#: src/Admin/Page.php:279
+#: src/Admin/Page.php:280
 msgid "Running"
 msgstr ""
 
-#: src/Admin/Page.php:281
+#: src/Admin/Page.php:282
 msgid "Enabled, not running"
 msgstr ""
 
-#: src/Admin/Page.php:283
+#: src/Admin/Page.php:284
 msgid "Off"
 msgstr ""
 
-#: src/Admin/Page.php:295
-#: src/Modules/Vulnerabilities.php:422
+#: src/Admin/Page.php:296
+#: src/Modules/Vulnerabilities.php:442
 msgid "Details"
 msgstr ""
 
-#: src/Admin/Page.php:300
+#: src/Admin/Page.php:301
 msgid "Pinned by SHOUSE_MODULES in wp-config.php."
 msgstr ""
 
 #. translators: %s: plugin or setting name, e.g. Wordfence.
-#: src/Admin/Page.php:395
+#: src/Admin/Page.php:396
 #, php-format
 msgid "Handled by %s, skipped here."
 msgstr ""
 
-#: src/Admin/Page.php:410
+#: src/Admin/Page.php:411
 msgid "SafeHouse skips what Wordfence already does (for example username discovery and login error masking) and leaves the firewall, two-factor login and malware scans to it. Vulnerability alerts stand down, because Wordfence warns about vulnerable plugins itself."
 msgstr ""
 
-#: src/Admin/Page.php:411
+#: src/Admin/Page.php:412
 msgid "Compatible with HPOS and the block checkout. Reduced prices show the lowest price from the previous 30 days (Omnibus). Generic login errors also cover the My Account form, maintenance mode lets the Store API and payment callbacks through, and product reviews survive \"disable comments\"."
 msgstr ""
 
-#: src/Admin/Page.php:412
+#: src/Admin/Page.php:413
 msgid "Payment gateways"
 msgstr ""
 
-#: src/Admin/Page.php:412
+#: src/Admin/Page.php:413
 msgid "Autopay, Przelewy24, PayU, imoje, Paynow, Stripe, PayPal and WooPayments. Their callbacks (?wc-api= and the REST API) pass maintenance mode, and XML-RPC stays on for WooPayments."
 msgstr ""
 
-#: src/Admin/Page.php:413
+#: src/Admin/Page.php:414
 msgid "Redis object cache"
 msgstr ""
 
-#: src/Admin/Page.php:413
+#: src/Admin/Page.php:414
 msgid "SafeHouse has its own Redis object cache: install it with \"wp shouse object-cache enable\". Every cached value is signed, so other sites on a shared Redis cannot plant data. A site that uses the Redis Object Cache plugin instead shows its status here."
 msgstr ""
 
-#: src/Admin/Page.php:414
+#: src/Admin/Page.php:415
 msgid "Real visitor addresses behind Cloudflare (General, \"Proxy in front of the site\"), cache clearing after changes (the Cloudflare cache module, token in wp-config.php) and Turnstile on forms (Bot protection). SafeHouse contacts Cloudflare only for the parts that are on."
 msgstr ""
 
-#: src/Admin/Page.php:415
+#: src/Admin/Page.php:416
 msgid "Elementor and Elementor Pro. Watched for new vulnerabilities like everything on this list."
 msgstr ""
 
-#: src/Admin/Page.php:420
+#: src/Admin/Page.php:421
 msgid "SafeHouse is built to run alongside these plugins. Design House watches all of them for new vulnerabilities (CVE) and tells you when an update cannot wait."
 msgstr ""
 
-#: src/Admin/Page.php:423
+#: src/Admin/Page.php:424
 msgid "Integration"
 msgstr ""
 
-#: src/Admin/Page.php:424
+#: src/Admin/Page.php:425
 msgid "On this site"
 msgstr ""
 
-#: src/Admin/Page.php:425
+#: src/Admin/Page.php:426
 msgid "What SafeHouse does"
 msgstr ""
 
-#: src/Admin/Page.php:439
-#: src/Admin/Page.php:504
+#: src/Admin/Page.php:440
+#: src/Admin/Page.php:505
 msgid "not installed"
 msgstr ""
 
-#: src/Admin/Page.php:443
+#: src/Admin/Page.php:444
 msgid "SafeHouse vulnerability alerts cover this site. For a firewall and two-factor login, install Wordfence."
 msgstr ""
 
-#: src/Admin/Page.php:444
+#: src/Admin/Page.php:445
 msgid "Nothing warns about vulnerable plugins on this site: switch on SafeHouse vulnerability alerts below, or install Wordfence."
 msgstr ""
 
-#: src/Admin/Page.php:468
+#: src/Admin/Page.php:469
 msgid "active"
 msgstr ""
 
-#: src/Admin/Page.php:468
-#: src/Modules/PluginHealth.php:398
+#: src/Admin/Page.php:469
+#: src/Modules/PluginHealth.php:410
 msgid "inactive"
 msgstr ""
 
-#: src/Admin/Page.php:474
+#: src/Admin/Page.php:475
 msgid "visitor addresses"
 msgstr ""
 
-#: src/Admin/Page.php:475
+#: src/Admin/Page.php:476
 msgid "cache clearing"
 msgstr ""
 
-#: src/Admin/Page.php:479
+#: src/Admin/Page.php:480
 msgid "on"
 msgstr ""
 
-#: src/Admin/Page.php:479
+#: src/Admin/Page.php:480
 msgid "off"
 msgstr ""
 
-#: src/Admin/Page.php:492
+#: src/Admin/Page.php:493
 msgid "connected"
 msgstr ""
 
-#: src/Admin/Page.php:492
+#: src/Admin/Page.php:493
 msgid "Redis not reachable"
 msgstr ""
 
-#: src/Admin/Page.php:492
+#: src/Admin/Page.php:493
 #: src/Core/ObjectCache.php:151
 msgid "SafeHouse object cache"
 msgstr ""
 
-#: src/Admin/Page.php:500
+#: src/Admin/Page.php:501
 msgid "Object cache connected to Redis."
 msgstr ""
 
-#: src/Admin/Page.php:500
+#: src/Admin/Page.php:501
 msgid "Object cache drop-in installed, but Redis is not reachable."
 msgstr ""
 
-#: src/Admin/Page.php:502
+#: src/Admin/Page.php:503
 msgid "Another persistent object cache is in use."
 msgstr ""
 
-#: src/Admin/Page.php:517
+#: src/Admin/Page.php:518
 msgid "Activity log"
 msgstr ""
 
-#: src/Admin/Page.php:523
+#: src/Admin/Page.php:524
 msgid "No events yet."
 msgstr ""
 
 #. translators: %s: time since the event, e.g. "5 mins".
-#: src/Admin/Page.php:541
+#: src/Admin/Page.php:542
 #, php-format
 msgid "%s ago"
 msgstr ""
@@ -296,10 +296,11 @@ msgid "That is fine when you reach the server directly. If the site no longer us
 msgstr ""
 
 #: src/Core/Net.php:155
+#: src/Core/Queue.php:202
 #: src/Modules/Hardening.php:270
-#: src/Modules/LoginLimits.php:355
-#: src/Modules/PluginHealth.php:350
-#: src/Modules/Vulnerabilities.php:301
+#: src/Modules/LoginLimits.php:411
+#: src/Modules/PluginHealth.php:356
+#: src/Modules/Vulnerabilities.php:319
 msgid "Security"
 msgstr ""
 
@@ -312,7 +313,7 @@ msgid "The SafeHouse object cache is connected to Redis"
 msgstr ""
 
 #: src/Core/ObjectCache.php:164
-msgid "Database results are kept in Redis between requests. Every cached value is signed, so other sites on a shared Redis cannot plant data."
+msgid "Database results are kept in Redis between requests. Values are signed; WordPress user, session and permission-option data stay outside persistent Redis. Use isolated Redis ACL credentials: signatures do not prevent replay of old cache data."
 msgstr ""
 
 #: src/Core/ObjectCache.php:167
@@ -326,148 +327,171 @@ msgid "WordPress is using its own cache for now, so the site works but is slower
 msgstr ""
 
 #: src/Core/ObjectCache.php:175
-#: src/Modules/Cloudflare.php:230
-#: src/Modules/LiteSpeed.php:269
+#: src/Modules/Cloudflare.php:291
+#: src/Modules/LiteSpeed.php:353
 msgid "Performance"
 msgstr ""
 
-#: src/Core/Updater.php:160
+#: src/Core/Queue.php:188
+msgid "SafeHouse delivery queue"
+msgstr ""
+
+#: src/Core/Queue.php:199
+msgid "SafeHouse has undelivered work"
+msgstr ""
+
+#: src/Core/Queue.php:199
+msgid "SafeHouse delivery queue is healthy"
+msgstr ""
+
+#. translators: 1: pending jobs, 2: jobs awaiting retry.
+#: src/Core/Queue.php:206
+#, php-format
+msgid "Pending: %1$d. Awaiting retry: %2$d."
+msgstr ""
+
+#. translators: 1: pending jobs, 2: jobs awaiting retry.
+#: src/Core/Queue.php:206
+msgid "Alerts and cache purges are retained until the transport accepts them. Check SMTP, Cloudflare credentials, database access and WP-Cron if work remains pending. Mail acceptance does not confirm inbox delivery."
+msgstr ""
+
+#: src/Core/Updater.php:163
 msgid "This SafeHouse package is not listed in the signed release manifest. Update cancelled."
 msgstr ""
 
-#: src/Core/Updater.php:173
+#: src/Core/Updater.php:175
 msgid "The downloaded SafeHouse package does not match the signed checksum. Update cancelled."
 msgstr ""
 
-#: src/Modules/Bots.php:77
+#: src/Modules/Bots.php:81
 msgid "Bot protection"
 msgstr ""
 
-#: src/Modules/Bots.php:81
+#: src/Modules/Bots.php:85
 msgid "Stops automated sign-ups, spam comments, password-reset floods, login attempts and fake orders. A honeypot works on its own; Cloudflare Turnstile is added when its keys are in wp-config.php."
 msgstr ""
 
-#: src/Modules/Bots.php:88
+#: src/Modules/Bots.php:92
 msgid "Honeypot on registration, lost password and comments"
 msgstr ""
 
-#: src/Modules/Bots.php:89
+#: src/Modules/Bots.php:93
 msgid "An invisible trap field plus proof that a person used the form in a browser. Needs no outside service. Visitors with JavaScript turned off cannot register, reset a password or comment."
 msgstr ""
 
-#: src/Modules/Bots.php:93
+#: src/Modules/Bots.php:97
 msgid "Turnstile on login"
 msgstr ""
 
-#: src/Modules/Bots.php:94
+#: src/Modules/Bots.php:98
 msgid "wp-login.php, login forms made with wp_login_form() and the WooCommerce login form."
 msgstr ""
 
-#: src/Modules/Bots.php:98
+#: src/Modules/Bots.php:102
 msgid "Turnstile on registration"
 msgstr ""
 
-#: src/Modules/Bots.php:99
+#: src/Modules/Bots.php:103
 msgid "WordPress and WooCommerce My Account registration."
 msgstr ""
 
-#: src/Modules/Bots.php:103
+#: src/Modules/Bots.php:107
 msgid "Turnstile on lost password"
 msgstr ""
 
-#: src/Modules/Bots.php:107
+#: src/Modules/Bots.php:111
 msgid "Turnstile on comments and reviews"
 msgstr ""
 
-#: src/Modules/Bots.php:108
+#: src/Modules/Bots.php:112
 msgid "For visitors who are not logged in."
 msgstr ""
 
-#: src/Modules/Bots.php:112
+#: src/Modules/Bots.php:116
 msgid "Turnstile on checkout"
 msgstr ""
 
-#: src/Modules/Bots.php:113
+#: src/Modules/Bots.php:117
 msgid "Classic and block checkout, including orders sent straight to the Store API. Express payment buttons outside the checkout page (such as Apple Pay or Google Pay on product pages) cannot pass this check, so turn it off on sites that use them."
 msgstr ""
 
-#: src/Modules/Bots.php:117
+#: src/Modules/Bots.php:121
 msgid "When Cloudflare cannot be reached"
 msgstr ""
 
-#: src/Modules/Bots.php:118
+#: src/Modules/Bots.php:122
 msgid "Applies only when this server cannot reach Cloudflare, or Cloudflare rejects the secret key. A visitor whose browser blocks Turnstile is still asked to try again."
 msgstr ""
 
-#: src/Modules/Bots.php:120
+#: src/Modules/Bots.php:124
 msgid "Let the submission through and log it"
 msgstr ""
 
-#: src/Modules/Bots.php:121
+#: src/Modules/Bots.php:125
 msgid "Block the submission"
 msgstr ""
 
-#: src/Modules/Bots.php:175
+#: src/Modules/Bots.php:182
 msgid "Leave this field empty"
 msgstr ""
 
-#: src/Modules/Bots.php:311
+#: src/Modules/Bots.php:333
 msgid "This looks like an automated submission. Please make sure JavaScript is on and try again."
 msgstr ""
 
-#: src/Modules/Bots.php:328
+#: src/Modules/Bots.php:350
 msgid "The anti-bot check is unavailable right now. Please try again in a few minutes."
 msgstr ""
 
-#: src/Modules/Bots.php:331
+#: src/Modules/Bots.php:353
 msgid "The anti-bot check did not pass. Please wait for it to finish and try again."
 msgstr ""
 
-#: src/Modules/Bots.php:370
+#: src/Modules/Bots.php:392
 msgid "Turnstile is off: add SHOUSE_TURNSTILE_SITE_KEY and SHOUSE_TURNSTILE_SECRET_KEY to wp-config.php. The honeypot works without them."
 msgstr ""
 
-#: src/Modules/Bots.php:372
+#: src/Modules/Bots.php:394
 msgid "Turnstile is off: wp-config.php has Cloudflare test keys, which always give the same answer and are not allowed on a production site."
 msgstr ""
 
-#: src/Modules/Bots.php:374
+#: src/Modules/Bots.php:396
 msgid "Turnstile is on, with keys from wp-config.php."
 msgstr ""
 
-#: src/Modules/Cloudflare.php:55
+#: src/Modules/Cloudflare.php:56
 msgid "Cloudflare cache"
 msgstr ""
 
-#: src/Modules/Cloudflare.php:59
-msgid "Clears the Cloudflare cache after changes, for sites where Cloudflare caches whole pages (APO or a Cache Everything rule). A changed post clears its own page and the listings it appears on; menus, widgets, themes and plugins clear everything. The API token and zone ID live in wp-config.php."
+#: src/Modules/Cloudflare.php:60
+msgid "Clears the Cloudflare cache after changes, for sites where Cloudflare caches whole pages (APO or a Cache Everything rule). Content, URL, taxonomy, stock, price and site-wide changes queue a whole-zone purge, covering old pages and arbitrary listings. Failed requests are retained and retried by WP-Cron. The API token and zone ID live in wp-config.php."
 msgstr ""
 
-#: src/Modules/Cloudflare.php:71
+#: src/Modules/Cloudflare.php:72
 msgid "Add SHOUSE_CLOUDFLARE_TOKEN (an API token allowed only to purge this zone's cache) and SHOUSE_CLOUDFLARE_ZONE (the zone ID from the Cloudflare dashboard) to wp-config.php."
 msgstr ""
 
-#: src/Modules/Cloudflare.php:178
+#: src/Modules/Cloudflare.php:239
 msgid "Clear the whole Cloudflare cache"
 msgstr ""
 
 #. translators: %s: error message.
-#: src/Modules/Cloudflare.php:184
-msgid "Cloudflare cache cleared."
+#: src/Modules/Cloudflare.php:245
+msgid "Cloudflare purge queued. Check the panel for delivery status."
 msgstr ""
 
 #. translators: %s: error message.
-#: src/Modules/Cloudflare.php:184
+#: src/Modules/Cloudflare.php:245
 #, php-format
 msgid "Cloudflare refused: %s"
 msgstr ""
 
-#: src/Modules/Cloudflare.php:191
+#: src/Modules/Cloudflare.php:252
 msgid "Nothing cleared yet."
 msgstr ""
 
 #. translators: %d: number of addresses.
-#: src/Modules/Cloudflare.php:196
+#: src/Modules/Cloudflare.php:257
 #, php-format
 msgid "%d address"
 msgid_plural "%d addresses"
@@ -475,54 +499,54 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: number of addresses.
-#: src/Modules/Cloudflare.php:196
+#: src/Modules/Cloudflare.php:257
 msgid "everything"
 msgstr ""
 
 #. translators: 1: date and time, 2: "everything" or "N addresses".
-#: src/Modules/Cloudflare.php:200
+#: src/Modules/Cloudflare.php:261
 #, php-format
 msgid "Last cleared %1$s (%2$s)."
 msgstr ""
 
 #. translators: 1: date and time, 2: error message.
-#: src/Modules/Cloudflare.php:202
+#: src/Modules/Cloudflare.php:263
 #, php-format
 msgid "The last call on %1$s failed: %2$s"
 msgstr ""
 
-#: src/Modules/Cloudflare.php:216
+#: src/Modules/Cloudflare.php:277
 msgid "SafeHouse Cloudflare cache"
 msgstr ""
 
-#: src/Modules/Cloudflare.php:227
+#: src/Modules/Cloudflare.php:288
 msgid "Cloudflare refused to clear the cache"
 msgstr ""
 
 #. translators: %s: error message from Cloudflare.
-#: src/Modules/Cloudflare.php:234
+#: src/Modules/Cloudflare.php:295
 #, php-format
 msgid "Visitors may see old pages until the cache expires. Check the token and zone ID in wp-config.php. Cloudflare said: %s"
 msgstr ""
 
-#: src/Modules/Duplicate.php:34
+#: src/Modules/Duplicate.php:36
 msgid "Duplicate posts and pages"
 msgstr ""
 
-#: src/Modules/Duplicate.php:38
+#: src/Modules/Duplicate.php:40
 msgid "Adds a \"Duplicate\" link to posts, pages and custom post types. The copy is a draft with the same content, taxonomies and custom fields. WooCommerce products use WooCommerce's own duplicate action."
 msgstr ""
 
-#: src/Modules/Duplicate.php:61
+#: src/Modules/Duplicate.php:63
 msgid "Duplicate"
 msgstr ""
 
-#: src/Modules/Duplicate.php:70
+#: src/Modules/Duplicate.php:72
 msgid "You are not allowed to duplicate this item."
 msgstr ""
 
 #. translators: %s: original title.
-#: src/Modules/Duplicate.php:80
+#: src/Modules/Duplicate.php:82
 #, php-format
 msgid "%s (copy)"
 msgstr ""
@@ -639,79 +663,103 @@ msgstr ""
 msgid "<strong>Error:</strong> The username, email address or password is incorrect."
 msgstr ""
 
-#: src/Modules/LiteSpeed.php:56
+#: src/Modules/LiteSpeed.php:64
 msgid "LiteSpeed page cache"
 msgstr ""
 
-#: src/Modules/LiteSpeed.php:60
+#: src/Modules/LiteSpeed.php:68
 msgid "On LiteSpeed servers, pages for visitors who are not logged in and have no cart are served from the server cache without running WordPress. SafeHouse only sends cache headers and clears the cache after changes; it writes no files. Logged-in users, the cart, checkout and account pages are never cached."
 msgstr ""
 
-#: src/Modules/LiteSpeed.php:67
+#: src/Modules/LiteSpeed.php:75
 msgid "Keep pages for (minutes)"
 msgstr ""
 
-#: src/Modules/LiteSpeed.php:68
+#: src/Modules/LiteSpeed.php:76
 msgid "At most 8 hours, so forms on cached pages still carry a valid security token. Changes clear the cache anyway."
 msgstr ""
 
-#: src/Modules/LiteSpeed.php:74
+#: src/Modules/LiteSpeed.php:82
 msgid "Never cache these paths"
 msgstr ""
 
-#: src/Modules/LiteSpeed.php:75
+#: src/Modules/LiteSpeed.php:83
 msgid "One per line, for example /contact/. A line matches every address that starts with it."
 msgstr ""
 
-#: src/Modules/LiteSpeed.php:86
+#: src/Modules/LiteSpeed.php:94
 msgid "The LiteSpeed Cache plugin is active and manages the server cache itself."
 msgstr ""
 
-#: src/Modules/LiteSpeed.php:195
+#: src/Modules/LiteSpeed.php:251
 msgid "Clear the cache"
 msgstr ""
 
-#: src/Modules/LiteSpeed.php:201
+#: src/Modules/LiteSpeed.php:257
 msgid "LiteSpeed was asked to clear the cache."
 msgstr ""
 
-#: src/Modules/LiteSpeed.php:209
+#: src/Modules/LiteSpeed.php:265
 msgid "This server is LiteSpeed. Tools → Site Health checks whether it actually serves pages from its cache."
 msgstr ""
 
-#: src/Modules/LiteSpeed.php:210
+#: src/Modules/LiteSpeed.php:266
 msgid "This server does not look like LiteSpeed, so the cache headers have no effect here."
 msgstr ""
 
-#: src/Modules/LiteSpeed.php:221
+#: src/Modules/LiteSpeed.php:270
+msgid "Public caching is paused until the server checks personal cookies before serving cached pages. Ask your host to apply these rewrite rules to this site and restart LiteSpeed, then run the SafeHouse LiteSpeed test in Site Health. No files are changed automatically."
+msgstr ""
+
+#: src/Modules/LiteSpeed.php:270
+msgid "Verify an anonymous cache hit, then repeat with a WordPress login or WooCommerce cart cookie and without _lscache_vary: the response must not be a cache hit."
+msgstr ""
+
+#: src/Modules/LiteSpeed.php:280
 msgid "SafeHouse LiteSpeed page cache"
 msgstr ""
 
-#: src/Modules/LiteSpeed.php:250
+#: src/Modules/LiteSpeed.php:326
+msgid "LiteSpeed served a cached page despite a personal cookie"
+msgstr ""
+
+#: src/Modules/LiteSpeed.php:327
+msgid "Disable public caching and have your host correct the cookie vary rules, restart LiteSpeed and purge existing pages. Test each login, cart and password cookie without _lscache_vary before re-enabling caching."
+msgstr ""
+
+#: src/Modules/LiteSpeed.php:330
 msgid "LiteSpeed serves pages from its cache"
 msgstr ""
 
-#: src/Modules/LiteSpeed.php:251
-msgid "The home page came from the LiteSpeed cache for a visitor who is not logged in."
+#: src/Modules/LiteSpeed.php:331
+msgid "The home page came from cache for an anonymous visitor; each personal cookie separately bypassed that cached page without relying on the supplementary vary cookie."
 msgstr ""
 
-#: src/Modules/LiteSpeed.php:254
+#: src/Modules/LiteSpeed.php:334
+msgid "LiteSpeed public caching is paused until cookie rules are configured"
+msgstr ""
+
+#: src/Modules/LiteSpeed.php:335
+msgid "Apply the cookie vary rewrite rules shown in the SafeHouse LiteSpeed settings, restart LiteSpeed and run this test again. PHP response headers alone do not protect sessions created before activation on OpenLiteSpeed."
+msgstr ""
+
+#: src/Modules/LiteSpeed.php:338
 msgid "LiteSpeed does not serve pages from its cache yet"
 msgstr ""
 
-#: src/Modules/LiteSpeed.php:255
+#: src/Modules/LiteSpeed.php:339
 msgid "The server is LiteSpeed, but the home page was not served from its cache. On LiteSpeed Enterprise add this to .htaccess, or ask your host to turn the cache on: <IfModule LiteSpeed> CacheLookup public on </IfModule>. A page that sets a cookie for every visitor is never cached either."
 msgstr ""
 
-#: src/Modules/LiteSpeed.php:258
+#: src/Modules/LiteSpeed.php:342
 msgid "The server is not LiteSpeed"
 msgstr ""
 
-#: src/Modules/LiteSpeed.php:259
+#: src/Modules/LiteSpeed.php:343
 msgid "The LiteSpeed page cache module has no effect on this server. Switch it off, or use the cache your host provides."
 msgstr ""
 
-#: src/Modules/LiteSpeed.php:263
+#: src/Modules/LiteSpeed.php:347
 msgid "WooCommerce geolocates customers without page caching support, so cached pages may show one country's prices and taxes to everyone. In WooCommerce → Settings → General choose \"Geolocate (with page caching support)\"."
 msgstr ""
 
@@ -757,122 +805,132 @@ msgstr ""
 msgid "Locked. Updates of installed plugins, themes and core still work."
 msgstr ""
 
-#: src/Modules/LoginLimits.php:73
+#: src/Modules/LoginLimits.php:75
 msgid "Login limits"
 msgstr ""
 
-#: src/Modules/LoginLimits.php:77
+#: src/Modules/LoginLimits.php:79
 msgid "Stops password guessing on the login forms, XML-RPC and application passwords. Too many failures from one address lock it out, longer each time. An account under attack is paused only for devices that never logged into it; devices that did keep working, so nobody can lock the owner out."
 msgstr ""
 
-#: src/Modules/LoginLimits.php:84
+#: src/Modules/LoginLimits.php:86
 msgid "Failures before an address is locked out"
 msgstr ""
 
-#: src/Modules/LoginLimits.php:90
+#: src/Modules/LoginLimits.php:92
 msgid "Counted over (minutes)"
 msgstr ""
 
-#: src/Modules/LoginLimits.php:96
+#: src/Modules/LoginLimits.php:98
 msgid "First lockout (minutes)"
 msgstr ""
 
-#: src/Modules/LoginLimits.php:97
+#: src/Modules/LoginLimits.php:99
 msgid "Each further lockout of the same address lasts four times longer, up to 24 hours."
 msgstr ""
 
-#: src/Modules/LoginLimits.php:103
+#: src/Modules/LoginLimits.php:105
 msgid "Failures per account in an hour before new devices are paused"
 msgstr ""
 
-#: src/Modules/LoginLimits.php:109
+#: src/Modules/LoginLimits.php:111
 msgid "Never lock out these addresses"
 msgstr ""
 
-#: src/Modules/LoginLimits.php:110
+#: src/Modules/LoginLimits.php:112
 msgid "One IP address or range per line, for example 203.0.113.7 or 198.51.100.0/24."
 msgstr ""
 
-#: src/Modules/LoginLimits.php:115
+#: src/Modules/LoginLimits.php:117
 msgid "E-mail when an account is paused"
 msgstr ""
 
-#: src/Modules/LoginLimits.php:125
+#: src/Modules/LoginLimits.php:130
+msgid "The login allowlist is too long. The previous allowlist was kept."
+msgstr ""
+
+#. translators: %d: line number.
+#: src/Modules/LoginLimits.php:141
+#, php-format
+msgid "Login allowlist line %d is not a valid IP address or CIDR range. The previous allowlist was kept."
+msgstr ""
+
+#: src/Modules/LoginLimits.php:151
 msgid "Wordfence brute force protection is on and already limits login attempts."
 msgstr ""
 
 #. translators: %d: minutes.
-#: src/Modules/LoginLimits.php:160
+#: src/Modules/LoginLimits.php:201
 #, php-format
 msgid "Too many failed login attempts from your address. Try again in %d minute."
 msgid_plural "Too many failed login attempts from your address. Try again in %d minutes."
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/Modules/LoginLimits.php:164
+#: src/Modules/LoginLimits.php:211
 msgid "This account is paused for new devices after many failed attempts. Log in from a device you used before, or try again in an hour."
 msgstr ""
 
-#: src/Modules/LoginLimits.php:193
+#: src/Modules/LoginLimits.php:247
 msgid "Too many failed login attempts from your address. Try again later."
 msgstr ""
 
-#: src/Modules/LoginLimits.php:309
+#: src/Modules/LoginLimits.php:365
 msgid "Lift all lockouts"
 msgstr ""
 
-#: src/Modules/LoginLimits.php:315
+#: src/Modules/LoginLimits.php:371
 msgid "All lockouts lifted."
 msgstr ""
 
-#: src/Modules/LoginLimits.php:325
+#: src/Modules/LoginLimits.php:381
 msgid "Nothing is locked out right now."
 msgstr ""
 
-#: src/Modules/LoginLimits.php:328
+#: src/Modules/LoginLimits.php:384
 msgid "Address or account"
 msgstr ""
 
-#: src/Modules/LoginLimits.php:328
+#: src/Modules/LoginLimits.php:384
 msgid "Until (UTC)"
 msgstr ""
 
-#: src/Modules/LoginLimits.php:330
+#: src/Modules/LoginLimits.php:386
 msgid "account (new devices)"
 msgstr ""
 
-#: src/Modules/LoginLimits.php:342
+#: src/Modules/LoginLimits.php:398
 msgid "SafeHouse login limits"
 msgstr ""
 
-#: src/Modules/LoginLimits.php:352
+#: src/Modules/LoginLimits.php:408
 msgid "Login limits cannot block by address on this server"
 msgstr ""
 
-#: src/Modules/LoginLimits.php:352
+#: src/Modules/LoginLimits.php:408
 msgid "Login limits block password guessing"
 msgstr ""
 
-#: src/Modules/LoginLimits.php:358
+#: src/Modules/LoginLimits.php:414
 msgid "Failed logins are counted per address and per account; addresses are locked out and accounts are paused for new devices."
 msgstr ""
 
 #. translators: %s: user login.
-#: src/Modules/LoginLimits.php:388
+#: src/Modules/LoginLimits.php:455
 #, php-format
 msgid "Account %s paused for new devices"
 msgstr ""
 
 #. translators: %s: user login.
-#: src/Modules/LoginLimits.php:388
+#: src/Modules/LoginLimits.php:455
 msgid "Many failed logins for this account came from devices that never logged into it. For an hour only devices that did can log in."
 msgstr ""
 
-#: src/Modules/LoginLimits.php:454
+#: src/Modules/LoginLimits.php:521
 msgid "Requests come through Cloudflare, but SafeHouse is not set up for it, so every visitor has a Cloudflare address. Locking one out would lock out everyone; only the per-account rule works. In SafeHouse → General, set \"Proxy in front of the site\" to Cloudflare."
 msgstr ""
 
-#: src/Modules/LoginLimits.php:455
+#: src/Modules/LoginLimits.php:522
 msgid "Requests come from a private address, so a proxy or load balancer sits in front of the site and every visitor has its address. Locking one out would lock out everyone; only the per-account rule works. Name the proxy in wp-config.php with SHOUSE_TRUSTED_PROXIES."
 msgstr ""
 
@@ -932,54 +990,90 @@ msgstr ""
 msgid "Maintenance mode is on"
 msgstr ""
 
-#: src/Modules/Omnibus.php:77
+#: src/Modules/Omnibus.php:78
 msgid "Omnibus price history"
 msgstr ""
 
-#: src/Modules/Omnibus.php:81
-msgid "Records every price change of products and variations, and next to each reduced price shows the lowest price from the 30 days before the reduction, as the EU Omnibus Directive requires. A product that is already reduced when recording starts shows its regular price there until its price next changes."
-msgstr ""
-
-#: src/Modules/Omnibus.php:88
-msgid "Show the lowest price next to reduced prices"
+#: src/Modules/Omnibus.php:82
+msgid "Records price changes of products and variations and shows the lowest recorded price before a reduction. Missing or incomplete history is clearly identified; a regular price is never substituted for historical evidence."
 msgstr ""
 
 #: src/Modules/Omnibus.php:89
+msgid "Show the lowest price next to reduced prices"
+msgstr ""
+
+#: src/Modules/Omnibus.php:90
 msgid "Shops that show reduced prices must show this. Prices are still recorded while it is off, so the figures are right when it comes back on."
 msgstr ""
 
-#: src/Modules/Omnibus.php:93
+#: src/Modules/Omnibus.php:94
 msgid "Wording"
 msgstr ""
 
 #. translators: %s is typed literally by the shop owner; keep it as it is.
-#: src/Modules/Omnibus.php:95
+#: src/Modules/Omnibus.php:96
 #, php-format
 msgid "Leave empty for the standard wording. Write %s where the price goes; without it, the price goes at the end."
 msgstr ""
 
-#: src/Modules/Omnibus.php:106
+#: src/Modules/Omnibus.php:107
 msgid "Needs WooCommerce."
 msgstr ""
 
-#: src/Modules/Omnibus.php:321
+#: src/Modules/Omnibus.php:233
+msgid "Lowest price before this reduction: unavailable because the recorded history is incomplete."
+msgstr ""
+
+#: src/Modules/Omnibus.php:387
+msgid "Price history storage could not be created or upgraded. Fix database permissions, then restart recording."
+msgstr ""
+
+#: src/Modules/Omnibus.php:410
+msgid "Restart recording after fixing storage"
+msgstr ""
+
+#: src/Modules/Omnibus.php:415
+msgid "Price history storage is still unavailable. Recording was not restarted."
+msgstr ""
+
+#: src/Modules/Omnibus.php:421
+msgid "Recording restarted. Earlier incomplete history will not be used for price claims."
+msgstr ""
+
+#: src/Modules/Omnibus.php:430
 msgid "Nothing recorded yet. Recording starts when the module is on and WooCommerce is active."
 msgstr ""
 
 #. translators: 1: date and time, 2: number of price changes, 3: number of products and variations.
-#: src/Modules/Omnibus.php:331
+#: src/Modules/Omnibus.php:440
 #, php-format
 msgid "Recording since %1$s. Price changes on record: %2$s, for %3$s products and variations."
 msgstr ""
 
-#: src/Modules/Omnibus.php:338
-msgid "A product that was already reduced when recording started has no earlier price on record, so its regular price is shown as the lowest price until its price next changes. `wp shouse omnibus status` lists every reduced product and where its figure comes from."
+#. translators: %d: number of reduced products with missing or incomplete history.
+#: src/Modules/Omnibus.php:462
+#, php-format
+msgid "%d reduced products have missing or incomplete price history. Review them before making historical price claims."
+msgstr ""
+
+#: src/Modules/Omnibus.php:464
+msgid "Missing history is shown as unavailable. A shorter recorded period is labelled as partial history, never as a verified 30-day minimum. Review reduced products with `wp shouse omnibus status`; resolve missing history before relying on a price claim."
 msgstr ""
 
 #. translators: %s: a price.
-#: src/Modules/Omnibus.php:405
+#: src/Modules/Omnibus.php:538
+#, php-format
+msgid "Lowest recorded price before the reduction (incomplete 30-day history): %s"
+msgstr ""
+
+#. translators: %s: a price.
+#: src/Modules/Omnibus.php:541
 #, php-format
 msgid "Lowest price in the 30 days before the reduction: %s"
+msgstr ""
+
+#: src/Modules/Omnibus.php:572
+msgid "A price change could not be recorded. Historical minimum claims are paused. Fix price history storage, then restart recording."
 msgstr ""
 
 #: src/Modules/PluginHealth.php:116
@@ -990,104 +1084,112 @@ msgstr ""
 msgid "Weekly check of installed plugins: closed on WordPress.org (often for security reasons), no update for two years, not from WordPress.org, one-time tools left active, inactive leftovers, and plugins a SafeHouse module replaces. Results also appear in Tools → Site Health."
 msgstr ""
 
-#: src/Modules/PluginHealth.php:244
+#: src/Modules/PluginHealth.php:246
 msgid "Inactive. Inactive plugins can still be attacked through their files; delete it if you do not need it."
 msgstr ""
 
 #. translators: 1: date, 2: reason code from WordPress.org, e.g. security-issue.
-#: src/Modules/PluginHealth.php:271
+#: src/Modules/PluginHealth.php:273
 #, php-format
 msgid "Closed on WordPress.org (%1$s, reason: %2$s). It gets no more updates; replace or remove it."
 msgstr ""
 
 #. translators: %s: date of the last update.
-#: src/Modules/PluginHealth.php:277
+#: src/Modules/PluginHealth.php:279
 #, php-format
 msgid "No update since %s. Probably abandoned."
 msgstr ""
 
-#: src/Modules/PluginHealth.php:282
+#: src/Modules/PluginHealth.php:284
 msgid "Not on WordPress.org and no update source declared. Make sure you know where its updates come from."
 msgstr ""
 
-#: src/Modules/PluginHealth.php:287
+#: src/Modules/PluginHealth.php:289
 msgid "Updates come from its vendor, not WordPress.org. Keep the licence active so security fixes arrive."
 msgstr ""
 
-#: src/Modules/PluginHealth.php:292
+#: src/Modules/PluginHealth.php:294
 msgid "One-time tool (migration, search-replace, import, file access or debugging) left active. Delete it when the job is done."
 msgstr ""
 
 #. translators: %s: SafeHouse module name.
-#: src/Modules/PluginHealth.php:299
+#: src/Modules/PluginHealth.php:301
 #, php-format
 msgid "SafeHouse can do this: module \"%s\". Switch it on, then remove this plugin."
 msgstr ""
 
-#: src/Modules/PluginHealth.php:323
+#: src/Modules/PluginHealth.php:325
 msgid "SafeHouse plugin health"
 msgstr ""
 
-#: src/Modules/PluginHealth.php:344
+#: src/Modules/PluginHealth.php:346
 msgid "No closed, abandoned or forgotten plugins found"
 msgstr ""
 
-#: src/Modules/PluginHealth.php:345
+#: src/Modules/PluginHealth.php:347
 msgid "Some plugins need attention"
 msgstr ""
 
+#: src/Modules/PluginHealth.php:350
+msgid "Plugin health has not been checked successfully or its data is out of date"
+msgstr ""
+
 #. translators: 1: number of critical findings, 2: number of warnings.
-#: src/Modules/PluginHealth.php:356
+#: src/Modules/PluginHealth.php:362
 #, php-format
 msgid "%1$d critical, %2$d warnings. Details are on the SafeHouse settings page."
 msgstr ""
 
-#: src/Modules/PluginHealth.php:361
+#: src/Modules/PluginHealth.php:367
 msgid "Open SafeHouse"
 msgstr ""
 
-#: src/Modules/PluginHealth.php:367
-#: src/Modules/Vulnerabilities.php:311
-#: src/Modules/Watch.php:238
+#: src/Modules/PluginHealth.php:373
+#: src/Modules/Vulnerabilities.php:329
+#: src/Modules/Watch.php:248
 msgid "Check now"
 msgstr ""
 
 #. translators: %s: error message.
-#: src/Modules/PluginHealth.php:374
+#: src/Modules/PluginHealth.php:380
 #, php-format
 msgid "Could not reach WordPress.org: %s"
 msgstr ""
 
-#: src/Modules/PluginHealth.php:375
+#: src/Modules/PluginHealth.php:381
 msgid "Plugin health updated."
 msgstr ""
 
-#: src/Modules/PluginHealth.php:382
+#: src/Modules/PluginHealth.php:388
 msgid "Not checked yet. Use \"Check now\" or wait for the daily run."
 msgstr ""
 
 #. translators: %s: date and time.
-#: src/Modules/PluginHealth.php:386
-#: src/Modules/Vulnerabilities.php:330
+#: src/Modules/PluginHealth.php:392
+#: src/Modules/Vulnerabilities.php:348
 #, php-format
 msgid "Last check: %s."
 msgstr ""
 
 #. translators: %s: error message.
-#: src/Modules/PluginHealth.php:388
+#: src/Modules/PluginHealth.php:394
 #, php-format
 msgid "The last refresh failed: %s"
 msgstr ""
 
-#: src/Modules/PluginHealth.php:393
+#: src/Modules/PluginHealth.php:399
+msgid "Plugin health data is unavailable or out of date. Previous findings remain visible; a clean result cannot be confirmed."
+msgstr ""
+
+#: src/Modules/PluginHealth.php:403
 msgid "Nothing to report."
 msgstr ""
 
-#: src/Modules/PluginHealth.php:396
+#: src/Modules/PluginHealth.php:408
 msgid "Plugin"
 msgstr ""
 
-#: src/Modules/PluginHealth.php:396
+#: src/Modules/PluginHealth.php:408
 msgid "Findings"
 msgstr ""
 
@@ -1135,70 +1237,70 @@ msgstr ""
 msgid "DISALLOW_UNFILTERED_HTML is set in wp-config.php, so nobody may add raw scripts."
 msgstr ""
 
-#: src/Modules/Smtp.php:40
+#: src/Modules/Smtp.php:41
 msgid "SMTP mail"
 msgstr ""
 
-#: src/Modules/Smtp.php:44
+#: src/Modules/Smtp.php:45
 msgid "Sends all WordPress and WooCommerce mail through your SMTP server, with credentials kept in wp-config.php. No mail log, so password-reset links are never stored."
 msgstr ""
 
-#: src/Modules/Smtp.php:51
+#: src/Modules/Smtp.php:52
 msgid "From address"
 msgstr ""
 
-#: src/Modules/Smtp.php:52
+#: src/Modules/Smtp.php:53
 msgid "Used when the sender is not set otherwise (WooCommerce sets its own). Should be on a domain your SMTP server may send for."
 msgstr ""
 
-#: src/Modules/Smtp.php:57
+#: src/Modules/Smtp.php:58
 msgid "From name"
 msgstr ""
 
-#: src/Modules/Smtp.php:129
+#: src/Modules/Smtp.php:156
 msgid "Send a test e-mail to me"
 msgstr ""
 
-#: src/Modules/Smtp.php:141
+#: src/Modules/Smtp.php:168
 msgid "SafeHouse test e-mail"
 msgstr ""
 
-#: src/Modules/Smtp.php:142
+#: src/Modules/Smtp.php:169
 msgid "If you can read this, WordPress can send mail."
 msgstr ""
 
 #. translators: %s: e-mail address.
-#: src/Modules/Smtp.php:148
+#: src/Modules/Smtp.php:175
 #, php-format
 msgid "Test e-mail sent to %s."
 msgstr ""
 
 #. translators: %s: error message.
-#: src/Modules/Smtp.php:151
+#: src/Modules/Smtp.php:178
 #, php-format
 msgid "Sending failed: %s"
 msgstr ""
 
 #. translators: %s: error message.
-#: src/Modules/Smtp.php:151
+#: src/Modules/Smtp.php:178
 msgid "unknown error"
 msgstr ""
 
-#: src/Modules/Smtp.php:157
+#: src/Modules/Smtp.php:184
 msgid "with login"
 msgstr ""
 
-#: src/Modules/Smtp.php:157
+#: src/Modules/Smtp.php:184
 msgid "without login"
 msgstr ""
 
 #. translators: 1: SMTP host, 2: port, 3: "with login" or "without login".
-#: src/Modules/Smtp.php:160
+#: src/Modules/Smtp.php:187
 #, php-format
 msgid "SMTP: %1$s:%2$d, %3$s (from wp-config.php)."
 msgstr ""
 
-#: src/Modules/Smtp.php:162
+#: src/Modules/Smtp.php:189
 msgid "SMTP is not configured: add SHOUSE_SMTP_HOST (and port, user, password) to wp-config.php. Until then mail goes through PHP mail(); the From settings still apply."
 msgstr ""
 
@@ -1266,125 +1368,137 @@ msgstr ""
 msgid "Empty keeps the WordPress default (unlimited)."
 msgstr ""
 
-#: src/Modules/Vulnerabilities.php:63
+#: src/Modules/Vulnerabilities.php:65
 msgid "Vulnerability alerts"
 msgstr ""
 
-#: src/Modules/Vulnerabilities.php:67
+#: src/Modules/Vulnerabilities.php:69
 msgid "Warns when the installed WordPress, a plugin or a theme has a known security vulnerability, and names the version that fixes it. Meant for sites without Wordfence, which does this itself. Data from Wordfence Intelligence, signed and served by the SafeHouse update host, checked every 6 hours."
 msgstr ""
 
-#: src/Modules/Vulnerabilities.php:79
+#: src/Modules/Vulnerabilities.php:81
 msgid "Wordfence is active and already warns about vulnerable plugins, themes and WordPress versions."
 msgstr ""
 
 #. translators: %d: number of vulnerabilities.
-#: src/Modules/Vulnerabilities.php:248
+#: src/Modules/Vulnerabilities.php:264
 #, php-format
 msgid "%d known vulnerability in installed software"
 msgid_plural "%d known vulnerabilities in installed software"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/Modules/Vulnerabilities.php:259
+#: src/Modules/Vulnerabilities.php:277
 msgid "Security vulnerability in installed software"
 msgstr ""
 
-#: src/Modules/Vulnerabilities.php:263
-#: src/Modules/Vulnerabilities.php:305
+#: src/Modules/Vulnerabilities.php:281
+#: src/Modules/Vulnerabilities.php:323
 msgid "Go to updates"
 msgstr ""
 
-#: src/Modules/Vulnerabilities.php:264
+#: src/Modules/Vulnerabilities.php:282
 msgid "All findings"
 msgstr ""
 
-#: src/Modules/Vulnerabilities.php:273
+#: src/Modules/Vulnerabilities.php:291
 msgid "SafeHouse vulnerability alerts"
 msgstr ""
 
-#: src/Modules/Vulnerabilities.php:286
+#: src/Modules/Vulnerabilities.php:304
 msgid "Installed software has known vulnerabilities"
 msgstr ""
 
-#: src/Modules/Vulnerabilities.php:290
-msgid "Vulnerability data has not been downloaded yet"
+#: src/Modules/Vulnerabilities.php:308
+msgid "Vulnerability data is unavailable or out of date"
 msgstr ""
 
-#: src/Modules/Vulnerabilities.php:294
+#: src/Modules/Vulnerabilities.php:309
+msgid "A successful recent vulnerability check is required."
+msgstr ""
+
+#: src/Modules/Vulnerabilities.php:312
 msgid "No known vulnerabilities in installed software"
 msgstr ""
 
 #. translators: %s: error message.
-#: src/Modules/Vulnerabilities.php:319
+#: src/Modules/Vulnerabilities.php:337
 #, php-format
 msgid "Could not download vulnerability data: %s"
 msgstr ""
 
-#: src/Modules/Vulnerabilities.php:320
+#: src/Modules/Vulnerabilities.php:338
 msgid "Vulnerability data updated."
 msgstr ""
 
-#: src/Modules/Vulnerabilities.php:327
+#: src/Modules/Vulnerabilities.php:345
 msgid "Not checked yet. Use \"Check now\" or wait for the next hourly run."
 msgstr ""
 
 #. translators: %s: error message.
-#: src/Modules/Vulnerabilities.php:333
+#: src/Modules/Vulnerabilities.php:351
 #, php-format
 msgid "The last download failed: %s"
 msgstr ""
 
-#: src/Modules/Vulnerabilities.php:339
+#: src/Modules/Vulnerabilities.php:357
+msgid "Vulnerability data is unavailable or out of date. Previous findings remain visible; a clean result cannot be confirmed."
+msgstr ""
+
+#: src/Modules/Vulnerabilities.php:359
 msgid "No known vulnerabilities in installed software."
 msgstr ""
 
-#: src/Modules/Vulnerabilities.php:342
+#: src/Modules/Vulnerabilities.php:362
 msgid "Software"
 msgstr ""
 
-#: src/Modules/Vulnerabilities.php:342
+#: src/Modules/Vulnerabilities.php:362
 msgid "Vulnerability"
 msgstr ""
 
-#: src/Modules/Vulnerabilities.php:342
+#: src/Modules/Vulnerabilities.php:362
 msgid "Fixed in"
 msgstr ""
 
-#: src/Modules/Vulnerabilities.php:347
+#: src/Modules/Vulnerabilities.php:367
 msgid "no fix yet"
 msgstr ""
 
 #. translators: 1: software name, 2: installed version, 3: CVSS score in brackets or empty, 4: vulnerability title, 5: fixed version(s).
-#: src/Modules/Vulnerabilities.php:408
+#: src/Modules/Vulnerabilities.php:428
 #, php-format
 msgid "%1$s %2$s%3$s: %4$s. Update to %5$s or later."
 msgstr ""
 
 #. translators: 1: software name, 2: installed version, 3: CVSS score in brackets or empty, 4: vulnerability title.
-#: src/Modules/Vulnerabilities.php:410
+#: src/Modules/Vulnerabilities.php:430
 #, php-format
 msgid "%1$s %2$s%3$s: %4$s. No fixed version yet: deactivate it if you can do without it."
 msgstr ""
 
-#: src/Modules/Watch.php:43
+#: src/Modules/Watch.php:47
 msgid "Change alerts"
 msgstr ""
 
-#: src/Modules/Watch.php:47
-msgid "E-mails the alert recipients when an administrator is added, a plugin or theme appears or is activated, a mu-plugin or drop-in shows up, wp-config.php changes, or someone opens registration or changes the default role, admin e-mail or site address. Changes are also written to the activity log."
+#: src/Modules/Watch.php:51
+msgid "Queues an alert when sensitive capabilities are granted or removed (including custom roles and individual grants), a plugin or theme appears or is activated, a mu-plugin or drop-in shows up, wp-config.php changes, or someone opens registration or changes the default role, admin e-mail or site address. Changes are also written to the activity log."
 msgstr ""
 
-#: src/Modules/Watch.php:239
+#: src/Modules/Watch.php:249
 msgid "Accept current state"
 msgstr ""
 
-#: src/Modules/Watch.php:246
+#: src/Modules/Watch.php:256
 msgid "The current state is the new baseline."
 msgstr ""
 
+#: src/Modules/Watch.php:263
+msgid "Changes detected, but the alert could not be stored. The previous baseline was retained. Check database access and alert recipients."
+msgstr ""
+
 #. translators: %d: number of changes.
-#: src/Modules/Watch.php:250
+#: src/Modules/Watch.php:266
 #, php-format
 msgid "%d change found and reported."
 msgid_plural "%d changes found and reported."
@@ -1392,20 +1506,24 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: number of changes.
-#: src/Modules/Watch.php:250
+#: src/Modules/Watch.php:266
 msgid "No changes since the last check."
 msgstr ""
 
-#: src/Modules/Watch.php:257
-msgid "No baseline yet. It is recorded on the first hourly check."
+#: src/Modules/Watch.php:273
+msgid "No baseline yet. It is recorded when monitoring starts."
 msgstr ""
 
-#. translators: 1: number of administrators, 2: number of plugins, 3: number of mu-plugins, 4: number of drop-ins, 5: number of site settings.
-#: src/Modules/Watch.php:262
+#. translators: 1: number of privileged accounts, 2: number of plugins, 3: number of mu-plugins, 4: number of drop-ins, 5: number of site settings.
+#: src/Modules/Watch.php:278
 #, php-format
-msgid "Watching %1$d administrators, %2$d plugins, %3$d must-use plugins, %4$d drop-ins, wp-config.php and %5$d site settings."
+msgid "Watching %1$d privileged accounts, %2$d plugins, %3$d must-use plugins, %4$d drop-ins, wp-config.php and %5$d site settings."
 msgstr ""
 
-#: src/Plugin.php:131
+#: src/Modules/Watch.php:407
+msgid "Monitoring could not read the current state from the database. The previous baseline was retained. Check database access and try again."
+msgstr ""
+
+#: src/Plugin.php:134
 msgid "SafeHouse 0.x supports single sites only. Activate it per site instead of network-wide."
 msgstr ""
