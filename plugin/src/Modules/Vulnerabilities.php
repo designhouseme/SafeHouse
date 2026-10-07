@@ -660,12 +660,12 @@ final class Vulnerabilities extends AbstractModule {
 			if ( null === $raw ) {
 				if ( null !== $accepted_floor ) {
 					$inserted = $wpdb->query( $wpdb->prepare( "INSERT IGNORE INTO {$wpdb->options} (option_name, option_value, autoload) SELECT %s, %s, 'off' FROM {$wpdb->options} AS floor WHERE floor.option_name = %s AND BINARY floor.option_value = %s", self::OPTION, maybe_serialize( $state ), self::FLOOR, $floor_raw ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- atomic first snapshot conditioned on its accepted floor.
-					if ( 1 === $inserted ) {
-						wp_cache_delete( self::OPTION, 'options' );
-						wp_cache_delete( 'notoptions', 'options' );
-						return $state;
-					}
-				} elseif ( add_option( self::OPTION, $state, '', false ) ) {
+				} else {
+					$inserted = $wpdb->query( $wpdb->prepare( "INSERT IGNORE INTO {$wpdb->options} (option_name, option_value, autoload) VALUES (%s, %s, 'off')", self::OPTION, maybe_serialize( $state ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- an initial error must never overwrite a concurrent first success.
+				}
+				if ( 1 === $inserted ) {
+					wp_cache_delete( self::OPTION, 'options' );
+					wp_cache_delete( 'notoptions', 'options' );
 					return $state;
 				}
 				continue;

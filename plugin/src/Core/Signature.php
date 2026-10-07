@@ -88,7 +88,10 @@ final class Signature {
 			// Read the authoritative value: the object cache is not a rollback-prevention store.
 			$raw = $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", $option ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- atomic security floor, not cacheable.
 			if ( null === $raw ) {
-				if ( add_option( $option, $candidate, '', false ) ) {
+				$inserted = $wpdb->query( $wpdb->prepare( "INSERT IGNORE INTO {$wpdb->options} (option_name, option_value, autoload) VALUES (%s, %s, 'off')", $option, maybe_serialize( $candidate ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- add_option() can overwrite a concurrent first writer on duplicate key.
+				if ( 1 === $inserted ) {
+					wp_cache_delete( $option, 'options' );
+					wp_cache_delete( 'notoptions', 'options' );
 					return true;
 				}
 				continue;

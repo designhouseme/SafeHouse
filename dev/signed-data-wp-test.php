@@ -182,11 +182,33 @@ try {
 	remove_filter( 'query', $advance_during_save, 1000 );
 	update_option( 'shouse_advisory_floor', $floor, false );
 	update_option( 'shouse_vulnerabilities', $newer_check, false );
+	delete_option( 'shouse_vulnerabilities' );
+	$first_snapshot_race = static function ( string $query ) use ( &$first_snapshot_race, $saver, $module, $newer_check, $floor ): string {
+		if ( str_starts_with( $query, 'INSERT' ) && str_contains( $query, "'shouse_vulnerabilities'" ) ) {
+			remove_filter( 'query', $first_snapshot_race, 1000 );
+			$saver->invoke( $module, $newer_check, [], $floor );
+		}
+		return $query;
+	};
+	add_filter( 'query', $first_snapshot_race, 1000 );
+	$kept = $saver->invoke( $module, [ 'error' => 'An earlier initial request failed' ], [] );
+	$check( $kept === $newer_check && get_option( 'shouse_vulnerabilities' ) === $newer_check, 'first error INSERT cannot overwrite a concurrent first successful snapshot' );
 	$http[ $base . 'advisories/feed.json' ] = new WP_Error( 'offline', 'Fixture network unavailable' );
 	$module->refresh();
 	$check( $module->site_health_result()['status'] === 'recommended', 'failed refresh never gives green health' );
 	$health = new PluginHealth();
 	$check( $health->site_health_result()['status'] === 'recommended', 'PluginHealth without a successful check is not green' );
+	$first_floor_race = static function ( string $query ) use ( &$first_floor_race ): string {
+		if ( str_starts_with( $query, 'INSERT' ) && str_contains( $query, "'shouse_test_floor'" ) ) {
+			remove_filter( 'query', $first_floor_race, 1000 );
+			Signature::advance_floor( 'shouse_test_floor', [ 'protocol' => 2, 'generation' => 21, 'digest' => str_repeat( 'c', 64 ) ] );
+		}
+		return $query;
+	};
+	add_filter( 'query', $first_floor_race, 1000 );
+	$accepted = Signature::advance_floor( 'shouse_test_floor', [ 'protocol' => 2, 'generation' => 20, 'digest' => str_repeat( 'a', 64 ) ] );
+	$check( ! $accepted && get_option( 'shouse_test_floor' )['generation'] === 21, 'first floor INSERT cannot lower a concurrent first accepted generation' );
+	delete_option( 'shouse_test_floor' );
 	$check( Signature::advance_floor( 'shouse_test_floor', [ 'protocol' => 2, 'generation' => 20, 'digest' => str_repeat( 'a', 64 ) ] ), 'floor initialized in real WordPress database' );
 	$check( ! Signature::advance_floor( 'shouse_test_floor', [ 'protocol' => 2, 'generation' => 19, 'digest' => str_repeat( 'b', 64 ) ] ), 'persistent floor rejects older metadata' );
 	$check( Signature::advance_floor( 'shouse_test_floor', [ 'protocol' => 2, 'generation' => 21, 'digest' => str_repeat( 'c', 64 ) ] ), 'floor advances with database compare-and-swap' );
@@ -196,6 +218,8 @@ try {
 } finally {
 	remove_filter( 'pre_http_request', $filter, 1000 );
 	if ( isset( $advance_during_save ) ) remove_filter( 'query', $advance_during_save, 1000 );
+	if ( isset( $first_snapshot_race ) ) remove_filter( 'query', $first_snapshot_race, 1000 );
+	if ( isset( $first_floor_race ) ) remove_filter( 'query', $first_floor_race, 1000 );
 	foreach ( $before as $name => $value ) {
 		if ( null === $value ) delete_option( $name ); else update_option( $name, $value, false );
 	}
