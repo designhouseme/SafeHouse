@@ -181,6 +181,9 @@ final class Net {
 	}
 
 	public static function in_range( string $ip, string $range ): bool {
+		if ( ! self::valid_range( $range ) ) {
+			return false;
+		}
 		[ $subnet, $bits ] = array_pad( explode( '/', $range, 2 ), 2, null );
 		$ip_bin            = @inet_pton( $ip ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- invalid input returns false.
 		$subnet_bin        = @inet_pton( (string) $subnet ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
@@ -188,7 +191,7 @@ final class Net {
 			return false;
 		}
 		$max_bits = strlen( $ip_bin ) * 8;
-		$bits     = null === $bits ? $max_bits : max( 0, min( $max_bits, (int) $bits ) );
+		$bits     = null === $bits ? $max_bits : (int) $bits;
 		$bytes    = intdiv( $bits, 8 );
 		if ( substr( $ip_bin, 0, $bytes ) !== substr( $subnet_bin, 0, $bytes ) ) {
 			return false;
@@ -199,6 +202,16 @@ final class Net {
 		}
 		$mask = chr( ( 0xff << ( 8 - $remainder ) ) & 0xff );
 		return ( $ip_bin[ $bytes ] & $mask ) === ( $subnet_bin[ $bytes ] & $mask );
+	}
+
+	/** Accept a single IP or an explicit decimal CIDR prefix; never widen malformed input. */
+	public static function valid_range( string $range ): bool {
+		[ $subnet, $bits ] = array_pad( explode( '/', $range, 2 ), 2, null );
+		if ( '' === self::valid_ip( $subnet ) ) {
+			return false;
+		}
+		$max_bits = false !== filter_var( $subnet, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 ) ? 128 : 32;
+		return null === $bits || ( 1 === preg_match( '/^(?:0|[1-9][0-9]{0,2})$/D', $bits ) && (int) $bits <= $max_bits );
 	}
 
 	private static function valid_ip( string $ip ): string {

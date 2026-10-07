@@ -185,6 +185,7 @@ final class Page {
 				<a class="shouse-maker" href="https://designhouse.me/" target="_blank" rel="noopener"><img src="<?php echo esc_url( plugins_url( 'assets/designhouse.svg', SHOUSE_FILE ) ); ?>" width="128" height="16" alt="Design House"></a>
 			</div>
 			<hr class="wp-header-end">
+			<?php settings_errors( 'shouse_settings' ); ?>
 
 			<?php if ( $locked ) : ?>
 				<div class="notice notice-info inline"><p><?php esc_html_e( 'Settings are locked by SHOUSE_LOCK_SETTINGS in wp-config.php. Change them in code.', 'shouse' ); ?></p></div>

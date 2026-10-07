@@ -18,6 +18,7 @@ namespace SafeHouse\Modules;
 
 use WP_Error;
 use WP_REST_Request;
+use WP_User;
 use SafeHouse\Core\AbstractModule;
 use SafeHouse\Core\Compat;
 use SafeHouse\Core\Log;
@@ -47,6 +48,9 @@ final class Bots extends AbstractModule {
 
 	/** @var array<string, true> Forms with Turnstile on in this request. */
 	private array $turnstile = [];
+
+	/** @var list<object> One scope per authenticate call, including nested calls. */
+	private array $login_operations = [];
 
 	public function id(): string {
 		return 'bots';
@@ -147,8 +151,11 @@ final class Bots extends AbstractModule {
 
 		if ( isset( $this->turnstile['login'] ) ) {
 			add_filter( 'login_form_middle', [ $this, 'login_form_middle' ] );
-			// After the password check (priority 20): an error returned earlier would be replaced by its result.
+			add_filter( 'authenticate', [ $this, 'begin_login' ], 1 );
+			// Core honours this error before hashing; authenticate alone cannot short-circuit core.
+			add_filter( 'wp_authenticate_user', [ $this, 'check_before_password' ], PHP_INT_MAX );
 			add_filter( 'authenticate', [ $this, 'check_wp_login' ], 30, 3 );
+			add_filter( 'authenticate', [ $this, 'end_login' ], PHP_INT_MAX );
 			add_filter( 'woocommerce_process_login_errors', [ $this, 'check_woo_login' ] );
 		}
 		if ( $this->honeypot || isset( $this->turnstile['register'] ) ) {
@@ -191,6 +198,20 @@ final class Bots extends AbstractModule {
 		return (string) $html . Turnstile::widget( 'shouse_login' );
 	}
 
+	public function begin_login( mixed $user ): mixed {
+		$this->login_operations[] = new \stdClass();
+		return $user;
+	}
+
+	public function end_login( mixed $user ): mixed {
+		array_pop( $this->login_operations );
+		return $user;
+	}
+
+	public function check_before_password( mixed $user ): mixed {
+		return $user instanceof WP_User ? $this->check_wp_login( $user, $user->user_login ) : $user;
+	}
+
 	/**
 	 * @param mixed $user     WP_User, WP_Error or null so far.
 	 * @param mixed $username Submitted username.
@@ -201,7 +222,8 @@ final class Bots extends AbstractModule {
 		if ( ! self::posted_to_wp_login() || ( '' === (string) $username && '' === (string) $password ) ) {
 			return $user;
 		}
-		$error = $this->verdict( 'login', false );
+		$operation = $this->login_operations ? $this->login_operations[ array_key_last( $this->login_operations ) ] : null;
+		$error     = $this->verdict( 'login', false, $operation );
 		return '' === $error ? $user : new WP_Error( 'shouse_bots', $error );
 	}
 
@@ -258,7 +280,7 @@ final class Bots extends AbstractModule {
 		if ( is_wp_error( $response ) || 'POST' !== $request->get_method() || ! preg_match( self::STORE_CHECKOUT, $request->get_route() ) ) {
 			return $response;
 		}
-		$error = $this->turnstile_verdict( 'checkout', sanitize_text_field( (string) $request->get_header( Turnstile::HEADER ) ) );
+		$error = $this->turnstile_verdict( 'checkout', sanitize_text_field( (string) $request->get_header( Turnstile::HEADER ) ), $request );
 		return '' === $error ? $response : new WP_Error( 'shouse_bots', $error, [ 'status' => 403 ] );
 	}
 
@@ -297,7 +319,7 @@ final class Bots extends AbstractModule {
 	}
 
 	private function add_verdict( WP_Error $errors, string $form, bool $honeypot ): WP_Error {
-		$error = $this->verdict( $form, $honeypot );
+		$error = $this->verdict( $form, $honeypot, $errors );
 		if ( '' !== $error ) {
 			$errors->add( 'shouse_bots', $error );
 		}
@@ -305,7 +327,7 @@ final class Bots extends AbstractModule {
 	}
 
 	/** '' when the submission may go on, otherwise the message to show. */
-	private function verdict( string $form, bool $honeypot ): string {
+	private function verdict( string $form, bool $honeypot, ?object $operation = null ): string {
 		if ( $honeypot && $this->honeypot && ! self::honeypot_passed() ) {
 			$this->note( $form, 'honeypot' );
 			return __( 'This looks like an automated submission. Please make sure JavaScript is on and try again.', 'shouse' );
@@ -315,11 +337,11 @@ final class Bots extends AbstractModule {
 		}
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- the token is the check; each form keeps its own nonce.
 		$token = isset( $_POST[ Turnstile::FIELD ] ) && is_string( $_POST[ Turnstile::FIELD ] ) ? sanitize_text_field( wp_unslash( $_POST[ Turnstile::FIELD ] ) ) : '';
-		return $this->turnstile_verdict( $form, $token );
+		return $this->turnstile_verdict( $form, $token, $operation );
 	}
 
-	private function turnstile_verdict( string $form, string $token ): string {
-		$result = Turnstile::verify( $token, 'shouse_' . $form );
+	private function turnstile_verdict( string $form, string $token, ?object $operation = null ): string {
+		$result = Turnstile::verify( $token, 'shouse_' . $form, $operation );
 		if ( Turnstile::PASSED === $result ) {
 			return '';
 		}

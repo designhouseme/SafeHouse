@@ -7,7 +7,8 @@
  * By account, without locking the owner out: after a successful login the browser gets a signed
  * device cookie for that account. When an account collects too many failures from browsers without
  * it, only new devices are paused; devices that logged in before keep working (OWASP "device
- * cookies"). Counting is by the name typed, existing or not, so a pause does not reveal accounts.
+ * cookies"). Existing accounts share a counter by user ID across login names and email addresses;
+ * unknown names have pseudonymous counters too, so a pause alone does not reveal an account.
  *
  * Safety: an address is blocked only when it is the visitor's. A connection from Cloudflare without
  * the Cloudflare setting, or from a private address (an unknown proxy or load balancer), would put
@@ -29,6 +30,7 @@ use SafeHouse\Core\Compat;
 use SafeHouse\Core\Log;
 use SafeHouse\Core\Net;
 use SafeHouse\Core\Notify;
+use SafeHouse\Core\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -121,13 +123,41 @@ final class LoginLimits extends AbstractModule {
 		return ! Compat::wordfence_on( 'loginSecurityEnabled' ) || Compat::ignore_overlaps();
 	}
 
+	public function sanitize( array $input, array $old ): array {
+		$clean = parent::sanitize( $input, $old );
+		$raw   = is_string( $input['allowlist'] ?? '' ) ? ( $input['allowlist'] ?? '' ) : 'invalid';
+		if ( strlen( $raw ) > 2000 ) {
+			add_settings_error( Settings::OPTION, 'shouse_invalid_allowlist', __( 'The login allowlist is too long. The previous allowlist was kept.', 'shouse' ) );
+			$clean['allowlist'] = $old['allowlist'] ?? '';
+			return $clean;
+		}
+		$lines = (array) preg_split( '/\R/', $raw );
+		foreach ( $lines as $index => $line ) {
+			if ( '' !== trim( $line ) && ! Net::valid_range( trim( $line ) ) ) {
+				add_settings_error(
+					Settings::OPTION,
+					'shouse_invalid_allowlist',
+					/* translators: %d: line number. */
+					sprintf( __( 'Login allowlist line %d is not a valid IP address or CIDR range. The previous allowlist was kept.', 'shouse' ), $index + 1 )
+				);
+				$clean['allowlist'] = $old['allowlist'] ?? '';
+				break;
+			}
+		}
+		return $clean;
+	}
+
 	public function unavailable_reason(): string {
 		return __( 'Wordfence brute force protection is on and already limits login attempts.', 'shouse' );
 	}
 
 	public function boot(): void {
 		self::maybe_install();
+		// Core's username/email callbacks can replace an earlier authenticate error. This hook is
+		// inside each callback, immediately before wp_check_password(), and does respect WP_Error.
+		add_filter( 'wp_authenticate_user', [ $this, 'refuse_before_password' ], PHP_INT_MAX );
 		add_filter( 'authenticate', [ $this, 'refuse_locked' ], 100, 3 );
+		add_filter( 'wp_is_application_passwords_available_for_user', [ $this, 'application_passwords_available' ], PHP_INT_MAX );
 		add_action( 'wp_login_failed', [ $this, 'login_failed' ], 10, 2 );
 		add_action( 'application_password_failed_authentication', [ $this, 'application_password_failed' ] );
 		// REST Basic auth checks application passwords without the authenticate filter; this is its hook.
@@ -138,6 +168,17 @@ final class LoginLimits extends AbstractModule {
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			WP_CLI::add_command( 'shouse login', LoginLimitsCommand::class );
 		}
+	}
+
+	/** Preserve errors from other authentication providers, including second-factor plugins. */
+	public function refuse_before_password( mixed $user ): mixed {
+		return $user instanceof WP_User ? $this->refuse_locked( $user, $user->user_login ) : $user;
+	}
+
+	/** Core checks availability before reading or hashing application passwords (also on REST). */
+	public function application_passwords_available( bool $available ): bool {
+		$ip = $this->allowlisted() ? null : $this->ip_subject();
+		return $available && ( null === $ip || 0 === $this->locked_for( 'ip', $ip ) );
 	}
 
 	/**
@@ -160,8 +201,16 @@ final class LoginLimits extends AbstractModule {
 				return new WP_Error( self::ERROR_CODE, sprintf( _n( 'Too many failed login attempts from your address. Try again in %d minute.', 'Too many failed login attempts from your address. Try again in %d minutes.', (int) ceil( $left / 60 ), 'shouse' ), (int) ceil( $left / 60 ) ) );
 			}
 		}
-		if ( ! $this->has_device_cookie( $username ) && $this->locked_for( 'user', self::account_key( $username ) ) > 0 ) {
-			return new WP_Error( self::PAUSED_CODE, __( 'This account is paused for new devices after many failed attempts. Log in from a device you used before, or try again in an hour.', 'shouse' ) );
+		$accounts = $user instanceof WP_User ? [ $user ] : self::account_candidates( $username );
+		foreach ( $accounts as $account ) {
+			if ( $this->has_device_cookie( $account ) ) {
+				continue;
+			}
+			foreach ( self::account_keys( $account ) as $key ) {
+				if ( $this->locked_for( 'user', $key ) > 0 ) {
+					return new WP_Error( self::PAUSED_CODE, __( 'This account is paused for new devices after many failed attempts. Log in from a device you used before, or try again in an hour.', 'shouse' ) );
+				}
+			}
 		}
 		return $user;
 	}
@@ -180,6 +229,11 @@ final class LoginLimits extends AbstractModule {
 	}
 
 	public function application_password_failed( mixed $error = null ): void {
+		// Invalid passwords never reach wp_authenticate_application_password_errors. Check here too,
+		// before counting, and attach the same error for early availability refusals.
+		if ( $error instanceof WP_Error ) {
+			$this->refuse_locked_application_password( $error );
+		}
 		if ( $error instanceof WP_Error && in_array( self::ERROR_CODE, $error->get_error_codes(), true ) ) {
 			return;
 		}
@@ -214,21 +268,19 @@ final class LoginLimits extends AbstractModule {
 			return;
 		}
 		$expires = time() + self::COOKIE_DAYS * DAY_IN_SECONDS;
-		foreach ( array_unique( [ $user->user_login, $user->user_email ] ) as $name ) {
-			$cookie = self::cookie_name( $name );
-			setcookie(
-				$cookie,
-				$expires . '.' . self::sign( $cookie . '|' . $expires ),
-				[
-					'expires'  => $expires,
-					'path'     => defined( 'COOKIEPATH' ) && constant( 'COOKIEPATH' ) ? (string) constant( 'COOKIEPATH' ) : '/',
-					'domain'   => (string) COOKIE_DOMAIN,
-					'secure'   => is_ssl(),
-					'httponly' => true,
-					'samesite' => 'Lax',
-				]
-			);
-		}
+		$cookie  = self::cookie_name( $user );
+		setcookie(
+			$cookie,
+			$expires . '.' . self::sign( $cookie . '|' . $expires ),
+			[
+				'expires'  => $expires,
+				'path'     => defined( 'COOKIEPATH' ) && constant( 'COOKIEPATH' ) ? (string) constant( 'COOKIEPATH' ) : '/',
+				'domain'   => (string) COOKIE_DOMAIN,
+				'secure'   => is_ssl(),
+				'httponly' => true,
+				'samesite' => 'Lax',
+			]
+		);
 	}
 
 	/** Daily: drop rows nobody has touched for a month and that lock nothing. */
@@ -297,7 +349,11 @@ final class LoginLimits extends AbstractModule {
 		if ( '' === $subject ) {
 			return (int) $wpdb->query( $wpdb->prepare( 'DELETE FROM %i', self::table() ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		}
-		$subjects = array_unique( [ $subject, self::account_key( $subject ), self::ip_key( $subject ) ] );
+		$subjects = [ $subject, self::ip_key( $subject ) ];
+		foreach ( self::account_candidates( $subject ) as $account ) {
+			$subjects = array_merge( $subjects, self::account_keys( $account ) );
+		}
+		$subjects = array_unique( $subjects );
 		$cleared  = 0;
 		foreach ( $subjects as $one ) {
 			$cleared += (int) $wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE subject = %s', self::table(), $one ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
@@ -365,6 +421,9 @@ final class LoginLimits extends AbstractModule {
 			return;
 		}
 		$ip = $this->ip_subject();
+		if ( null !== $ip && $this->locked_for( 'ip', $ip ) > 0 ) {
+			return; // Includes invalid application passwords and concurrent requests already in flight.
+		}
 		if ( null !== $ip ) {
 			$row = $this->bump( 'ip', $ip, (int) $this->opt( 'ip_window' ) * MINUTE_IN_SECONDS );
 			if ( $row['fails'] >= (int) $this->opt( 'ip_attempts' ) ) {
@@ -373,15 +432,23 @@ final class LoginLimits extends AbstractModule {
 				Log::add( 'login_locked', sprintf( 'Address locked out for %d minutes after failed logins', (int) ( $seconds / 60 ) ), [ 'subject' => $ip ], 'warning' );
 			}
 		}
-		if ( ! $count_account || '' === $username || $this->has_device_cookie( $username ) ) {
+		if ( ! $count_account || '' === $username ) {
+			return;
+		}
+		foreach ( self::account_candidates( $username ) as $account ) {
+			$this->count_account_failure( $account );
+		}
+	}
+
+	private function count_account_failure( string|WP_User $identity ): void {
+		if ( $this->has_device_cookie( $identity ) ) {
 			return; // A device that logged into this account before is not part of an attack on it.
 		}
-		$account = self::account_key( $username );
+		$account = self::account_key( $identity );
 		$row     = $this->bump( 'user', $account, self::ACCOUNT_WINDOW );
 		if ( $row['fails'] >= (int) $this->opt( 'account_attempts' ) && 0 === $this->locked_for( 'user', $account ) ) {
 			$this->lock( 'user', $account, self::ACCOUNT_PAUSE );
-			$user = get_user_by( 'login', $username );
-			$user = $user ? $user : get_user_by( 'email', $username );
+			$user = self::account_user( $identity );
 			Log::add( 'login_paused', 'Account paused for new devices after failed logins', [ 'user' => $user ? $user->user_login : '(no such account)' ], 'warning' );
 			if ( $user && $this->opt( 'notify' ) ) {
 				/* translators: %s: user login. */
@@ -410,7 +477,7 @@ final class LoginLimits extends AbstractModule {
 
 	private function lock( string $kind, string $subject, int $seconds ): void {
 		global $wpdb;
-		$wpdb->query( $wpdb->prepare( 'UPDATE %i SET fails = 0, lockouts = lockouts + 1, locked_until = %s, updated_at = %s WHERE kind = %s AND subject = %s', self::table(), self::time( time() + $seconds ), self::time(), $kind, $subject ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->query( $wpdb->prepare( 'UPDATE %i SET fails = 0, lockouts = lockouts + 1, locked_until = %s, updated_at = %s WHERE kind = %s AND subject = %s AND (locked_until IS NULL OR locked_until <= %s)', self::table(), self::time( time() + $seconds ), self::time(), $kind, $subject, self::time() ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 	}
 
 	/** Seconds left on a lockout, 0 when there is none. */
@@ -473,10 +540,19 @@ final class LoginLimits extends AbstractModule {
 		return false;
 	}
 
-	private function has_device_cookie( string $username ): bool {
-		foreach ( [ self::COOKIE, self::LEGACY_COOKIE ] as $prefix ) {
-			$cookie = self::cookie_name( $username, $prefix );
-			$value  = isset( $_COOKIE[ $cookie ] ) ? sanitize_text_field( wp_unslash( $_COOKIE[ $cookie ] ) ) : '';
+	private function has_device_cookie( string|WP_User $username ): bool {
+		$user    = self::account_user( $username );
+		$cookies = [ self::cookie_name( $username ) ];
+		// Keep already issued device cookies working across the identity-key migration.
+		if ( $user ) {
+			foreach ( [ self::COOKIE, self::LEGACY_COOKIE ] as $prefix ) {
+				foreach ( [ $user->user_login, $user->user_email ] as $name ) {
+					$cookies[] = $prefix . substr( self::sign( 'name|' . strtolower( trim( $name ) ) ), 0, 20 );
+				}
+			}
+		}
+		foreach ( array_unique( $cookies ) as $cookie ) {
+			$value = isset( $_COOKIE[ $cookie ] ) ? sanitize_text_field( wp_unslash( $_COOKIE[ $cookie ] ) ) : '';
 			if ( preg_match( '/^(\d+)\.([a-f0-9]{64})$/', $value, $m ) && (int) $m[1] >= time() && hash_equals( self::sign( $cookie . '|' . $m[1] ), $m[2] ) ) {
 				return true;
 			}
@@ -485,17 +561,60 @@ final class LoginLimits extends AbstractModule {
 	}
 
 	/** Cookie name per account, keyed so it does not reveal the account. */
-	private static function cookie_name( string $username, string $prefix = self::COOKIE ): string {
-		return $prefix . substr( self::sign( 'name|' . strtolower( trim( $username ) ) ), 0, 20 );
+	private static function cookie_name( string|WP_User $username ): string {
+		return self::COOKIE . substr( self::sign( 'device|' . self::account_key( $username ) ), 0, 20 );
 	}
 
 	private static function sign( string $data ): string {
 		return hash_hmac( 'sha256', $data, wp_salt( 'auth' ) );
 	}
 
-	/** Account rows are keyed by a hash of the typed name: no plain usernames in the table. */
-	private static function account_key( string $username ): string {
-		return 'u:' . substr( self::sign( 'account|' . strtolower( trim( $username ) ) ), 0, 40 );
+	/** Use the database's canonical identity, including its collation, without storing plain IDs. */
+	private static function account_key( string|WP_User $username ): string {
+		$user = self::account_user( $username );
+		$name = $user ? 'account-id|' . $user->ID : 'account|' . strtolower( trim( (string) $username ) );
+		return 'u:' . substr( self::sign( $name ), 0, 40 );
+	}
+
+	/**
+	 * Keep active pauses issued before the ID-key migration until their normal expiry.
+	 *
+	 * @return list<string>
+	 */
+	private static function account_keys( string|WP_User $username ): array {
+		$keys = [ self::account_key( $username ) ];
+		$user = self::account_user( $username );
+		if ( $user ) {
+			foreach ( [ $user->user_login, $user->user_email ] as $name ) {
+				$keys[] = 'u:' . substr( self::sign( 'account|' . strtolower( trim( $name ) ) ), 0, 40 );
+			}
+		}
+		return array_values( array_unique( $keys ) );
+	}
+
+	/**
+	 * A login can also be another user's email; core may attempt both identities.
+	 *
+	 * @return list<WP_User|string>
+	 */
+	private static function account_candidates( string $username ): array {
+		$users = [];
+		foreach ( [ 'login', 'email' ] as $field ) {
+			$user = 'email' !== $field || is_email( $username ) ? get_user_by( $field, $username ) : false;
+			if ( $user ) {
+				$users[ $user->ID ] = $user;
+			}
+		}
+		return $users ? array_values( $users ) : [ $username ];
+	}
+
+	private static function account_user( string|WP_User $username ): WP_User|false {
+		if ( $username instanceof WP_User ) {
+			return $username;
+		}
+		$username = trim( $username );
+		$user     = get_user_by( 'login', $username );
+		return $user ? $user : ( is_email( $username ) ? get_user_by( 'email', $username ) : false );
 	}
 
 	/** IPv4 as is; IPv6 by its /64, which one attacker usually controls whole. */

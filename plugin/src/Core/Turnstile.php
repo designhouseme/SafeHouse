@@ -67,20 +67,28 @@ final class Turnstile {
 	}
 
 	/**
-	 * Check a token with Cloudflare. Each token is single-use, so the result is kept for the request.
+	 * Check a single-use token. Only repeated hooks for the same operation may share its result.
+	 * Callers without an operation object get no cache; separate REST subrequests use separate objects.
 	 *
 	 * @return string self::PASSED, self::FAILED or self::UNAVAILABLE.
 	 */
-	public static function verify( string $token, string $action ): string {
-		static $results = [];
+	public static function verify( string $token, string $action, ?object $operation = null ): string {
+		/** @var \WeakMap<object, array<string, string>>|null $results */
+		static $results = null;
 		if ( '' === $token || strlen( $token ) > 2048 ) {
 			return self::FAILED;
 		}
-		$key = $action . '|' . $token;
-		if ( ! isset( $results[ $key ] ) ) {
-			$results[ $key ] = self::ask_cloudflare( $token, $action );
+		if ( null === $operation ) {
+			return self::ask_cloudflare( $token, $action );
 		}
-		return $results[ $key ];
+		$results ??= new \WeakMap();
+		$key       = $action . '|' . $token;
+		$cached    = $results[ $operation ] ?? [];
+		if ( ! isset( $cached[ $key ] ) ) {
+			$cached[ $key ]        = self::ask_cloudflare( $token, $action );
+			$results[ $operation ] = $cached;
+		}
+		return $cached[ $key ];
 	}
 
 	private static function ask_cloudflare( string $token, string $action ): string {
