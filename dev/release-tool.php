@@ -8,6 +8,7 @@
  *   manifest <zipfile> <out.json> <version> <download_url> <changelog.md>
  *   sign     <keyfile> <file>                writes <file>.sig (base64 detached signature)
  *   verify   <public_key_b64> <file>         exits 1 unless <file>.sig is valid
+ *   envelope <file> <out.json> [extra.sig]  atomic payload and detached signatures
  *
  * @package SafeHouse
  */
@@ -93,21 +94,41 @@ switch ( $cmd ) {
 		if ( is_readable( $changelog_file ) && preg_match( '/^## ' . preg_quote( $version, '/' ) . '\b.*?$(.*?)(?=^## |\z)/ms', (string) file_get_contents( $changelog_file ), $m ) ) {
 			$changelog = trim( $m[1] );
 		}
+		$now = time();
 		$manifest = [
+			'protocol'     => 2,
+			'channel'      => 'release',
+			'generation'   => max( $now, (int) ( is_file( $out ) ? ( json_decode( (string) file_get_contents( $out ), true )['generation'] ?? 0 ) : 0 ) + 1 ),
+			'issued_at'    => $now,
+			'expires_at'   => $now + 180 * 86400,
 			'slug'         => 'shouse',
 			'name'         => 'SafeHouse',
 			'version'      => $version,
 			'requires'     => plugin_header( $zipfile, 'Requires at least' ),
 			'requires_php' => plugin_header( $zipfile, 'Requires PHP' ),
 			'tested'       => plugin_header( $zipfile, 'Tested up to' ),
-			'released'     => gmdate( 'Y-m-d' ),
+			'released'     => gmdate( 'Y-m-d', $now ),
 			'homepage'     => 'https://designhouse.me/',
 			'download_url' => $download_url,
 			'sha256'       => hash_file( 'sha256', $zipfile ),
+			'size'         => filesize( $zipfile ),
 			'changelog'    => $changelog,
 		];
 		file_put_contents( $out, json_encode( $manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . "\n" );
 		echo "manifest -> $out\n";
+		break;
+
+	case 'envelope':
+		[ $file, $out ] = $args + [ '', '' ];
+		$signatures = [];
+		foreach ( array_merge( [ "$file.sig" ], array_slice( $args, 2 ) ) as $signature_file ) {
+			$encoded = trim( (string) file_get_contents( $signature_file ) );
+			if ( strlen( (string) base64_decode( $encoded, true ) ) !== SODIUM_CRYPTO_SIGN_BYTES ) {
+				fail( "invalid signature in $signature_file" );
+			}
+			$signatures[] = $encoded;
+		}
+		file_put_contents( $out, json_encode( [ 'format' => 1, 'payload' => base64_encode( (string) file_get_contents( $file ) ), 'signatures' => array_values( array_unique( $signatures ) ) ], JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR ) . "\n" );
 		break;
 
 	case 'sign':

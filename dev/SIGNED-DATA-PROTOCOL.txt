@@ -1,0 +1,134 @@
+SAFEHOUSE SIGNED DATA: PROTOCOL 2 AND MIGRATION
+
+Trust and representation
+------------------------
+The release key and advisory key remain separate. New clients prefer release.json
+and advisories/feed.json. Each is ONE object:
+  {"format":1,"payload":"base64 of exact signed JSON bytes","signatures":["base64 Ed25519 signature", ...]}
+There are at most four signatures. Do not re-encode the payload before checking a
+signature. Additional signatures support staged key rotation; any one must match
+a key compiled into that channel's client. Envelope format is distinct from the
+signed payload protocol. Invalid signatures/fields never trigger legacy fallback.
+
+Both signed payloads add protocol=2, channel (release/advisories), generation
+(positive integer), issued_at and expires_at (Unix seconds). Release metadata has
+size, a positive byte count <=20 MiB, covered by its signature. Its lifetime is at
+most 180 days; advisory metadata lasts at most 48 hours. issued_at may be at most
+five minutes ahead of the client clock. Publishers must renew before expiration.
+The producer increments generation over its previous output, or uses current Unix
+seconds for a first publication. Preserve the previous signed index across fresh
+CI runners to detect suspicious feed shrinkage and guarantee monotonic generation.
+
+A client persists its highest generation/protocol outside transients, using a
+compare-and-swap in the WordPress options table. Releases additionally reject a
+version lower than either the installed or previously accepted version. Same-
+generation different contents are refused. Legacy releases use day-precision dates,
+so a strictly newer version on the same day is permitted until migration. Legacy
+protocol may upgrade to modern protocol at the same timestamp. Never clear these
+floors as part of ordinary cache invalidation. There is no automatic rollback or
+clock-error override; recovery requires an operator to verify the signed channel
+and correct the clock, or publish a later generation. Do not reset floors merely
+to suppress an error from the update host.
+
+Advisory snapshot publication compares both the previous snapshot bytes and the
+exact accepted floor in one SQL statement (including the first insertion). A
+floor advanced by a concurrent request invalidates an older in-flight write.
+An error can replace a snapshot only if the baseline from that check is still
+unchanged, so a delayed failure cannot erase a concurrent successful refresh.
+Status also checks protocol, digest and generation against the retained floor.
+
+Backward-compatible deployment order
+------------------------------------
+1. Deploy the read and ingest Worker changes first. They keep all legacy paths
+   and add release.json, advisories/feed.json and advisories/sha256/<hash>.json.
+   No plugin deployment or data publication is performed by these local changes.
+2. Update the advisory producer AND publisher together in SafeHouseCVE (that
+   separate repository is not modified here). Run dev/cve-watch.php with the
+   previous signed index restored, then dev/publish-advisories.sh. Its token remains
+   limited to advisories. The publisher validates all local files before uploading.
+   Publish immutable shards first, legacy xx.json next, index.json.sig/index.json,
+   and feed.json LAST. Keep old immutable shards while accepted indices can refer
+   to them (at least 48 hours plus five minutes); never rewrite them.
+3. Build the new plugin using dev/release.sh. dev/publish.sh uploads the immutable
+   version ZIP, latest ZIP, legacy manifest signature/manifest, then release.json
+   LAST. Both old and new clients can fetch a complete current publication.
+4. Only then roll out the new client ZIP. Observe metadata freshness, rejected
+   publications and continued checks from legacy installations.
+
+Old clients still use the existing manifest.json + .sig and index.json + .sig,
+and ignore the new signed fields. The advisory index keeps format=1 and the same
+256 shard map; old clients fetch xx.json, new protocol-2 clients fetch sha256/hash.json.
+Do not deploy a new producer with an old uploader that omits immutable shards.
+Legacy two-request clients retain a small publication-transition race; it cannot
+be eliminated retroactively in their code. New clients read one atomic envelope.
+
+A new client on a legacy host may fall back ONLY when its atomic URL is HTTP 404
+and it has never accepted protocol 2. Legacy signatures are still mandatory.
+For old release metadata, signed released (UTC date) supplies the 180-day window
+and generation; size is not signed, so a strict 20 MiB streaming cap is applied.
+For old advisory metadata, signed generated supplies the 48-hour window and
+generation. A successful modern payload permanently disables legacy downgrade.
+A timeout, malformed envelope, wrong signature, expiry, future date or incomplete
+schema does not permit a fallback. Missing data means degraded status, never good.
+
+Download isolation
+------------------
+The client streams directly to package.zip in a new random 0700 directory under
+the system temporary path. This path must resolve outside ABSPATH/WP_CONTENT_DIR.
+It ignores Content-Disposition and does not use download_url's rename behavior.
+The HTTP transport receives limit_response_size=signed size+1 (or legacy cap+1),
+and the client checks size and SHA-256 before handing the path to WordPress. Failed
+files are removed immediately; successful temporary files/directories have a
+shutdown cleanup after the synchronous upgrade. A public WP_TEMP_DIR is not used.
+
+Producer validation and renewal
+-------------------------------
+Advisory input must be a nonempty collection of valid records/ranges. The production
+minimum is 1000 actionable advisory UUIDs; --min-advisories=1 exists for explicit
+fixtures, not production configuration. An over-20% drop against the previous
+signed index aborts before replacing it. After human review of a legitimate
+correction, --approve-count=N authorizes only that exact resulting count. Restore
+the previous index and its .sig in the output directory, or use --previous-index.
+An explicitly named missing/invalid previous index fails. The first migration from
+an old index lacking record_count still enforces schema and the absolute minimum.
+A fresh CI runner without a previous index cannot apply the relative-drop check;
+production scheduling must persist/restore it. No empty JSON error response is signed.
+
+Run dev/release.sh renew x.y.z to rebuild the same tagged ZIP with fresh metadata,
+then dev/publish.sh x.y.z. The ZIP remains byte-identical under the pinned builder;
+conditional publication accepts an identical retry and rejects changed contents.
+Schedule/review renewal before the 180-day window ends. Advisory jobs must publish
+at least once in 48 hours; a missed window becomes a visible degraded check.
+Manual release publication now requires SHOUSE_RELEASE_TOKEN too: direct wrangler
+bucket writes would bypass the immutable conditional-write guarantee.
+
+The release tool uses a digest-pinned Composer image, no network, a read-only root
+filesystem, dropped capabilities and explicit mounts. Package/manifest/envelope
+operations do not receive the key. Signing/pubkey operations mount only the key
+file read-only. Change SHOUSE_RELEASE_IMAGE only to another reviewed digest; tags
+are refused. Existing keys are never overwritten by keygen.
+
+Key rotation and legacy installations
+------------------------------------
+Do not start signing solely with a new key because the new ZIP trusts it. Installed
+clients must already know it. Publish a bridge version containing both public keys,
+signed by the old key. Maintain reachability for clients which skip that version.
+The atomic envelope can contain both signatures of the SAME payload; use
+release-tool.php envelope manifest.json release.json extra.sig after producing and
+verifying the additional detached signature. Keep the legacy .sig signed with a
+key the legacy population trusts until that compatibility channel is retired.
+Removing an old key from the newest ZIP does not revoke it on old installations.
+If a key is compromised, old clients that know only that key need an independently
+trusted/manual upgrade or separately authenticated recovery. This protocol does
+not pretend that a compromised sole trust root can authenticate its own replacement.
+
+Tests
+-----
+node dev/ingest-security-test.mjs uses the actual Worker and an atomic R2 model.
+wp eval-file dev/signed-data-wp-test.php runs on a disposable local/development WP,
+with ephemeral keys, controlled HTTP and restoration of the touched options.
+dev/signed-producer-test.php tests generation and validation without external APIs.
+python3 dev/signed-publish-test.py checks publication ordering and failures using
+the actual publisher scripts and inert local curl/git replacements.
+Existing update-test.sh/advisory-test.sh test installed release ZIPs in their isolated
+WordPress environment; never run them against an existing customer installation.
