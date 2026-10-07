@@ -15,6 +15,7 @@
 namespace SafeHouse\Modules;
 
 use WP_CLI;
+use WP_Error;
 use SafeHouse\Core\AbstractModule;
 use SafeHouse\Core\Log;
 use SafeHouse\Core\Notify;
@@ -110,11 +111,18 @@ final class Watch extends AbstractModule {
 	/**
 	 * Current inventory. Cheap: directory listings, a few options, one user query and one file hash.
 	 *
-	 * @return array<string, mixed>
+	 * @return array<string, mixed>|WP_Error
 	 */
-	public function snapshot(): array {
+	public function snapshot(): array|WP_Error {
 		$privileges = self::privileges();
-		$admins     = [];
+		if ( is_wp_error( $privileges ) ) {
+			return $privileges;
+		}
+		$options = self::raw_options();
+		if ( is_wp_error( $options ) ) {
+			return $options;
+		}
+		$admins = [];
 		foreach ( $privileges as $id => $entry ) {
 			if ( in_array( 'manage_options', $entry['caps'], true ) ) {
 				$admins[ $id ] = $entry['login'];
@@ -131,7 +139,7 @@ final class Watch extends AbstractModule {
 			'mu_plugins'     => self::entries( WPMU_PLUGIN_DIR ),
 			'dropins'        => array_values( array_filter( self::DROPINS, static fn( $file ) => file_exists( WP_CONTENT_DIR . '/' . $file ) ) ),
 			'config_hash'    => $config ? (string) hash_file( 'sha256', $config ) : '',
-			'options'        => self::raw_options(),
+			'options'        => $options,
 		];
 	}
 
@@ -142,12 +150,15 @@ final class Watch extends AbstractModule {
 	/**
 	 * Compare with the stored baseline, alert once, then store the new state.
 	 *
-	 * @return string[] Changes found.
+	 * @return string[]|WP_Error Changes found, or an incomplete inventory.
 	 */
-	public function check(): array {
+	public function check(): array|WP_Error {
 		$this->delivery_queued = true;
 		$before                = $this->stored_state();
 		$now                   = $this->snapshot();
+		if ( is_wp_error( $now ) ) {
+			return $now;
+		}
 		if ( ! $before ) {
 			update_option( self::STATE_OPTION, $now, false );
 			return [];
@@ -221,9 +232,15 @@ final class Watch extends AbstractModule {
 		return $changes;
 	}
 
-	public function accept(): void {
-		update_option( self::STATE_OPTION, $this->snapshot(), false );
+	/** @return true|WP_Error */
+	public function accept(): bool|WP_Error {
+		$now = $this->snapshot();
+		if ( is_wp_error( $now ) ) {
+			return $now;
+		}
+		update_option( self::STATE_OPTION, $now, false );
 		Log::add( 'inventory_accepted', 'Current plugins, privileges, files and site settings accepted as the baseline' );
+		return true;
 	}
 
 	public function tasks(): array {
@@ -235,10 +252,13 @@ final class Watch extends AbstractModule {
 
 	public function handle_task( string $task ): string {
 		if ( 'accept' === $task ) {
-			$this->accept();
-			return __( 'The current state is the new baseline.', 'shouse' );
+			$result = $this->accept();
+			return is_wp_error( $result ) ? $result->get_error_message() : __( 'The current state is the new baseline.', 'shouse' );
 		}
 		$changes = $this->check();
+		if ( is_wp_error( $changes ) ) {
+			return $changes->get_error_message();
+		}
 		if ( ! $this->delivery_queued ) {
 			return __( 'Changes detected, but the alert could not be stored. The previous baseline was retained. Check database access and alert recipients.', 'shouse' );
 		}
@@ -284,11 +304,17 @@ final class Watch extends AbstractModule {
 	 */
 	public function cli( array $args ): void {
 		if ( 'accept' === $args[0] ) {
-			$this->accept();
+			$result = $this->accept();
+			if ( is_wp_error( $result ) ) {
+				WP_CLI::error( $result->get_error_message() );
+			}
 			WP_CLI::success( 'Baseline updated.' );
 			return;
 		}
 		$changes = $this->check();
+		if ( is_wp_error( $changes ) ) {
+			WP_CLI::error( $changes->get_error_message() );
+		}
 		foreach ( $changes as $change ) {
 			WP_CLI::log( $change );
 		}
@@ -302,13 +328,16 @@ final class Watch extends AbstractModule {
 	 * Watched options as stored in the database, past any filter (Hardening filters default_role
 	 * on read, which would hide a value planted straight in the table) and past the object cache.
 	 *
-	 * @return array<string, string>
+	 * @return array<string, string>|WP_Error
 	 */
-	private static function raw_options(): array {
+	private static function raw_options(): array|WP_Error {
 		global $wpdb;
 		$placeholders = implode( ', ', array_fill( 0, count( self::OPTIONS ), '%s' ) );
 		$rows         = (array) $wpdb->get_results( $wpdb->prepare( "SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name IN ($placeholders)", self::OPTIONS ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- the uncached value is the point; placeholders built above.
-		$options      = array_fill_keys( self::OPTIONS, '' );
+		if ( self::query_failed() ) {
+			return self::read_error();
+		}
+		$options = array_fill_keys( self::OPTIONS, '' );
 		foreach ( $rows as $row ) {
 			$options[ (string) $row->option_name ] = self::scalar( $row->option_value );
 		}
@@ -320,17 +349,23 @@ final class Watch extends AbstractModule {
 	 * This observes persistent privileges, including custom roles and direct SQL changes.
 	 * Runtime user_has_cap filters are deliberately outside this inventory.
 	 *
-	 * @return array<int, array{login: string, caps: list<string>}>
+	 * @return array<int, array{login: string, caps: list<string>}>|WP_Error
 	 */
-	private static function privileges(): array {
+	private static function privileges(): array|WP_Error {
 		global $wpdb;
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery -- this inventory must see database changes past caches.
-		$roles  = maybe_unserialize( $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", $wpdb->get_blog_prefix() . 'user_roles' ) ) );
+		$roles = maybe_unserialize( $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", $wpdb->get_blog_prefix() . 'user_roles' ) ) );
+		if ( self::query_failed() ) {
+			return self::read_error();
+		}
 		$roles  = is_array( $roles ) ? $roles : [];
 		$out    = [];
 		$cursor = 0;
 		do {
 			$users = (array) $wpdb->get_results( $wpdb->prepare( "SELECT u.ID, u.user_login, m.meta_value FROM {$wpdb->users} u JOIN {$wpdb->usermeta} m ON u.ID = m.user_id WHERE m.meta_key = %s AND u.ID > %d ORDER BY u.ID LIMIT 500", $wpdb->get_blog_prefix() . 'capabilities', $cursor ), ARRAY_A );
+			if ( self::query_failed() ) {
+				return self::read_error();
+			}
 			foreach ( $users as $user ) {
 				$cursor   = (int) $user['ID'];
 				$assigned = maybe_unserialize( $user['meta_value'] );
@@ -356,6 +391,20 @@ final class Watch extends AbstractModule {
 		} while ( $more );
 		// phpcs:enable WordPress.DB.DirectDatabaseQuery
 		return $out;
+	}
+
+	/**
+	 * wpdb updates last_error on every query.
+	 *
+	 * @phpstan-impure
+	 */
+	private static function query_failed(): bool {
+		global $wpdb;
+		return '' !== $wpdb->last_error;
+	}
+
+	private static function read_error(): WP_Error {
+		return new WP_Error( 'watch_read_failed', __( 'Monitoring could not read the current state from the database. The previous baseline was retained. Check database access and try again.', 'shouse' ) );
 	}
 
 	/** @return array<string, mixed> */
