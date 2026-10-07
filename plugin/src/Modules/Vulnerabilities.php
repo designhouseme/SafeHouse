@@ -33,6 +33,7 @@ final class Vulnerabilities extends AbstractModule {
 
 	private const OPTION    = 'shouse_vulnerabilities';
 	private const FINDINGS  = 'shouse_vulnerabilities_findings';
+	private const FLOOR     = 'shouse_advisory_floor';
 	private const INDEX_URL = 'https://updates.designhouse.me/shouse/advisories/index.json';
 
 	/** Base64 Ed25519 keys for advisory data only. The updater never trusts these. */
@@ -41,6 +42,7 @@ final class Vulnerabilities extends AbstractModule {
 	];
 
 	private const MAX_AGE     = 6 * HOUR_IN_SECONDS;
+	private const SOURCE_AGE  = 48 * HOUR_IN_SECONDS;
 	private const RETRY_AFTER = HOUR_IN_SECONDS;
 	private const MAX_INDEX   = 256 * KB_IN_BYTES;
 	private const MAX_SHARD   = 4 * MB_IN_BYTES;
@@ -117,14 +119,14 @@ final class Vulnerabilities extends AbstractModule {
 	 */
 	public function refresh(): array {
 		$state                = $this->state();
+		$baseline             = $state;
 		$state['checked_at']  = time();
 		$state['fingerprint'] = $this->fingerprint();
 
 		$index = $this->fetch_index();
 		if ( is_wp_error( $index ) ) {
 			$state['error'] = $index->get_error_message();
-			update_option( self::OPTION, $state, false );
-			return $state;
+			return $this->save_state( $state, $baseline );
 		}
 
 		$wanted = [];
@@ -140,11 +142,10 @@ final class Vulnerabilities extends AbstractModule {
 				$shards[ $name ] = $known;
 				continue;
 			}
-			$entries = $this->fetch_shard( $name, $hash, $items );
+			$entries = $this->fetch_shard( (string) $name, $hash, $items, 2 === $index['protocol'] );
 			if ( is_wp_error( $entries ) ) {
 				$state['error'] = $entries->get_error_message();
-				update_option( self::OPTION, $state, false );
-				return $state;
+				return $this->save_state( $state, $baseline );
 			}
 			$shards[ $name ] = [
 				'hash'    => $hash,
@@ -153,11 +154,26 @@ final class Vulnerabilities extends AbstractModule {
 			];
 		}
 
-		$state['error']       = '';
-		$state['generated']   = $index['generated'];
-		$state['attribution'] = $index['attribution'];
-		$state['shards']      = $shards;
-		update_option( self::OPTION, $state, false );
+		$floor = [
+			'protocol'   => $index['protocol'],
+			'generation' => $index['generation'],
+			'digest'     => $index['_digest'],
+		];
+		if ( ! Signature::advance_floor( self::FLOOR, $floor ) ) {
+			$state['error'] = 'Vulnerability data would roll back an accepted generation or could not be persisted.';
+			return $this->save_state( $state, $baseline );
+		}
+		$state['error']        = '';
+		$state['last_success'] = time();
+		$state['expires_at']   = $index['expires_at'];
+		$state['generation']   = $index['generation'];
+		$state['protocol']     = $index['protocol'];
+		$state['digest']       = $index['_digest'];
+		$state['generated']    = $index['generated'];
+		$state['attribution']  = $index['attribution'];
+		$state['shards']       = $shards;
+
+		$state = $this->save_state( $state, $baseline, $floor );
 		$this->forget();
 		return $state;
 	}
@@ -233,8 +249,8 @@ final class Vulnerabilities extends AbstractModule {
 		}
 		$notified = (array) get_option( self::OPTION . '_notified', [] );
 		$new      = array_diff_key( $current, array_flip( $notified ) );
-		update_option( self::OPTION . '_notified', array_keys( $current ), false );
 		if ( ! $new ) {
+			update_option( self::OPTION . '_notified', array_keys( $current ), false );
 			return;
 		}
 		$lines = [];
@@ -245,7 +261,9 @@ final class Vulnerabilities extends AbstractModule {
 		$lines[] = (string) ( $this->state()['attribution'] ?? '' );
 		Log::add( 'vulnerability_found', sprintf( '%d known vulnerabilities in installed software', count( $new ) ), [ 'items' => array_keys( $new ) ], 'critical' );
 		/* translators: %d: number of vulnerabilities. */
-		Notify::send( sprintf( _n( '%d known vulnerability in installed software', '%d known vulnerabilities in installed software', count( $new ), 'shouse' ), count( $new ) ), $lines );
+		if ( Notify::send( sprintf( _n( '%d known vulnerability in installed software', '%d known vulnerabilities in installed software', count( $new ), 'shouse' ), count( $new ) ), $lines ) ) {
+			update_option( self::OPTION . '_notified', array_keys( $current ), false );
+		}
 	}
 
 	public function admin_notice(): void {
@@ -285,10 +303,10 @@ final class Vulnerabilities extends AbstractModule {
 			$status = $urgent ? 'critical' : 'recommended';
 			$label  = __( 'Installed software has known vulnerabilities', 'shouse' );
 			$items  = '<ul>' . implode( '', array_map( fn( $f ) => '<li>' . esc_html( $this->sentence( $f ) ) . '</li>', $findings ) ) . '</ul>';
-		} elseif ( empty( $state['generated'] ) ) {
+		} elseif ( ! $this->current_data( $state ) ) {
 			$status = 'recommended';
-			$label  = __( 'Vulnerability data has not been downloaded yet', 'shouse' );
-			$items  = '' !== ( $state['error'] ?? '' ) ? '<p>' . esc_html( (string) $state['error'] ) . '</p>' : '';
+			$label  = __( 'Vulnerability data is unavailable or out of date', 'shouse' );
+			$items  = '<p>' . esc_html( (string) ( $state['error'] ?? __( 'A successful recent vulnerability check is required.', 'shouse' ) ) ) . '</p>';
 		} else {
 			$status = 'good';
 			$label  = __( 'No known vulnerabilities in installed software', 'shouse' );
@@ -335,7 +353,9 @@ final class Vulnerabilities extends AbstractModule {
 		}
 		echo '</p>';
 		$findings = $this->findings( true );
-		if ( ! empty( $state['generated'] ) && ! $findings ) {
+		if ( ! $this->current_data( $state ) ) {
+			echo '<p>' . esc_html__( 'Vulnerability data is unavailable or out of date. Previous findings remain visible; a clean result cannot be confirmed.', 'shouse' ) . '</p>';
+		} elseif ( ! $findings ) {
 			echo '<p>' . esc_html__( 'No known vulnerabilities in installed software.', 'shouse' ) . '</p>';
 		}
 		if ( $findings ) {
@@ -425,37 +445,60 @@ final class Vulnerabilities extends AbstractModule {
 	/**
 	 * Verified index: format, generated, attribution and 256 shard hashes.
 	 *
-	 * @return array{generated: string, attribution: string, shards: array<string, string>}|WP_Error
+	 * @return array{generated: string, attribution: string, shards: array<string, string>, protocol: int, generation: int, issued_at: int, expires_at: int, _digest: string}|WP_Error
 	 */
 	private function fetch_index(): array|WP_Error {
-		$url  = $this->index_url();
-		$body = $this->get_body( $url, self::MAX_INDEX );
-		$sig  = $this->get_body( $url . '.sig', KB_IN_BYTES );
-		if ( is_wp_error( $body ) ) {
-			return $body;
+		$url      = $this->index_url();
+		$envelope = $this->get_body( dirname( $url ) . '/feed.json', 2 * self::MAX_INDEX );
+		if ( is_wp_error( $envelope ) ) {
+			$floor = get_option( self::FLOOR, [] );
+			if ( 'shouse_advisories_not_found' !== $envelope->get_error_code() || ( is_array( $floor ) && ( $floor['protocol'] ?? 1 ) >= 2 ) ) {
+				return $envelope;
+			}
+			$body = $this->get_body( $url, self::MAX_INDEX );
+			$sig  = $this->get_body( $url . '.sig', KB_IN_BYTES );
+			if ( is_wp_error( $body ) || is_wp_error( $sig ) ) {
+				return is_wp_error( $body ) ? $body : $sig;
+			}
+			$body = Signature::verify( $body, $sig, $this->public_keys() ) ? $body : null;
+		} else {
+			$body = Signature::unpack( $envelope, $this->public_keys(), self::MAX_INDEX );
 		}
-		if ( is_wp_error( $sig ) ) {
-			return $sig;
-		}
-		if ( ! Signature::verify( $body, $sig, $this->public_keys() ) ) {
+		if ( null === $body ) {
 			Log::add( 'advisories_rejected', 'Vulnerability data has an invalid signature', [ 'url' => $url ], 'critical' );
 			return new WP_Error( 'shouse_bad_signature', 'Vulnerability data signature is invalid.' );
 		}
 		$data   = json_decode( $body, true );
-		$shards = is_array( $data ) ? (array) ( $data['shards'] ?? [] ) : [];
-		if ( 1 !== ( $data['format'] ?? null ) || 256 !== count( $shards ) ) {
+		$shards = is_array( $data ) && is_array( $data['shards'] ?? null ) ? $data['shards'] : [];
+		if ( ! is_array( $data ) || 1 !== ( $data['format'] ?? null ) || 256 !== count( $shards ) ) {
 			return new WP_Error( 'shouse_bad_advisories', 'Vulnerability data has an unknown format.' );
 		}
 		foreach ( $shards as $name => $hash ) {
-			if ( ! preg_match( '/^[0-9a-f]{2}$/', (string) $name ) || ! preg_match( '/^[0-9a-f]{64}$/', (string) $hash ) ) {
+			if ( ! preg_match( '/^[0-9a-f]{2}$/', (string) $name ) || ! is_string( $hash ) || ! preg_match( '/^[0-9a-f]{64}$/', $hash ) ) {
 				return new WP_Error( 'shouse_bad_advisories', 'Vulnerability data has an unknown format.' );
 			}
 		}
+		$freshness = Signature::freshness( $data, 'advisories', self::SOURCE_AGE, 'generated', 'Y-m-d\TH:i:s\Z' );
+		if ( null === $freshness || ! is_string( $data['generated'] ?? null ) || ! is_string( $data['attribution'] ?? null ) ) {
+			return new WP_Error( 'shouse_stale_advisories', 'Vulnerability data is expired, future-dated or malformed.' );
+		}
+		$digest = hash( 'sha256', $body );
+		if ( ! Signature::advance_floor(
+			self::FLOOR,
+			[
+				'protocol'   => $freshness['protocol'],
+				'generation' => $freshness['generation'],
+				'digest'     => $digest,
+			]
+		) ) {
+			return new WP_Error( 'shouse_advisories_rollback', 'Vulnerability data would roll back an accepted generation or could not be persisted.' );
+		}
 		return [
-			'generated'   => mb_substr( sanitize_text_field( (string) ( $data['generated'] ?? '' ) ), 0, 40 ),
-			'attribution' => mb_substr( sanitize_text_field( (string) ( $data['attribution'] ?? '' ) ), 0, 500 ),
+			'generated'   => mb_substr( sanitize_text_field( $data['generated'] ), 0, 40 ),
+			'attribution' => mb_substr( sanitize_text_field( $data['attribution'] ), 0, 500 ),
 			'shards'      => $shards,
-		];
+			'_digest'     => $digest,
+		] + $freshness;
 	}
 
 	/**
@@ -464,8 +507,9 @@ final class Vulnerabilities extends AbstractModule {
 	 * @param string[] $items "type:slug" keys installed on this site.
 	 * @return array<string, list<array{0: string, 1: string, 2: float|null, 3: array<int, array{0: string, 1: bool, 2: string, 3: bool}>, 4: string[]}>>|WP_Error
 	 */
-	private function fetch_shard( string $name, string $hash, array $items ): array|WP_Error {
-		$body = $this->get_body( dirname( $this->index_url() ) . '/' . $name . '.json', self::MAX_SHARD );
+	private function fetch_shard( string $name, string $hash, array $items, bool $immutable ): array|WP_Error {
+		$path = $immutable ? 'sha256/' . $hash : $name;
+		$body = $this->get_body( dirname( $this->index_url() ) . '/' . $path . '.json', self::MAX_SHARD );
 		if ( is_wp_error( $body ) ) {
 			return $body;
 		}
@@ -479,11 +523,15 @@ final class Vulnerabilities extends AbstractModule {
 		}
 		$out = [];
 		foreach ( $items as $item ) {
+			if ( isset( $data[ $item ] ) && ! is_array( $data[ $item ] ) ) {
+				return new WP_Error( 'shouse_bad_shard', 'Vulnerability data contains an invalid entry.' );
+			}
 			foreach ( (array) ( $data[ $item ] ?? [] ) as $vuln ) {
 				$clean = self::clean_entry( $vuln );
-				if ( null !== $clean ) {
-					$out[ $item ][] = $clean;
+				if ( null === $clean ) {
+					return new WP_Error( 'shouse_bad_shard', 'Vulnerability data contains an invalid entry.' );
 				}
+				$out[ $item ][] = $clean;
 			}
 		}
 		return $out;
@@ -496,14 +544,18 @@ final class Vulnerabilities extends AbstractModule {
 	 * @return array{0: string, 1: string, 2: float|null, 3: array<int, array{0: string, 1: bool, 2: string, 3: bool}>, 4: string[]}|null
 	 */
 	private static function clean_entry( mixed $vuln ): ?array {
-		if ( ! is_array( $vuln ) || 5 !== count( $vuln ) || ! is_scalar( $vuln[0] ) || ! is_scalar( $vuln[1] ) || ! is_array( $vuln[3] ) || ! is_array( $vuln[4] ) ) {
+		if ( ! is_array( $vuln ) || ! array_is_list( $vuln ) || 5 !== count( $vuln ) || ! is_string( $vuln[0] ) || ! preg_match( self::ID_FORMAT, $vuln[0] )
+			|| ! is_string( $vuln[1] ) || ! is_array( $vuln[3] ) || ! is_array( $vuln[4] )
+			|| ( null !== $vuln[2] && ( ! is_numeric( $vuln[2] ) || $vuln[2] < 0 || $vuln[2] > 10 ) ) ) {
 			return null;
 		}
 		$ranges = [];
 		foreach ( $vuln[3] as $range ) {
-			if ( is_array( $range ) && 4 === count( $range ) && is_scalar( $range[0] ) && is_scalar( $range[2] ) ) {
-				$ranges[] = [ (string) $range[0], (bool) $range[1], (string) $range[2], (bool) $range[3] ];
+			if ( ! is_array( $range ) || ! array_is_list( $range ) || 4 !== count( $range ) || ! is_string( $range[0] ) || ! is_string( $range[2] )
+				|| '' === $range[0] || '' === $range[2] || strlen( $range[0] ) > 64 || strlen( $range[2] ) > 64 || ! is_bool( $range[1] ) || ! is_bool( $range[3] ) ) {
+				return null;
 			}
+			$ranges[] = [ $range[0], $range[1], $range[2], $range[3] ];
 		}
 		if ( ! $ranges ) {
 			return null;
@@ -530,7 +582,7 @@ final class Vulnerabilities extends AbstractModule {
 			return $response;
 		}
 		if ( 200 !== wp_remote_retrieve_response_code( $response ) ) {
-			return new WP_Error( 'shouse_advisories_http', sprintf( 'HTTP %d for %s', wp_remote_retrieve_response_code( $response ), $url ) );
+			return new WP_Error( 404 === wp_remote_retrieve_response_code( $response ) ? 'shouse_advisories_not_found' : 'shouse_advisories_http', sprintf( 'HTTP %d for %s', wp_remote_retrieve_response_code( $response ), $url ) );
 		}
 		return wp_remote_retrieve_body( $response );
 	}
@@ -576,6 +628,79 @@ final class Vulnerabilities extends AbstractModule {
 	private function state(): array {
 		$state = get_option( self::OPTION, [] );
 		return is_array( $state ) ? $state : [];
+	}
+
+	/**
+	 * Publish a complete snapshot atomically. A slower old refresh cannot erase newer findings.
+	 *
+	 * @param array<string, mixed>      $state          Candidate state.
+	 * @param array<string, mixed>|null $baseline       Snapshot at the beginning of the check.
+	 * @param array<string, mixed>|null $accepted_floor Exact floor required to publish a success.
+	 * @return array<string, mixed> State kept in the database.
+	 */
+	private function save_state( array $state, ?array $baseline = null, ?array $accepted_floor = null ): array {
+		global $wpdb;
+		for ( $attempt = 0; $attempt < 5; ++$attempt ) {
+			$floor_raw = null;
+			if ( null !== $accepted_floor ) {
+				$floor_raw = $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", self::FLOOR ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- must match the authoritative accepted generation.
+			}
+			$raw      = $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", self::OPTION ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- snapshot compare-and-swap, not cacheable.
+			$previous = null === $raw ? [] : maybe_unserialize( $raw );
+			if ( null !== $accepted_floor && maybe_unserialize( $floor_raw ?? '' ) !== $accepted_floor ) {
+				$kept = is_array( $previous ) ? $previous : [];
+				if ( ! $this->current_data( $kept ) ) {
+					$kept['error'] = 'Vulnerability data changed while this check was running.';
+				}
+				return $kept;
+			}
+			if ( ! empty( $state['error'] ) && null !== $baseline && is_array( $previous ) && $previous !== $baseline ) {
+				return $previous; // An older failed request must not erase a concurrent success, even for the same generation.
+			}
+			if ( null === $raw ) {
+				if ( null !== $accepted_floor ) {
+					$inserted = $wpdb->query( $wpdb->prepare( "INSERT IGNORE INTO {$wpdb->options} (option_name, option_value, autoload) SELECT %s, %s, 'off' FROM {$wpdb->options} AS floor WHERE floor.option_name = %s AND BINARY floor.option_value = %s", self::OPTION, maybe_serialize( $state ), self::FLOOR, $floor_raw ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- atomic first snapshot conditioned on its accepted floor.
+					if ( 1 === $inserted ) {
+						wp_cache_delete( self::OPTION, 'options' );
+						wp_cache_delete( 'notoptions', 'options' );
+						return $state;
+					}
+				} elseif ( add_option( self::OPTION, $state, '', false ) ) {
+					return $state;
+				}
+				continue;
+			}
+			if ( is_array( $previous ) && (int) ( $previous['generation'] ?? 0 ) > (int) ( $state['generation'] ?? 0 ) ) {
+				return $previous;
+			}
+			$encoded = maybe_serialize( $state );
+			if ( $encoded === $raw ) {
+				return $state;
+			}
+			if ( null !== $accepted_floor ) {
+				$updated = $wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->options} AS snapshot INNER JOIN {$wpdb->options} AS floor ON floor.option_name = %s SET snapshot.option_value = %s WHERE snapshot.option_name = %s AND BINARY snapshot.option_value = %s AND BINARY floor.option_value = %s", self::FLOOR, $encoded, self::OPTION, $raw, $floor_raw ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- floor and complete snapshot must still match in one atomic statement.
+			} else {
+				$updated = $wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->options} SET option_value = %s WHERE option_name = %s AND BINARY option_value = %s", $encoded, self::OPTION, $raw ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- snapshot compare-and-swap cannot use update_option().
+			}
+			if ( 1 === $updated ) {
+				wp_cache_delete( self::OPTION, 'options' );
+				wp_cache_delete( 'notoptions', 'options' );
+				return $state;
+			}
+		}
+		$state['error'] = 'Could not persist the complete vulnerability check.';
+		return $state;
+	}
+
+	/** @param array<string, mixed> $state Last downloaded data, retained even after an error. */
+	private function current_data( array $state ): bool {
+		$floor = get_option( self::FLOOR, [] );
+		return '' === ( $state['error'] ?? '' ) && ! empty( $state['last_success'] )
+			&& time() - (int) $state['last_success'] <= self::MAX_AGE + HOUR_IN_SECONDS
+			&& (int) ( $state['expires_at'] ?? 0 ) > time()
+			&& (int) ( $state['generation'] ?? 0 ) >= (int) ( is_array( $floor ) ? ( $floor['generation'] ?? 0 ) : 0 )
+			&& is_array( $floor ) && ( $state['protocol'] ?? null ) === ( $floor['protocol'] ?? null ) && ( $state['digest'] ?? null ) === ( $floor['digest'] ?? null )
+			&& ( $state['fingerprint'] ?? '' ) === $this->fingerprint();
 	}
 
 	private function index_url(): string {

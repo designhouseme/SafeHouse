@@ -4,7 +4,7 @@
  *
  * Flow: core asks the `update_plugins_{host}` filter (thanks to the Update URI header, the plugin
  * is never looked up on wordpress.org, so a lookalike slug there cannot hijack it). We fetch
- * manifest.json and manifest.json.sig, verify the Ed25519 signature over the exact bytes with
+	 * release.json, an atomic envelope, verify the Ed25519 signature over the exact bytes with
  * a public key baked into the plugin, and only then offer the update. When core downloads the
  * package, upgrader_pre_download checks its SHA-256 against the signed manifest and refuses
  * anything else. A compromised update host can therefore not ship code: it has no private key.
@@ -30,15 +30,18 @@ final class Updater {
 
 	private const MANIFEST_URL = 'https://updates.designhouse.me/shouse/manifest.json';
 
-	/** Base64 Ed25519 public keys. Keep the previous key here for one release when rotating. */
+	/** Base64 Ed25519 public keys. Rotation requires a bridge release; see dev/SIGNED-DATA-PROTOCOL.txt. */
 	private const PUBLIC_KEYS = [
 		'SOrVjhZX5PC6q78ohxcoO9zqcll7YarqDyF6hQ6knBg=', // 2026-10-06
 	];
 
-	private const CACHE_KEY      = 'shouse_update_manifest';
+	private const CACHE_KEY      = 'shouse_update_manifest_v2';
+	private const FLOOR_OPTION   = 'shouse_update_floor';
 	private const CACHE_TTL      = 3 * HOUR_IN_SECONDS;
-	private const ERROR_TTL      = HOUR_IN_SECONDS;
+	private const ERROR_TTL      = 5 * MINUTE_IN_SECONDS;
 	private const MAX_MANIFEST   = 64 * 1024;
+	private const MAX_PACKAGE    = 20 * 1024 * 1024;
+	private const MAX_AGE        = 180 * DAY_IN_SECONDS;
 	private const VERSION_FORMAT = '/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/';
 
 	public static function register(): void {
@@ -161,8 +164,7 @@ final class Updater {
 			}
 		}
 
-		require_once ABSPATH . 'wp-admin/includes/file.php';
-		$file = download_url( $package, 120 );
+		$file = self::download( $package, $manifest['size'] );
 		if ( is_wp_error( $file ) ) {
 			return $file;
 		}
@@ -174,6 +176,73 @@ final class Updater {
 		}
 		Log::add( 'update_verified', 'SafeHouse ' . $manifest['version'] . ' package verified' );
 		return $file;
+	}
+
+	/**
+	 * The HTTP response never controls a filesystem name. Limit bytes while streaming, before hashing.
+	 * A legacy manifest has no signed size; its migration path still enforces MAX_PACKAGE.
+	 */
+	private static function download( string $url, int $size ): string|WP_Error {
+		$base = realpath( sys_get_temp_dir() );
+		if ( false === $base || ! wp_is_writable( $base ) ) {
+			return new WP_Error( 'shouse_private_temp', 'A writable private system temporary directory is required.' );
+		}
+		foreach ( [ ABSPATH, WP_CONTENT_DIR ] as $public_root ) {
+			$root = realpath( $public_root );
+			if ( false !== $root && ( $base === $root || str_starts_with( $base . '/', rtrim( $root, '/' ) . '/' ) ) ) {
+				return new WP_Error( 'shouse_private_temp', 'The update temporary directory must be outside the website.' );
+			}
+		}
+		$dir = $base . '/shouse-' . bin2hex( random_bytes( 16 ) );
+		if ( ! mkdir( $dir, 0700 ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_mkdir -- exclusive private directory, no recursive fallback.
+			return new WP_Error( 'shouse_private_temp', 'Cannot create a private update directory.' );
+		}
+		$file    = $dir . '/package.zip';
+		$cleanup = static function () use ( $file, $dir ): void {
+			if ( file_exists( $file ) ) {
+				wp_delete_file( $file );
+			}
+			if ( is_dir( $dir ) ) {
+				rmdir( $dir ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- only our empty private directory.
+			}
+		};
+		$keep    = false;
+		try {
+			$handle = fopen( $file, 'xb' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- exclusive filename in private directory.
+			if ( false === $handle ) {
+				return new WP_Error( 'shouse_private_temp', 'Cannot create the update file.' );
+			}
+			fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- close our own handle.
+			$limit    = $size > 0 ? min( $size, self::MAX_PACKAGE ) : self::MAX_PACKAGE;
+			$response = wp_safe_remote_get(
+				$url,
+				[
+					'timeout'             => 120,
+					'redirection'         => 2,
+					'stream'              => true,
+					'filename'            => $file,
+					'limit_response_size' => $limit + 1,
+				]
+			);
+			if ( is_wp_error( $response ) ) {
+				return $response;
+			}
+			if ( 200 !== wp_remote_retrieve_response_code( $response ) ) {
+				return new WP_Error( 'shouse_package_http', 'The update download failed.' );
+			}
+			clearstatcache( true, $file );
+			$actual = filesize( $file );
+			if ( false === $actual || $actual < 1 || $actual > $limit || ( $size > 0 && $actual !== $size ) ) {
+				return new WP_Error( 'shouse_package_size', 'The update package size does not match its signed limit.' );
+			}
+			register_shutdown_function( $cleanup );
+			$keep = true;
+			return $file;
+		} finally {
+			if ( ! $keep ) {
+				$cleanup();
+			}
+		}
 	}
 
 	/**
@@ -211,10 +280,13 @@ final class Updater {
 	/**
 	 * Verified manifest, cached. Null when unavailable or invalid.
 	 *
-	 * @return array{version: string, download_url: string, sha256: string, requires: string, requires_php: string, tested: string, released: string, homepage: string, changelog: string}|null
+	 * @return array<string, mixed>|null
 	 */
 	public static function manifest(): ?array {
 		$cached = get_site_transient( self::CACHE_KEY );
+		if ( is_array( $cached ) && ! self::accept( $cached ) ) {
+			$cached = false;
+		}
 		if ( false === $cached ) {
 			$cached = self::fetch();
 			set_site_transient( self::CACHE_KEY, $cached, is_wp_error( $cached ) ? self::ERROR_TTL : self::CACHE_TTL );
@@ -223,25 +295,31 @@ final class Updater {
 	}
 
 	/**
-	 * @return array{version: string, download_url: string, sha256: string, requires: string, requires_php: string, tested: string, released: string, homepage: string, changelog: string}|WP_Error
+	 * @return array<string, mixed>|WP_Error
 	 */
 	private static function fetch(): array|WP_Error {
-		$url  = self::manifest_url();
-		$args = [
+		$url      = self::manifest_url();
+		$args     = [
 			'timeout'             => 10,
 			'redirection'         => 2,
-			'limit_response_size' => self::MAX_MANIFEST,
+			'limit_response_size' => 2 * self::MAX_MANIFEST,
 		];
-
-		$body = self::get_body( $url, $args );
-		$sig  = self::get_body( $url . '.sig', $args );
-		if ( is_wp_error( $body ) ) {
-			return $body;
+		$envelope = self::get_body( dirname( $url ) . '/release.json', $args );
+		if ( is_wp_error( $envelope ) ) {
+			$floor = get_option( self::FLOOR_OPTION, [] );
+			if ( 'shouse_update_not_found' !== $envelope->get_error_code() || ( is_array( $floor ) && ( $floor['protocol'] ?? 1 ) >= 2 ) ) {
+				return $envelope;
+			}
+			$body = self::get_body( $url, $args );
+			$sig  = self::get_body( $url . '.sig', $args );
+			if ( is_wp_error( $body ) || is_wp_error( $sig ) ) {
+				return is_wp_error( $body ) ? $body : $sig;
+			}
+			$body = Signature::verify( $body, $sig, self::public_keys() ) ? $body : null;
+		} else {
+			$body = Signature::unpack( $envelope, self::public_keys(), self::MAX_MANIFEST );
 		}
-		if ( is_wp_error( $sig ) ) {
-			return $sig;
-		}
-		if ( ! Signature::verify( $body, $sig, self::public_keys() ) ) {
+		if ( null === $body ) {
 			Log::add( 'update_rejected', 'SafeHouse update manifest has an invalid signature', [ 'url' => $url ], 'critical' );
 			return new WP_Error( 'shouse_bad_signature', 'Manifest signature is invalid.' );
 		}
@@ -250,24 +328,59 @@ final class Updater {
 		if ( ! is_array( $data ) || 'shouse' !== ( $data['slug'] ?? '' ) ) {
 			return new WP_Error( 'shouse_bad_manifest', 'Manifest is not for SafeHouse.' );
 		}
-		$manifest = [
-			'version'      => (string) ( $data['version'] ?? '' ),
-			'download_url' => (string) ( $data['download_url'] ?? '' ),
-			'sha256'       => strtolower( (string) ( $data['sha256'] ?? '' ) ),
-			'requires'     => (string) ( $data['requires'] ?? '' ),
-			'requires_php' => (string) ( $data['requires_php'] ?? '' ),
-			'tested'       => (string) ( $data['tested'] ?? '' ),
-			'released'     => (string) ( $data['released'] ?? '' ),
-			'homepage'     => (string) ( $data['homepage'] ?? 'https://designhouse.me/' ),
-			'changelog'    => (string) ( $data['changelog'] ?? '' ),
+		$freshness = Signature::freshness( $data, 'release', self::MAX_AGE, 'released', 'Y-m-d' );
+		if ( null === $freshness ) {
+			return new WP_Error( 'shouse_stale_manifest', 'Release metadata is expired, future-dated or malformed.' );
+		}
+		foreach ( [ 'version', 'download_url', 'sha256', 'requires', 'requires_php', 'tested', 'released', 'homepage', 'changelog' ] as $field ) {
+			if ( ! is_string( $data[ $field ] ?? null ) ) {
+				return new WP_Error( 'shouse_bad_manifest', 'Manifest fields are invalid.' );
+			}
+		}
+		$size = $data['size'] ?? 0;
+		if ( ! is_int( $size ) || $size < ( 2 === $freshness['protocol'] ? 1 : 0 ) || $size > self::MAX_PACKAGE ) {
+			return new WP_Error( 'shouse_bad_manifest', 'The signed package size is invalid.' );
+		}
+		$manifest  = [
+			'version'      => $data['version'],
+			'download_url' => $data['download_url'],
+			'sha256'       => strtolower( $data['sha256'] ),
+			'requires'     => $data['requires'],
+			'requires_php' => $data['requires_php'],
+			'tested'       => $data['tested'],
+			'released'     => $data['released'],
+			'homepage'     => $data['homepage'],
+			'changelog'    => $data['changelog'],
+			'size'         => $size,
+			'_digest'      => hash( 'sha256', $body ),
 		];
-		$scheme   = wp_parse_url( $manifest['download_url'], PHP_URL_SCHEME );
+		$manifest += $freshness;
+		$scheme    = wp_parse_url( $manifest['download_url'], PHP_URL_SCHEME );
 		if ( ! preg_match( self::VERSION_FORMAT, $manifest['version'] )
 			|| ! preg_match( '/^[a-f0-9]{64}$/', $manifest['sha256'] )
 			|| ! ( 'https' === $scheme || ( 'http' === $scheme && self::is_local() ) ) ) {
 			return new WP_Error( 'shouse_bad_manifest', 'Manifest fields are invalid.' );
 		}
-		return $manifest;
+		return self::accept( $manifest ) ? $manifest : new WP_Error( 'shouse_update_rollback', 'Release metadata would roll back an accepted release or could not be persisted.' );
+	}
+
+	/** @param array<string, mixed> $manifest Previously verified, complete release metadata. */
+	private static function accept( array $manifest ): bool {
+		if ( ! is_int( $manifest['expires_at'] ?? null ) || $manifest['expires_at'] <= time()
+			|| ! is_int( $manifest['protocol'] ?? null ) || ! is_int( $manifest['generation'] ?? null )
+			|| ! is_string( $manifest['_digest'] ?? null ) || ! is_string( $manifest['version'] ?? null )
+			|| version_compare( $manifest['version'], SHOUSE_VERSION, '<' ) ) {
+			return false;
+		}
+		return Signature::advance_floor(
+			self::FLOOR_OPTION,
+			[
+				'protocol'   => $manifest['protocol'],
+				'generation' => $manifest['generation'],
+				'digest'     => $manifest['_digest'],
+				'version'    => $manifest['version'],
+			]
+		);
 	}
 
 	/**
@@ -280,7 +393,7 @@ final class Updater {
 			return $response;
 		}
 		if ( 200 !== wp_remote_retrieve_response_code( $response ) ) {
-			return new WP_Error( 'shouse_update_http', sprintf( 'HTTP %d for %s', wp_remote_retrieve_response_code( $response ), $url ) );
+			return new WP_Error( 404 === wp_remote_retrieve_response_code( $response ) ? 'shouse_update_not_found' : 'shouse_update_http', sprintf( 'HTTP %d for %s', wp_remote_retrieve_response_code( $response ), $url ) );
 		}
 		return wp_remote_retrieve_body( $response );
 	}

@@ -7,10 +7,13 @@
 // the CVE watch workflow).
 
 const PATHS = [
+	/^shouse\/release\.json$/,
 	/^shouse\/manifest\.json(\.sig)?$/,
 	/^shouse\/shouse-latest\.zip$/,
 	/^shouse\/shouse-\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?\.zip$/,
 	/^shouse\/advisories\/index\.json(\.sig)?$/,
+	/^shouse\/advisories\/feed\.json$/,
+	/^shouse\/advisories\/sha256\/[0-9a-f]{64}\.json$/,
 	/^shouse\/advisories\/[0-9a-f]{2}\.json$/,
 ];
 
@@ -58,7 +61,8 @@ export default {
 			return new Response(null, { headers });
 		}
 		if (!('body' in object)) {
-			return new Response(null, { status: 304, headers }); // If-None-Match / If-Modified-Since matched.
+			const failedPrecondition = request.headers.has('if-match') || request.headers.has('if-unmodified-since');
+			return new Response(null, { status: failedPrecondition ? 412 : 304, headers });
 		}
 		if (object.range && request.headers.has('range')) {
 			const { offset: start, length: count, suffix } = object.range;

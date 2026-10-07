@@ -13,6 +13,8 @@ const CHANNELS = [
 		secret: 'INGEST_TOKEN',
 		maxBytes: 4 * 1024 * 1024,
 		files: [
+			{ path: /^shouse\/advisories\/feed\.json$/, type: 'application/json', cache: SHORT },
+			{ path: /^shouse\/advisories\/sha256\/[0-9a-f]{64}\.json$/, type: 'application/json', cache: 'public, max-age=31536000, immutable', immutable: true, addressed: true },
 			{ path: /^shouse\/advisories\/index\.json$/, type: 'application/json', cache: SHORT },
 			{ path: /^shouse\/advisories\/index\.json\.sig$/, type: 'text/plain', cache: SHORT },
 			{ path: /^shouse\/advisories\/[0-9a-f]{2}\.json$/, type: 'application/json', cache: SHORT },
@@ -22,6 +24,7 @@ const CHANNELS = [
 		secret: 'RELEASE_TOKEN',
 		maxBytes: 20 * 1024 * 1024,
 		files: [
+			{ path: /^shouse\/release\.json$/, type: 'application/json', cache: SHORT },
 			{ path: /^shouse\/shouse-\d+\.\d+\.\d+\.zip$/, type: 'application/zip', cache: 'public, max-age=31536000, immutable', immutable: true },
 			{ path: /^shouse\/shouse-latest\.zip$/, type: 'application/zip', cache: SHORT },
 			{ path: /^shouse\/manifest\.json$/, type: 'application/json', cache: SHORT },
@@ -38,6 +41,44 @@ function plain(status, text, extra = {}) {
 }
 
 const hex = (buffer) => [...new Uint8Array(buffer)].map((b) => b.toString(16).padStart(2, '0')).join('');
+
+/** Enforce the limit during consumption, including chunked bodies and missing Content-Length. */
+async function limitedBody(request, limit) {
+	if (request.body === null) return new Uint8Array();
+	const reader = request.body.getReader();
+	const chunks = [];
+	let size = 0;
+	try {
+		for (;;) {
+			const { done, value } = await reader.read();
+			if (done) break;
+			size += value.byteLength;
+			if (size > limit) {
+				await reader.cancel();
+				return null;
+			}
+			chunks.push(value);
+		}
+	} finally {
+		reader.releaseLock();
+	}
+	const body = new Uint8Array(size);
+	let offset = 0;
+	for (const chunk of chunks) {
+		body.set(chunk, offset);
+		offset += chunk.byteLength;
+	}
+	return body;
+}
+
+async function unchanged(bucket, key, sha256, size) {
+	const existing = await bucket.head(key);
+	if (existing === null || existing.size !== size) return false;
+	if (existing.checksums?.sha256) return hex(existing.checksums.sha256) === hex(sha256);
+	// Objects published before SHA-256 metadata was introduced remain immutable too.
+	const object = await bucket.get(key);
+	return object !== null && hex(await crypto.subtle.digest('SHA-256', await object.arrayBuffer())) === hex(sha256);
+}
 
 /** The channel whose token was presented, compared in constant time (both sides hashed to equal length). */
 async function channelFor(request, env) {
@@ -77,22 +118,26 @@ export default {
 		if (Number(request.headers.get('content-length') ?? 0) > channel.maxBytes) {
 			return plain(413, 'Too large');
 		}
-		const body = await request.arrayBuffer();
-		if (body.byteLength > channel.maxBytes) {
+		const body = await limitedBody(request, channel.maxBytes);
+		if (body === null) {
 			return plain(413, 'Too large');
 		}
 		if (body.byteLength === 0) {
 			return plain(400, 'Empty body');
 		}
-		const md5 = await crypto.subtle.digest('MD5', body);
-		if (file.immutable) {
-			const existing = await env.UPDATES.head(key);
-			if (existing !== null) {
-				const stored = existing.checksums?.md5 ? hex(existing.checksums.md5) : existing.etag;
-				return stored === hex(md5) ? plain(200, 'Unchanged') : plain(409, 'This version is already published with different contents');
-			}
+		const sha256 = await crypto.subtle.digest('SHA-256', body);
+		if (file.addressed && !key.endsWith(`/${hex(sha256)}.json`)) {
+			return plain(400, 'Content does not match its address');
 		}
-		await env.UPDATES.put(key, body, { md5, httpMetadata: { contentType: file.type, cacheControl: file.cache } });
+		const stored = await env.UPDATES.put(key, body, {
+			sha256,
+			httpMetadata: { contentType: file.type, cacheControl: file.cache },
+			...(file.immutable ? { onlyIf: new Headers({ 'if-none-match': '*' }) } : {}),
+		});
+		if (stored === null) {
+			return await unchanged(env.UPDATES, key, sha256, body.byteLength)
+				? plain(200, 'Unchanged') : plain(409, 'This version is already published with different contents');
+		}
 		return plain(201, 'Stored');
 	},
 };

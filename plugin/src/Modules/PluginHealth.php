@@ -134,7 +134,7 @@ final class PluginHealth extends AbstractModule {
 
 	public function maybe_refresh(): void {
 		$report = $this->report();
-		if ( ( $report['fingerprint'] ?? '' ) !== $this->fingerprint() || time() - (int) ( $report['checked_at'] ?? 0 ) > self::MAX_AGE ) {
+		if ( ! empty( $report['error'] ) || ( $report['fingerprint'] ?? '' ) !== $this->fingerprint() || time() - (int) ( $report['last_success'] ?? 0 ) > self::MAX_AGE ) {
 			$this->refresh();
 		}
 	}
@@ -168,8 +168,9 @@ final class PluginHealth extends AbstractModule {
 		}
 
 		$previous = $this->report();
-		if ( '' !== $error && ! empty( $previous['items'] ) ) {
-			$previous['error'] = $error;
+		if ( '' !== $error ) {
+			$previous['error']      = $error;
+			$previous['checked_at'] = time();
 			update_option( self::OPTION, $previous, false );
 			return $previous;
 		}
@@ -207,10 +208,11 @@ final class PluginHealth extends AbstractModule {
 		}
 
 		$report = [
-			'checked_at'  => time(),
-			'fingerprint' => $this->fingerprint(),
-			'error'       => $error,
-			'items'       => $items,
+			'checked_at'   => time(),
+			'last_success' => time(),
+			'fingerprint'  => $this->fingerprint(),
+			'error'        => $error,
+			'items'        => $items,
 		];
 		update_option( self::OPTION, $report, false );
 		return $report;
@@ -343,6 +345,10 @@ final class PluginHealth extends AbstractModule {
 		$label  = 'good' === $status
 			? __( 'No closed, abandoned or forgotten plugins found', 'shouse' )
 			: __( 'Some plugins need attention', 'shouse' );
+		if ( 'good' === $status && ! $this->current_report( $this->report() ) ) {
+			$status = 'recommended';
+			$label  = __( 'Plugin health has not been checked successfully or its data is out of date', 'shouse' );
+		}
 		return [
 			'label'       => $label,
 			'status'      => $status,
@@ -389,8 +395,14 @@ final class PluginHealth extends AbstractModule {
 		}
 		echo '</p>';
 		$findings = $this->findings();
+		if ( ! $this->current_report( $report ) ) {
+			echo '<p>' . esc_html__( 'Plugin health data is unavailable or out of date. Previous findings remain visible; a clean result cannot be confirmed.', 'shouse' ) . '</p>';
+		}
 		if ( ! $findings ) {
-			echo '<p>' . esc_html__( 'Nothing to report.', 'shouse' ) . '</p></div>';
+			if ( $this->current_report( $report ) ) {
+				echo '<p>' . esc_html__( 'Nothing to report.', 'shouse' ) . '</p>';
+			}
+			echo '</div>';
 			return;
 		}
 		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Plugin', 'shouse' ) . '</th><th>' . esc_html__( 'Findings', 'shouse' ) . '</th></tr></thead><tbody>';
@@ -470,7 +482,15 @@ final class PluginHealth extends AbstractModule {
 			return 'HTTP ' . wp_remote_retrieve_response_code( $response );
 		}
 		$data = json_decode( wp_remote_retrieve_body( $response ), true );
-		return is_array( $data ) ? $data : 'invalid response';
+		if ( ! is_array( $data ) ) {
+			return 'invalid response';
+		}
+		foreach ( $slugs as $slug ) {
+			if ( ! isset( $data[ $slug ] ) || ! is_array( $data[ $slug ] ) ) {
+				return 'incomplete response';
+			}
+		}
+		return $data;
 	}
 
 	/** @return array<string, array<string, mixed>> */
@@ -508,6 +528,13 @@ final class PluginHealth extends AbstractModule {
 	private function report(): array {
 		$report = get_option( self::OPTION, [] );
 		return is_array( $report ) ? $report : [];
+	}
+
+	/** @param array<string, mixed> $report Stored full report, never treated as current on an error. */
+	private function current_report( array $report ): bool {
+		return empty( $report['error'] ) && ! empty( $report['last_success'] )
+			&& time() - (int) $report['last_success'] <= self::MAX_AGE + DAY_IN_SECONDS
+			&& ( $report['fingerprint'] ?? '' ) === $this->fingerprint();
 	}
 
 	/** WordPress.org slug as core's update check knows it (hello.php is "hello-dolly"), else the folder name. */
