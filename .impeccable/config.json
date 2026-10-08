@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "plugin/assets/admin.css"
+        ],
+        "createdAt": "2026-10-08T18:34:15.423Z",
+        "reason": "Agent review: existing .shouse-note follows WordPress admin informational notice styling for pinned settings and unavailable modules (plugin/src/Admin/Page.php:301,304). The border is unchanged from HEAD and conveys notice status, not decorative card styling."
+      }
+    ]
+  }
+}
