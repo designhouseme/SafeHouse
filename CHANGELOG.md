@@ -8,6 +8,7 @@ Each release needs a `## x.y.z` section; its body is shown in the WordPress "Vie
 - Cooperative time/memory budgets and one worker per site for SafeHouse delivery. Five failed attempts pause retained jobs for explicit review and resumption. Alert and Cloudflare transport no longer runs inline in ordinary requests.
 - Targeted privilege-change checks and resumable full inventory reconciliation preserve immediate grant/revoke alerts without enumerating every account per user change.
 - Added failure, resource-budget, concurrency, privacy and lifecycle regressions plus Polish translations.
+- Release gates now exercise real ZIP installation, upgrade and removal on current and minimum supported WordPress/PHP, real WooCommerce Action Scheduler diagnostics and alert retry, and isolated PHP-FPM termination/recovery and CLI cron exclusion/deadline checks. Documented the separate hosting controls and target-site staging checks.
 
 ## 0.2.1
 

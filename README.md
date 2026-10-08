@@ -108,6 +108,20 @@ Do not run the plugin from a clone of this repository on a live site. A copy ins
 - Content, taxonomy, stock and price changes conservatively purge the whole page cache/Cloudflare zone. This includes old URLs and unknown listing pages, at the cost of additional cache misses. An API acknowledgement does not independently prove edge eviction.
 - Price history reports observed data only. A shorter observation period is labelled partial; missing history is shown as unavailable. The schema upgrade starts a new trusted observation period because older code could infer historical timestamps; old rows remain inspectable. Long active reductions retain their preceding window. No reconstructed history or automatic legal-compliance guarantee is provided.
 
+### Hosting protection and staging checks
+
+SafeHouse observes PHP failures and bounds its own background work. Ending a stuck third-party request requires a limit outside that request. On Linux, PHP's [`max_execution_time`](https://www.php.net/manual/en/function.set-time-limit.php) excludes time spent in some external operations, and a plugin can reset the timer. A gateway timeout alone does not prove that the PHP process stopped.
+
+Ask the host to verify the controls for the site's actual PHP handler:
+
+- **PHP-FPM:** a finite `request_terminate_timeout`, with `request_terminate_timeout_track_finished` enabled to cover shutdown and work after `fastcgi_finish_request()`. Size `pm.max_children` from measured worker memory and available resources. `pm.max_requests` recycles workers after completed requests; it does not stop a stuck request. See the [FPM pool settings](https://www.php.net/manual/en/install.fpm.configuration.php).
+- **LiteSpeed/LSAPI:** verify the handler mode before relying on `LSAPI_MAX_PROCESS_TIME`; it applies to ProcessGroup and Daemon modes. A connection's initial response timeout is not a whole-request execution limit. See [LSAPI options](https://docs.litespeedtech.com/lsws/extapp/php/configuration/options/) and [OpenLiteSpeed PHP settings](https://docs.openlitespeed.org/config/php/).
+- **System cron:** establish and verify the external schedule before disabling visitor-triggered WP-Cron. Give CLI work its own wall-clock deadline and a per-site lock shared by every scheduled invocation; FPM limits do not cover CLI. A local lock does not coordinate separate hosts. See [WordPress system scheduling](https://developer.wordpress.org/plugins/cron/hooking-wp-cron-into-the-system-task-scheduler/), [`timeout`](https://www.gnu.org/software/coreutils/manual/html_node/timeout-invocation.html) and [`flock`](https://man7.org/linux/man-pages/man1/flock.1.html).
+
+Keep each site's process concurrency and memory usage within its hosting allocation, reserving resources for the database, cache and operating system. Choose request and cron deadlines around the site's real checkout, import, backup and subscription work. The deliberately small limits in `dev/host-protection/` are test fixtures, not production settings.
+
+Before enabling a release on a live site, use a staging copy with its actual plugins, PHP handler and scheduled tasks. Route mail and payments to test services. Exercise login, both relevant checkout paths, webhooks, a complete cron cycle, safe-mode recovery and restoration of the previous package. Compare PHP errors, response times, memory and pending/failed scheduler work with the pre-upgrade baseline. Confirm host termination and subsequent recovery only in a disposable environment. The automated WooCommerce and host labs below cover selected integrations; they do not certify a target site's configuration.
+
 ## Repository layout
 
 ```
@@ -132,6 +146,8 @@ You need Docker. You don't need PHP or Composer on the host.
 ./dev/lint.sh                                  # PHPCS (WordPress coding standards) + PHPStan
 ./dev/smoke.sh                                 # HTTP and WP-CLI regression checks against the dev site
 ./dev/security-test.sh                         # disposable release-gate tests, including real Redis
+./dev/package-lifecycle-test.sh                 # real ZIP install, upgrade, safe mode and removal; no running dev site needed
+./dev/host-protection-test.sh                   # isolated PHP-FPM termination/recovery and CLI cron locking/deadline lab
 ```
 
 Mailpit catches outgoing dev mail at http://localhost:8025. All published dev ports bind to `127.0.0.1`. Setup generates random database and administrator passwords in `build/dev-credentials.env` (mode 0600). Source `dev/env.sh` before raw Compose commands. Existing volumes retain their credentials: deliberately migrate them or recreate disposable volumes; setup does not silently reset a site. The standalone security gate publishes no ports and blocks outbound mail and HTTP in its fixtures.
@@ -139,10 +155,15 @@ Mailpit catches outgoing dev mail at http://localhost:8025. All published dev po
 Other test environments:
 
 - `dev/ols/`: OpenLiteSpeed with Redis, for the page cache, object cache, login limits and Cloudflare tests.
+- `dev/ols/stability-test.sh`: run after `dev/ols/setup.sh`, with the same `COMPOSE_PROJECT_NAME` and `OLS_PORT`. Checks real WooCommerce Action Scheduler states, read-only diagnostics, heartbeat and queued alert retry. Uses a disposable site, blocks fixture HTTP/mail, and restores its test data.
 - `dev/update-test.sh`: signed updates end to end, on an isolated site with a throwaway key.
 - `dev/package-test.sh`: install and uninstall from a release ZIP.
+- `dev/package-lifecycle-test.sh`: builds an unsigned test ZIP from the current plugin, installs it into a disposable volume, exercises schema upgrade, deactivation/reactivation and uninstall, and requires an empty debug log. Set `SHOUSE_PACKAGE_WP_IMAGE=wordpress:6.6-php8.1-apache` and `SHOUSE_PACKAGE_CLI_IMAGE=wordpress:cli-php8.1` for the minimum supported platform.
+- `dev/host-protection-test.sh`: proves worker termination and recovery for CPU loops, blocking work, post-response work and shutdown loops. Also checks recovery after PHP memory exhaustion, CLI cron exclusion and timeout recovery. Uses an internal network with no published ports; removes its containers afterward. It does not configure the host or install SafeHouse.
 - `dev/updates-test.sh` and `dev/ingest-test.sh`: both Workers against a local R2 bucket.
 - `dev/cve-watch-test.sh`: the CVE watch issue logic against a mock GitHub API.
+
+The Release workflow requires the ZIP lifecycle tests on both supported platform targets, the real WooCommerce integration and the host lab alongside lint and security regressions. A manual run on `main` checks these gates without publishing; publication remains restricted to version tags and the protected `release` environment.
 
 ### Rules for changes
 

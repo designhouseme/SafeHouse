@@ -58,14 +58,51 @@ jobs:
         run: ./dev/ols/litespeed-security-test.sh
       - name: Cloudflare transport and retry integration
         run: ./dev/ols/cloudflare-test.sh
+      - name: Stability with real WooCommerce Action Scheduler
+        run: ./dev/ols/stability-test.sh
       - name: Remove disposable services
         if: always()
         run: |
           source dev/env.sh
           docker compose -f dev/ols/docker-compose.yml down -v --remove-orphans
 
+  package:
+    name: ZIP lifecycle (${{ matrix.platform }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: current WordPress / PHP 8.3
+            wordpress: wordpress:php8.3-apache
+            cli: wordpress:cli-php8.3
+          - platform: WordPress 6.6 / PHP 8.1
+            wordpress: wordpress:6.6-php8.1-apache
+            cli: wordpress:cli-php8.1
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install, upgrade, deactivate and uninstall the ZIP
+        env:
+          SHOUSE_PACKAGE_WP_IMAGE: ${{ matrix.wordpress }}
+          SHOUSE_PACKAGE_CLI_IMAGE: ${{ matrix.cli }}
+        run: ./dev/package-lifecycle-test.sh
+
+  host:
+    name: PHP-FPM termination and cron isolation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify host termination and recovery in an isolated lab
+        run: ./dev/host-protection-test.sh
+
   publish:
-    needs: [check, integration]
+    needs: [check, integration, package, host]
     if: github.ref_type == 'tag'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
