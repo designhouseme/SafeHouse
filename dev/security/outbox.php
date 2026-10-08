@@ -34,6 +34,7 @@ $rows = static fn() => (array) $wpdb->get_results( $wpdb->prepare( 'SELECT * FRO
 $due = static function () use ( $wpdb, $table, $tag ) { $wpdb->query( $wpdb->prepare( 'UPDATE %i SET available_at = 0, locked_until = 0 WHERE payload LIKE %s', $table, '%' . $wpdb->esc_like( $tag ) . '%' ) ); };
 try {
 	$assert( Notify::send( $tag, [ 'Local delivery fixture' ] ), 'failed mail transport still durably accepts an alert' );
+	$assert( 0 === $mail_calls && 0 === (int) $rows()[0]['attempts'], 'queuing an alert never calls the mail transport inline' );
 	Queue::run( 'mail', 20 ); // Earlier fixture alerts may be ahead of this one on a reused local site.
 	$pending = $rows();
 	$assert( 1 === count( $pending ) && 1 === (int) $pending[0]['attempts'], 'failed alert retained with retry count' );
@@ -120,6 +121,8 @@ try {
 	$free_slot = static function () use ( $wpdb, $rate_key ) { $wpdb->delete( $wpdb->options, [ 'option_name' => $rate_key ] ); };
 	$free_slot();
 	$assert( '' === $cf->purge( [ home_url( '/' . $tag ) => true ] ), 'purge is durably accepted before timeout' );
+	$assert( 0 === $http_calls, 'queuing a purge never calls Cloudflare inline' );
+	Queue::run( 'cloudflare' );
 	$purges = static fn() => (array) $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i WHERE queue = %s AND payload LIKE %s', $table, 'cloudflare', '%' . $wpdb->esc_like( $tag ) . '%' ), ARRAY_A );
 	$assert( 1 === count( $purges() ), 'timeout keeps the purge queued' );
 	foreach ( [ '429', '500', 'success' ] as $transport ) {
@@ -134,13 +137,30 @@ try {
 	$assert( 1 === count( $remaining ) && str_contains( $remaining[0]['payload'], '-during' ), 'whole-zone acknowledgement covers old jobs and retains changes arriving during delivery' );
 	$free_slot(); $due(); Queue::run( 'cloudflare', 1 );
 	$assert( [] === $purges(), 'the concurrent change receives its own later purge' );
+
+	$cf->purge( [ home_url( '/' . $tag . '-disabled' ) => true ] );
+	$registry = new ReflectionProperty( Queue::class, 'handlers' );
+	$handlers = $registry->getValue();
+	// On a later request with the module disabled or safe mode on, its handler is not registered.
+	$registry->setValue( null, array_diff_key( $handlers, [ 'cloudflare' => true ] ) );
+	try {
+		$calls = $http_calls;
+		Queue::run( 'cloudflare' );
+		$pending = $purges();
+		$assert( 1 === count( $pending ) && 1 === (int) $pending[0]['paused'] && $calls === $http_calls, 'disabled module retains its purge paused without transport calls' );
+	} finally {
+		$registry->setValue( null, $handlers );
+	}
+	$assert( 1 === Queue::resume( 1 ), 'restored handler can resume the retained purge explicitly' );
+	$free_slot(); $due(); Queue::run( 'cloudflare', 1 );
+	$assert( [] === $purges(), 'resumed purge is delivered after the module returns' );
 	remove_filter( 'pre_http_request', $http, 2000 );
 	WP_CLI::success( $checks . ' durable-delivery and privilege checks passed.' );
 } finally {
 	$mail_ok = true;
 	if ( $user_id && ! is_wp_error( $user_id ) ) { require_once ABSPATH . 'wp-admin/includes/user.php'; wp_delete_user( $user_id ); }
 	remove_role( $role_name );
-	update_option( 'shouse_watch_state', $old_state, false );
+	false === $old_state ? delete_option( 'shouse_watch_state' ) : update_option( 'shouse_watch_state', $old_state, false );
 	$wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE payload LIKE %s', $table, '%' . $wpdb->esc_like( $tag ) . '%' ) );
 	remove_filter( 'pre_wp_mail', $mail_filter, 2000 );
 }

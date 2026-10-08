@@ -141,7 +141,6 @@ final class Cloudflare extends AbstractModule {
 		) ) {
 			return 'The purge could not be stored. Check database access.';
 		}
-		Queue::run( 'cloudflare', 1 );
 		return '';
 	}
 

@@ -44,13 +44,17 @@ check "runs with them"                      "yes yes" "$(wp shouse status | awk 
 echo "== a post change covers old URLs and arbitrary listings"
 fresh; : > "$D/requests.jsonl"
 wp post update 1 --post_title="Cloudflare $RANDOM" >/dev/null
+check "post update only queues the purge"    0 "$(calls)"
+wp shouse queue run --limit=20 >/dev/null
 check "one call"                            1 "$(calls)"
 check "to this zone's purge endpoint, with the token" yes "$(last | grep -q "/zones/$ZONE/purge_cache" && last | grep -q 'Bearer test-token-123' && echo yes || echo no)"
 check "whole zone covers old URLs and arbitrary listings" yes "$(last | python3 -c 'import sys,json; print("yes" if json.load(sys.stdin)["body"].get("purge_everything") is True else "no")')"
 
 echo "== at most one call every 30 seconds"
 wp post update 1 --post_title="Cloudflare again $RANDOM" >/dev/null
-check "a second change right after waits"   1   "$(calls)"
+check "a second change makes no inline call" 1   "$(calls)"
+wp shouse queue run --limit=20 >/dev/null
+check "worker respects the 30-second gap"   1   "$(calls)"
 check "and is queued for cron"              1   "$(wp cron event list --hook=shouse_queue --format=count)"
 fresh
 wp cron event run shouse_queue >/dev/null
@@ -58,19 +62,29 @@ check "cron sends it"                       2   "$(calls)"
 
 echo "== site-wide changes and comments"
 fresh
+n=$(calls)
 wp eval 'do_action( "wp_update_nav_menu", 1 );' >/dev/null
+check "menu change only queues the purge"    "$n" "$(calls)"
+wp shouse queue run --limit=20 >/dev/null
+check "worker sends the menu purge"          "$((n + 1))" "$(calls)"
 check "a menu change clears everything"     yes "$(last | grep -q '"purge_everything":true' && echo yes || echo no)"
 fresh; n=$(calls)
 wp comment create --comment_post_ID=1 --comment_content="Buy cheap things" --comment_approved=0 >/dev/null
 check "an unapproved comment clears nothing" "$n" "$(calls)"
 fresh
 wp comment create --comment_post_ID=1 --comment_content="Nice post" --comment_approved=1 >/dev/null
+check "approved comment only queues"         "$n" "$(calls)"
+wp shouse queue run --limit=20 >/dev/null
 check "an approved comment clears its post" "$((n + 1))" "$(calls)"
 
 echo "== failures"
 echo error > "$D/mode"; fresh
+n=$(calls)
 ./wp.sh post update 1 --post_title="Cloudflare refused $RANDOM" >/dev/null 2>&1
 check "a refusal does not break the change" 0 "$?"
+check "failure path also queues without HTTP" "$n" "$(calls)"
+wp shouse queue run --limit=20 >/dev/null
+check "worker attempts the failing purge"    "$((n + 1))" "$(calls)"
 check "the refusal is logged"              yes "$(wp shouse log --limit=5 | grep -q cloudflare_purge_failed && echo yes || echo no)"
 check "and shows in Site Health"            recommended "$(wp eval 'echo SafeHouse\Plugin::instance()->module( "cloudflare" )->site_health_result()["status"];')"
 check "the token never reaches the activity log" 0 "$(wp eval 'global $wpdb; echo (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE message LIKE %s OR context LIKE %s", $wpdb->prefix . "shouse_log", "%test-token-123%", "%test-token-123%" ) );')"

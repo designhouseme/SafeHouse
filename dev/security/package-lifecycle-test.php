@@ -56,7 +56,7 @@ switch ( $mode ) {
 		$assert_pins();
 		$assert( SafeHouse\Modules\Omnibus::maybe_install( true ), 'optional price-history schema can be installed from the package' );
 		$assert( 4 === count( $tables() ), 'all four SafeHouse tables are present' );
-		$assert( '1' === get_option( 'shouse_queue_db_version' ) && '2' === get_option( 'shouse_omnibus_db_version' ), 'queue and price-history schema versions are recorded' );
+		$assert( '2' === get_option( 'shouse_queue_db_version' ) && '2' === get_option( 'shouse_omnibus_db_version' ), 'queue and price-history schema versions are recorded' );
 		$p = Plugin::instance();
 		$p->settings->set_module_enabled( 'watch', true );
 		$p->settings->set_module_enabled( 'tweaks', false );
