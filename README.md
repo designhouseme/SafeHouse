@@ -18,6 +18,7 @@ SafeHouse has no firewall and no malware scanner. Leave those to Wordfence, Clou
 | Hardening | File editor off, no username discovery, generic login errors, version hidden, XML-RPC off, security headers, no admin role for new accounts | on |
 | Change alerts | Queued alerts for sensitive capability grants, custom roles, plugins, themes, files and key settings | on |
 | Plugin health | Flags plugins that are closed, abandoned, not from WordPress.org, left over, or replaceable by SafeHouse | on |
+| Stability | Local PHP incident samples, temporary HTTP timing, and bounded WP-Cron/Action Scheduler diagnostics | on |
 | Vulnerability alerts | Known vulnerabilities in core, plugins and themes, from signed Wordfence Intelligence data (stands down when Wordfence runs) | on |
 | Login limits | Address lockouts that grow longer each time; accounts under attack are paused only for new devices | on |
 | Omnibus price history | Recorded pre-reduction minimum; incomplete or missing history is identified explicitly | on with WooCommerce |
@@ -28,6 +29,21 @@ SafeHouse has no firewall and no malware scanner. Leave those to Wordfence, Clou
 | SMTP mail, Header and footer scripts, Duplicate posts, Maintenance mode, Tweaks | The small things sites usually install separate plugins for | off |
 
 A Redis object cache (signed values, its own keys only) is installed with `wp shouse object-cache enable`.
+
+Stability records observed requests over three seconds, memory pressure and PHP failures after SafeHouse loads. A temporary 15-minute session samples roughly 10% of requests and measures up to 20 WordPress HTTP API calls per sampled request. It stores no raw error messages, URLs, request bodies, cookies, SQL or credentials. Storage is a fixed set of 256 replaceable groups, with at most one saved observation per ten seconds site-wide. The panel shows the last seven days; daily WP-Cron cleanup removes older records when cron runs. Counts are saved samples, not complete traffic/error totals. An error location does not establish which plugin caused resource exhaustion.
+
+In **SafeHouse → Stability**, use **Check background queues** for a bounded scheduler snapshot. Checks also run hourly; unavailable, stale and truncated results are labelled. A disabled visitor-triggered cron can be intentional when the host runs cron. SafeHouse never executes or deletes third-party work during a diagnostic check. Custom Action Scheduler storage implementations are reported as unsupported. The observer runs in PHP and cannot interrupt arbitrary stuck code, record every out-of-memory error, or observe a process killed by the host. Recovery Mode and hosting logs remain necessary.
+
+```sh
+wp shouse stability status       # cached observations and delivery state
+wp shouse stability scan         # collect scheduler observations; no jobs executed
+wp shouse stability sample on    # expires after 15 minutes; use off to stop early
+wp shouse queue status           # includes paused work, also available in safe mode
+wp shouse queue run --limit=10   # one bounded delivery batch
+wp shouse queue resume --limit=20 # only after correcting the cause of failure
+```
+
+Delivery uses one leased worker per site, at most 20 jobs per invocation and a five-second cooperative budget with memory headroom. Limits are checked between operations and cannot preempt a blocked callback. After five failed attempts a job is retained as paused; inspect and resume it explicitly. Alert and purge delivery requires working cron. Pending work remains durable without a hard backlog size cap, so prolonged transport failures require operator attention. Full privilege inventories run in resumable slices; direct sensitive grants/revocations are still checked immediately.
 
 <details>
 <summary><strong>The plugins it replaces</strong></summary>
@@ -86,7 +102,7 @@ Do not run the plugin from a clone of this repository on a live site. A copy ins
 
 - Signed release and advisory metadata carry expiry and generation numbers. New clients reject older accepted generations and expired data; a compromised host can still withhold data. Correct server time and metadata renewal are required. See [protocol and rollout](dev/SIGNED-DATA-PROTOCOL.txt) before changing the Workers or publisher.
 - Redis signatures prevent unsigned value injection. User/session/role-option groups remain request-local so replayed Redis values cannot restore their old state. Other business caches still require isolated Redis ACLs: signatures alone do not prevent replay. Redis failure during a request uses a runtime cache; transient data may disappear between requests, as allowed by WordPress. Startup recovery uses the database generation and invalidates stale keys before Redis is reused.
-- Alerts and Cloudflare purges use a durable database queue. WP-Cron retries failures with backoff; Site Health reports pending/retried work. Use a reliable system cron on sites without regular traffic. SMTP acceptance does not prove inbox delivery, and a crash after remote acceptance can cause a duplicate. Pending alert recipients and bodies stay in the site's database until accepted; password-reset mail is not added to this outbox.
+- Alerts and Cloudflare purges use a durable database queue. WP-Cron retries failures with backoff and pauses jobs after five failed attempts; Site Health reports pending/retried work. Use a reliable system cron on sites without regular traffic. SMTP acceptance does not prove inbox delivery, and a crash after remote acceptance can cause a duplicate. Pending alert recipients and bodies stay in the site's database until accepted; password-reset mail is not added to this outbox.
 - Change alerts monitor stored sensitive capabilities, including custom roles and direct grants, plus the documented inventory. Runtime capability filters and arbitrary file contents are outside that inventory; it is not a malware scanner.
 - LiteSpeed public caching stays paused until server cookie vary rules cover every required login, cart, comment and password cookie. Apply the per-site rules shown in the module panel, restart LiteSpeed and run Site Health. Existing sessions must bypass without `_lscache_vary`. This was verified on OpenLiteSpeed 1.9.2; PHP response headers alone were insufficient. The plugin does not edit `.htaccess`.
 - Content, taxonomy, stock and price changes conservatively purge the whole page cache/Cloudflare zone. This includes old URLs and unknown listing pages, at the cost of additional cache misses. An API acknowledgement does not independently prove edge eviction.
