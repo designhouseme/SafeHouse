@@ -59,6 +59,7 @@ switch ( $mode ) {
 	case 'seed':
 		$assert( is_plugin_active( 'shouse/shouse.php' ) && defined( 'SHOUSE_VERSION' ), 'ZIP plugin is active and boots' );
 		$assert( ! file_exists( dirname( SHOUSE_FILE ) . '/.git' ) && ! file_exists( dirname( SHOUSE_FILE ) . '/dev' ), 'installed package has no development checkout' );
+		$assert( is_readable( dirname( SHOUSE_FILE ) . '/LICENSE' ), 'the distribution includes its license' );
 		$assert_pins();
 		$assert( SafeHouse\Modules\Omnibus::maybe_install( true ), 'optional price-history schema can be installed from the package' );
 		$assert( 5 === count( $tables() ), 'all five SafeHouse tables are present' );
