@@ -143,6 +143,7 @@ final class Plugin {
 		wp_clear_scheduled_hook( 'shouse_daily' );
 		wp_clear_scheduled_hook( 'shouse_queue' );
 		wp_clear_scheduled_hook( 'shouse_cloudflare_purge' );
+		wp_clear_scheduled_hook( 'shouse_watch_continue' );
 		ObjectCache::deactivate();
 	}
 }

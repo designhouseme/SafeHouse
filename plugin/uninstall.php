@@ -36,6 +36,7 @@ wp_clear_scheduled_hook( 'shouse_hourly' );
 wp_clear_scheduled_hook( 'shouse_daily' );
 wp_clear_scheduled_hook( 'shouse_queue' );
 wp_clear_scheduled_hook( 'shouse_cloudflare_purge' );
+wp_clear_scheduled_hook( 'shouse_watch_continue' );
 
 // Our object cache loader, if deactivation did not remove it already. Another plugin's drop-in is left alone.
 $shouse_dropin = WP_CONTENT_DIR . '/object-cache.php';

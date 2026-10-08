@@ -16,6 +16,12 @@ $mail_calls  = 0;
 $blocked     = 0;
 $checks      = 0;
 $old_state   = get_option( 'shouse_watch_state' );
+$old_work = [];
+foreach ( [ 'shouse_watch_scan', 'shouse_watch_lock', 'shouse_watch_epoch', 'cron' ] as $name ) {
+	$old_work[ $name ] = get_option( $name );
+}
+delete_option( 'shouse_watch_scan' );
+delete_option( 'shouse_watch_lock' );
 $old_errors  = $wpdb->suppress_errors( true );
 $fail_query  = static function ( string $sql ) use ( $wpdb, &$path, &$writes, &$blocked ): string {
 	if ( str_starts_with( $sql, 'INSERT INTO `' . Queue::table() . '`' ) || str_starts_with( $sql, 'INSERT INTO `' . Log::table() . '`' ) ) {
@@ -86,6 +92,9 @@ try {
 	remove_filter( 'query', $fail_query );
 	remove_filter( 'pre_wp_mail', $mail_filter, PHP_INT_MAX );
 	$wpdb->suppress_errors( $old_errors );
+	foreach ( $old_work as $name => $value ) {
+		false === $value ? delete_option( $name ) : update_option( $name, $value, false );
+	}
 	if ( false === $old_state ) {
 		delete_option( 'shouse_watch_state' );
 	} else {
