@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-07T15:16:49+00:00\n"
+"POT-Creation-Date: 2026-10-08T18:28:53+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: shouse\n"
@@ -296,7 +296,7 @@ msgid "That is fine when you reach the server directly. If the site no longer us
 msgstr ""
 
 #: src/Core/Net.php:155
-#: src/Core/Queue.php:202
+#: src/Core/Queue.php:283
 #: src/Modules/Hardening.php:270
 #: src/Modules/LoginLimits.php:411
 #: src/Modules/PluginHealth.php:356
@@ -327,32 +327,33 @@ msgid "WordPress is using its own cache for now, so the site works but is slower
 msgstr ""
 
 #: src/Core/ObjectCache.php:175
-#: src/Modules/Cloudflare.php:291
+#: src/Modules/Cloudflare.php:290
 #: src/Modules/LiteSpeed.php:353
+#: src/Modules/Stability.php:155
 msgid "Performance"
 msgstr ""
 
-#: src/Core/Queue.php:188
+#: src/Core/Queue.php:269
 msgid "SafeHouse delivery queue"
 msgstr ""
 
-#: src/Core/Queue.php:199
+#: src/Core/Queue.php:280
 msgid "SafeHouse has undelivered work"
 msgstr ""
 
-#: src/Core/Queue.php:199
+#: src/Core/Queue.php:280
 msgid "SafeHouse delivery queue is healthy"
 msgstr ""
 
-#. translators: 1: pending jobs, 2: jobs awaiting retry.
-#: src/Core/Queue.php:206
+#. translators: 1: retained jobs, 2: jobs with previous attempts, 3: paused jobs.
+#: src/Core/Queue.php:287
 #, php-format
-msgid "Pending: %1$d. Awaiting retry: %2$d."
+msgid "Pending: %1$d. Previously attempted: %2$d. Paused: %3$d."
 msgstr ""
 
-#. translators: 1: pending jobs, 2: jobs awaiting retry.
-#: src/Core/Queue.php:206
-msgid "Alerts and cache purges are retained until the transport accepts them. Check SMTP, Cloudflare credentials, database access and WP-Cron if work remains pending. Mail acceptance does not confirm inbox delivery."
+#. translators: 1: retained jobs, 2: jobs with previous attempts, 3: paused jobs.
+#: src/Core/Queue.php:287
+msgid "Failed jobs are retained and pause after five attempts. Unavailable handlers also pause. Correct the cause, then resume a bounded batch in Stability or with wp shouse queue resume. Check SMTP, Cloudflare credentials, database access and WP-Cron. Mail acceptance does not confirm inbox delivery."
 msgstr ""
 
 #: src/Core/Updater.php:163
@@ -471,27 +472,27 @@ msgstr ""
 msgid "Add SHOUSE_CLOUDFLARE_TOKEN (an API token allowed only to purge this zone's cache) and SHOUSE_CLOUDFLARE_ZONE (the zone ID from the Cloudflare dashboard) to wp-config.php."
 msgstr ""
 
-#: src/Modules/Cloudflare.php:239
+#: src/Modules/Cloudflare.php:238
 msgid "Clear the whole Cloudflare cache"
 msgstr ""
 
 #. translators: %s: error message.
-#: src/Modules/Cloudflare.php:245
+#: src/Modules/Cloudflare.php:244
 msgid "Cloudflare purge queued. Check the panel for delivery status."
 msgstr ""
 
 #. translators: %s: error message.
-#: src/Modules/Cloudflare.php:245
+#: src/Modules/Cloudflare.php:244
 #, php-format
 msgid "Cloudflare refused: %s"
 msgstr ""
 
-#: src/Modules/Cloudflare.php:252
+#: src/Modules/Cloudflare.php:251
 msgid "Nothing cleared yet."
 msgstr ""
 
 #. translators: %d: number of addresses.
-#: src/Modules/Cloudflare.php:257
+#: src/Modules/Cloudflare.php:256
 #, php-format
 msgid "%d address"
 msgid_plural "%d addresses"
@@ -499,32 +500,32 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: number of addresses.
-#: src/Modules/Cloudflare.php:257
+#: src/Modules/Cloudflare.php:256
 msgid "everything"
 msgstr ""
 
 #. translators: 1: date and time, 2: "everything" or "N addresses".
-#: src/Modules/Cloudflare.php:261
+#: src/Modules/Cloudflare.php:260
 #, php-format
 msgid "Last cleared %1$s (%2$s)."
 msgstr ""
 
 #. translators: 1: date and time, 2: error message.
-#: src/Modules/Cloudflare.php:263
+#: src/Modules/Cloudflare.php:262
 #, php-format
 msgid "The last call on %1$s failed: %2$s"
 msgstr ""
 
-#: src/Modules/Cloudflare.php:277
+#: src/Modules/Cloudflare.php:276
 msgid "SafeHouse Cloudflare cache"
 msgstr ""
 
-#: src/Modules/Cloudflare.php:288
+#: src/Modules/Cloudflare.php:287
 msgid "Cloudflare refused to clear the cache"
 msgstr ""
 
 #. translators: %s: error message from Cloudflare.
-#: src/Modules/Cloudflare.php:295
+#: src/Modules/Cloudflare.php:294
 #, php-format
 msgid "Visitors may see old pages until the cache expires. Check the token and zone ID in wp-config.php. Cloudflare said: %s"
 msgstr ""
@@ -1146,7 +1147,7 @@ msgstr ""
 
 #: src/Modules/PluginHealth.php:373
 #: src/Modules/Vulnerabilities.php:329
-#: src/Modules/Watch.php:248
+#: src/Modules/Watch.php:492
 msgid "Check now"
 msgstr ""
 
@@ -1257,51 +1258,340 @@ msgstr ""
 msgid "From name"
 msgstr ""
 
-#: src/Modules/Smtp.php:156
+#: src/Modules/Smtp.php:165
 msgid "Send a test e-mail to me"
 msgstr ""
 
-#: src/Modules/Smtp.php:168
+#: src/Modules/Smtp.php:177
 msgid "SafeHouse test e-mail"
 msgstr ""
 
-#: src/Modules/Smtp.php:169
+#: src/Modules/Smtp.php:178
 msgid "If you can read this, WordPress can send mail."
 msgstr ""
 
 #. translators: %s: e-mail address.
-#: src/Modules/Smtp.php:175
+#: src/Modules/Smtp.php:184
 #, php-format
 msgid "Test e-mail sent to %s."
 msgstr ""
 
 #. translators: %s: error message.
-#: src/Modules/Smtp.php:178
+#: src/Modules/Smtp.php:187
 #, php-format
 msgid "Sending failed: %s"
 msgstr ""
 
 #. translators: %s: error message.
-#: src/Modules/Smtp.php:178
+#: src/Modules/Smtp.php:187
 msgid "unknown error"
 msgstr ""
 
-#: src/Modules/Smtp.php:184
+#: src/Modules/Smtp.php:193
 msgid "with login"
 msgstr ""
 
-#: src/Modules/Smtp.php:184
+#: src/Modules/Smtp.php:193
 msgid "without login"
 msgstr ""
 
 #. translators: 1: SMTP host, 2: port, 3: "with login" or "without login".
-#: src/Modules/Smtp.php:187
+#: src/Modules/Smtp.php:196
 #, php-format
 msgid "SMTP: %1$s:%2$d, %3$s (from wp-config.php)."
 msgstr ""
 
-#: src/Modules/Smtp.php:189
+#: src/Modules/Smtp.php:198
 msgid "SMTP is not configured: add SHOUSE_SMTP_HOST (and port, user, password) to wp-config.php. Until then mail goes through PHP mail(); the From settings still apply."
+msgstr ""
+
+#: src/Modules/Stability.php:31
+msgid "Stability"
+msgstr ""
+
+#: src/Modules/Stability.php:35
+msgid "Records slow requests and PHP failures locally, and checks background queues. Observations help investigate a cause; they never automatically disable another plugin or cancel its work."
+msgstr ""
+
+#: src/Modules/Stability.php:46
+msgid "Email about recorded PHP failures"
+msgstr ""
+
+#: src/Modules/Stability.php:47
+msgid "One summary per hour at most, delivered by the SafeHouse queue when cron runs."
+msgstr ""
+
+#: src/Modules/Stability.php:77
+msgid "Check background queues"
+msgstr ""
+
+#: src/Modules/Stability.php:79
+msgid "Stop detailed sampling"
+msgstr ""
+
+#: src/Modules/Stability.php:81
+msgid "Sample requests for 15 minutes"
+msgstr ""
+
+#: src/Modules/Stability.php:83
+msgid "Resume up to 20 paused SafeHouse jobs"
+msgstr ""
+
+#: src/Modules/Stability.php:89
+msgid "Settings are locked in wp-config.php."
+msgstr ""
+
+#: src/Modules/Stability.php:93
+msgid "Background queue observations updated. Partial results are labelled in the panel."
+msgstr ""
+
+#: src/Modules/Stability.php:93
+msgid "The observations could not be saved. Check database access."
+msgstr ""
+
+#: src/Modules/Stability.php:98
+msgid "The sampling session could not be saved. Check database access."
+msgstr ""
+
+#: src/Modules/Stability.php:100
+msgid "Detailed sampling starts with subsequent requests and expires automatically after 15 minutes."
+msgstr ""
+
+#: src/Modules/Stability.php:105
+msgid "Detailed sampling could not be stopped. Check database access."
+msgstr ""
+
+#: src/Modules/Stability.php:107
+msgid "Detailed sampling stopped. Basic incident recording remains active."
+msgstr ""
+
+#. translators: %d: number of retained delivery jobs.
+#: src/Modules/Stability.php:113
+#, php-format
+msgid "%d retained jobs resumed. Delivery runs separately; check the cause of failure before resuming more."
+msgstr ""
+
+#: src/Modules/Stability.php:130
+msgid "SafeHouse stability observations"
+msgstr ""
+
+#: src/Modules/Stability.php:152
+msgid "Review the stability observations"
+msgstr ""
+
+#: src/Modules/Stability.php:152
+msgid "No substantial delay found in the latest bounded check"
+msgstr ""
+
+#: src/Modules/Stability.php:158
+msgid "Observations can be incomplete. A clean sample does not rule out a failure. Check collection time, queue age and hosting logs."
+msgstr ""
+
+#: src/Modules/Stability.php:159
+msgid "Open Stability"
+msgstr ""
+
+#. translators: %s: local date and time.
+#: src/Modules/Stability.php:170
+#, php-format
+msgid "Detailed sampling is active until %s."
+msgstr ""
+
+#: src/Modules/Stability.php:172
+msgid "Basic recording observes requests over 3 seconds, high memory use and PHP failures after SafeHouse loads. Detailed sampling adds HTTP timing for about 10% of requests, up to 20 calls per sampled request. At most one observation is saved per 10 seconds site-wide. Storage is capped at 256 groups; the panel shows the last 7 days and scheduled cleanup removes older records. Counts are recorded samples, not traffic totals."
+msgstr ""
+
+#: src/Modules/Stability.php:173
+msgid "Background work"
+msgstr ""
+
+#: src/Modules/Stability.php:175
+msgid "No background queue observations yet. Run a check below; scheduled checks then run hourly."
+msgstr ""
+
+#. translators: %s: local date and time.
+#: src/Modules/Stability.php:178
+#, php-format
+msgid "Last checked: %s."
+msgstr ""
+
+#: src/Modules/Stability.php:180
+msgid "These observations are out of date. Run a new check and verify the site cron runner."
+msgstr ""
+
+#: src/Modules/Stability.php:185
+msgid "Visitor-triggered WP-Cron is disabled. This can be intentional when a hosting cron runner is configured."
+msgstr ""
+
+#. translators: %s: local date and time, or an unknown-state label.
+#: src/Modules/Stability.php:189
+#, php-format
+msgid "Last scheduled stability check: %s."
+msgstr ""
+
+#. translators: %s: local date and time, or an unknown-state label.
+#: src/Modules/Stability.php:189
+msgid "not observed"
+msgstr ""
+
+#. translators: 1: pending jobs, 2: jobs with failed attempts, 3: paused jobs.
+#: src/Modules/Stability.php:193
+#, php-format
+msgid "SafeHouse delivery: %1$d pending, %2$d with failed attempts, %3$d paused."
+msgstr ""
+
+#: src/Modules/Stability.php:195
+msgid "SafeHouse queue storage is unavailable. The displayed counts cannot confirm that the queue is empty."
+msgstr ""
+
+#: src/Modules/Stability.php:198
+msgid "Repeated failures are retained for review. Fix the mail transport or cache integration before resuming jobs. Third-party queues are never changed here."
+msgstr ""
+
+#: src/Modules/Stability.php:200
+msgid "Recent observations"
+msgstr ""
+
+#: src/Modules/Stability.php:203
+msgid "Incident storage is unavailable. Check database access; no clean result can be confirmed."
+msgstr ""
+
+#: src/Modules/Stability.php:205
+msgid "No recent observations were recorded. This does not confirm that every request completed successfully."
+msgstr ""
+
+#: src/Modules/Stability.php:207
+msgid "Recent stability observations"
+msgstr ""
+
+#: src/Modules/Stability.php:207
+msgid "Last seen"
+msgstr ""
+
+#: src/Modules/Stability.php:207
+msgid "Observation"
+msgstr ""
+
+#: src/Modules/Stability.php:207
+msgid "Context / location"
+msgstr ""
+
+#. translators: 1: observed duration in seconds, 2: peak memory, 3: saved observations.
+#: src/Modules/Stability.php:211
+#, php-format
+msgid "%1$s s; %2$s peak; %3$d samples"
+msgstr ""
+
+#. translators: 1: measured HTTP calls, 2: measured duration in seconds.
+#: src/Modules/Stability.php:214
+#, php-format
+msgid "%1$d HTTP calls; %2$s s measured"
+msgstr ""
+
+#: src/Modules/Stability.php:216
+msgid "undetermined"
+msgstr ""
+
+#: src/Modules/Stability.php:220
+msgid "Location identifies where an error surfaced or a slow HTTP call originated; it is not proof of the cause. Recovery Mode and hosting logs remain essential for failures before loading, exhausted workers and killed processes."
+msgstr ""
+
+#: src/Modules/Stability.php:227
+msgid "not present"
+msgstr ""
+
+#: src/Modules/Stability.php:232
+msgid "cron data exceeds the 1 MiB inspection limit; inspect it through the hosting tools"
+msgstr ""
+
+#: src/Modules/Stability.php:233
+msgid "this scheduler storage is not supported by the bounded check"
+msgstr ""
+
+#: src/Modules/Stability.php:234
+msgid "the inspection reached its time or memory limit; inspect the scheduler through the hosting tools"
+msgstr ""
+
+#: src/Modules/Stability.php:235
+msgid "a complete check was not possible; inspect the scheduler and hosting logs"
+msgstr ""
+
+#. translators: %d: observed scheduled events or pending actions.
+#: src/Modules/Stability.php:242
+#, php-format
+msgid "%d scheduled or pending items observed"
+msgstr ""
+
+#: src/Modules/Stability.php:244
+msgid "partial check; totals may be higher"
+msgstr ""
+
+#. translators: %d: number of overdue events in the bounded observation.
+#: src/Modules/Stability.php:249
+#, php-format
+msgid "%d overdue events observed."
+msgstr ""
+
+#. translators: 1: running actions, 2: failed actions in the bounded observation.
+#: src/Modules/Stability.php:252
+#, php-format
+msgid "%1$d running and %2$d failed actions observed."
+msgstr ""
+
+#. translators: %s: age of the oldest observed Action Scheduler claim.
+#: src/Modules/Stability.php:256
+#, php-format
+msgid "Oldest worker claim: %s ago. Its age alone does not confirm a stuck job."
+msgstr ""
+
+#. translators: %s: age of the oldest observed overdue task.
+#: src/Modules/Stability.php:262
+#, php-format
+msgid "Oldest observed overdue item: %s ago."
+msgstr ""
+
+#: src/Modules/Stability.php:276
+msgid "Administration"
+msgstr ""
+
+#: src/Modules/Stability.php:277
+msgid "Login"
+msgstr ""
+
+#: src/Modules/Stability.php:278
+msgid "Scheduled task"
+msgstr ""
+
+#: src/Modules/Stability.php:279
+msgid "Command line"
+msgstr ""
+
+#: src/Modules/Stability.php:282
+msgid "Website request"
+msgstr ""
+
+#: src/Modules/Stability.php:288
+msgid "PHP failure"
+msgstr ""
+
+#: src/Modules/Stability.php:289
+msgid "Memory exhausted"
+msgstr ""
+
+#: src/Modules/Stability.php:290
+msgid "Execution time limit"
+msgstr ""
+
+#: src/Modules/Stability.php:291
+msgid "High memory use"
+msgstr ""
+
+#: src/Modules/Stability.php:292
+msgid "Slow request"
+msgstr ""
+
+#: src/Modules/Stability.php:293
+msgid "Diagnostic sample"
 msgstr ""
 
 #: src/Modules/Tweaks.php:35
@@ -1477,28 +1767,37 @@ msgstr ""
 msgid "%1$s %2$s%3$s: %4$s. No fixed version yet: deactivate it if you can do without it."
 msgstr ""
 
-#: src/Modules/Watch.php:47
+#: src/Modules/Watch.php:60
 msgid "Change alerts"
 msgstr ""
 
-#: src/Modules/Watch.php:51
+#: src/Modules/Watch.php:64
 msgid "Queues an alert when sensitive capabilities are granted or removed (including custom roles and individual grants), a plugin or theme appears or is activated, a mu-plugin or drop-in shows up, wp-config.php changes, or someone opens registration or changes the default role, admin e-mail or site address. Changes are also written to the activity log."
 msgstr ""
 
-#: src/Modules/Watch.php:249
+#: src/Modules/Watch.php:252
+msgid "The inventory needs more time. Run a background check to finish it in batches."
+msgstr ""
+
+#: src/Modules/Watch.php:493
 msgid "Accept current state"
 msgstr ""
 
-#: src/Modules/Watch.php:256
+#: src/Modules/Watch.php:503
+#: src/Modules/Watch.php:513
+msgid "The inventory is continuing in the background. The previous baseline stays in place until it finishes."
+msgstr ""
+
+#: src/Modules/Watch.php:503
 msgid "The current state is the new baseline."
 msgstr ""
 
-#: src/Modules/Watch.php:263
+#: src/Modules/Watch.php:510
 msgid "Changes detected, but the alert could not be stored. The previous baseline was retained. Check database access and alert recipients."
 msgstr ""
 
 #. translators: %d: number of changes.
-#: src/Modules/Watch.php:266
+#: src/Modules/Watch.php:516
 #, php-format
 msgid "%d change found and reported."
 msgid_plural "%d changes found and reported."
@@ -1506,24 +1805,24 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: number of changes.
-#: src/Modules/Watch.php:266
+#: src/Modules/Watch.php:516
 msgid "No changes since the last check."
 msgstr ""
 
-#: src/Modules/Watch.php:273
-msgid "No baseline yet. It is recorded when monitoring starts."
+#: src/Modules/Watch.php:523
+msgid "No baseline yet. It will be recorded by the scheduled background check."
 msgstr ""
 
 #. translators: 1: number of privileged accounts, 2: number of plugins, 3: number of mu-plugins, 4: number of drop-ins, 5: number of site settings.
-#: src/Modules/Watch.php:278
+#: src/Modules/Watch.php:528
 #, php-format
 msgid "Watching %1$d privileged accounts, %2$d plugins, %3$d must-use plugins, %4$d drop-ins, wp-config.php and %5$d site settings."
 msgstr ""
 
-#: src/Modules/Watch.php:407
+#: src/Modules/Watch.php:849
 msgid "Monitoring could not read the current state from the database. The previous baseline was retained. Check database access and try again."
 msgstr ""
 
-#: src/Plugin.php:134
+#: src/Plugin.php:136
 msgid "SafeHouse 0.x supports single sites only. Activate it per site instead of network-wide."
 msgstr ""

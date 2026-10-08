@@ -353,7 +353,7 @@ msgid "Some plugins need attention"
 msgstr "Niektóre wtyczki wymagają uwagi"
 
 #: src/Core/Net.php:155
-#: src/Core/Queue.php:202
+#: src/Core/Queue.php:283
 #: src/Modules/Hardening.php:270
 #: src/Modules/LoginLimits.php:411
 #: src/Modules/PluginHealth.php:356
@@ -373,7 +373,7 @@ msgstr "Otwórz SafeHouse"
 
 #: src/Modules/PluginHealth.php:373
 #: src/Modules/Vulnerabilities.php:329
-#: src/Modules/Watch.php:248
+#: src/Modules/Watch.php:492
 msgid "Check now"
 msgstr "Sprawdź teraz"
 
@@ -485,50 +485,50 @@ msgstr "Używany, gdy nadawca nie jest ustawiony inaczej (WooCommerce ustawia w�
 msgid "From name"
 msgstr "Nazwa nadawcy"
 
-#: src/Modules/Smtp.php:156
+#: src/Modules/Smtp.php:165
 msgid "Send a test e-mail to me"
 msgstr "Wyślij do mnie testowy e-mail"
 
-#: src/Modules/Smtp.php:168
+#: src/Modules/Smtp.php:177
 msgid "SafeHouse test e-mail"
 msgstr "Testowy e-mail SafeHouse"
 
-#: src/Modules/Smtp.php:169
+#: src/Modules/Smtp.php:178
 msgid "If you can read this, WordPress can send mail."
 msgstr "Jeśli to czytasz, WordPress potrafi wysyłać pocztę."
 
 #. translators: %s: e-mail address.
-#: src/Modules/Smtp.php:175
+#: src/Modules/Smtp.php:184
 #, php-format
 msgid "Test e-mail sent to %s."
 msgstr "Testowy e-mail wysłany na adres %s."
 
 #. translators: %s: error message.
-#: src/Modules/Smtp.php:178
+#: src/Modules/Smtp.php:187
 #, php-format
 msgid "Sending failed: %s"
 msgstr "Wysyłka nie powiodła się: %s"
 
 #. translators: %s: error message.
-#: src/Modules/Smtp.php:178
+#: src/Modules/Smtp.php:187
 msgid "unknown error"
 msgstr "nieznany błąd"
 
-#: src/Modules/Smtp.php:184
+#: src/Modules/Smtp.php:193
 msgid "with login"
 msgstr "z logowaniem"
 
-#: src/Modules/Smtp.php:184
+#: src/Modules/Smtp.php:193
 msgid "without login"
 msgstr "bez logowania"
 
 #. translators: 1: SMTP host, 2: port, 3: "with login" or "without login".
-#: src/Modules/Smtp.php:187
+#: src/Modules/Smtp.php:196
 #, php-format
 msgid "SMTP: %1$s:%2$d, %3$s (from wp-config.php)."
 msgstr "SMTP: %1$s:%2$d, %3$s (z wp-config.php)."
 
-#: src/Modules/Smtp.php:189
+#: src/Modules/Smtp.php:198
 msgid "SMTP is not configured: add SHOUSE_SMTP_HOST (and port, user, password) to wp-config.php. Until then mail goes through PHP mail(); the From settings still apply."
 msgstr "SMTP nie jest skonfigurowany: dodaj SHOUSE_SMTP_HOST (oraz port, użytkownika i hasło) do wp-config.php. Do tego czasu poczta idzie przez PHP mail(); ustawienia nadawcy nadal działają."
 
@@ -596,20 +596,20 @@ msgstr "Liczba zachowywanych wersji"
 msgid "Empty keeps the WordPress default (unlimited)."
 msgstr "Puste pole zostawia domyślne ustawienie WordPressa (bez limitu)."
 
-#: src/Modules/Watch.php:47
+#: src/Modules/Watch.php:60
 msgid "Change alerts"
 msgstr "Alerty o zmianach"
 
-#: src/Modules/Watch.php:249
+#: src/Modules/Watch.php:493
 msgid "Accept current state"
 msgstr "Zatwierdź obecny stan"
 
-#: src/Modules/Watch.php:256
+#: src/Modules/Watch.php:503
 msgid "The current state is the new baseline."
 msgstr "Obecny stan jest nowym punktem odniesienia."
 
 #. translators: %d: number of changes.
-#: src/Modules/Watch.php:266
+#: src/Modules/Watch.php:516
 #, php-format
 msgid "%d change found and reported."
 msgid_plural "%d changes found and reported."
@@ -618,11 +618,11 @@ msgstr[1] "Znaleziono i zgłoszono %d zmiany."
 msgstr[2] "Znaleziono i zgłoszono %d zmian."
 
 #. translators: %d: number of changes.
-#: src/Modules/Watch.php:266
+#: src/Modules/Watch.php:516
 msgid "No changes since the last check."
 msgstr "Brak zmian od ostatniego sprawdzenia."
 
-#: src/Plugin.php:134
+#: src/Plugin.php:136
 msgid "SafeHouse 0.x supports single sites only. Activate it per site instead of network-wide."
 msgstr "SafeHouse 0.x obsługuje tylko pojedyncze witryny. Włącz wtyczkę na poszczególnych witrynach, a nie w całej sieci."
 
@@ -888,8 +888,9 @@ msgid "WooCommerce geolocates customers without page caching support, so cached 
 msgstr "WooCommerce geolokalizuje klientów bez obsługi cache stron, więc strony z cache mogą pokazywać wszystkim ceny i podatki jednego kraju. W WooCommerce → Ustawienia → Ogólne wybierz geolokalizację z obsługą cache stron (Geolocate with page caching support)."
 
 #: src/Core/ObjectCache.php:175
-#: src/Modules/Cloudflare.php:291
+#: src/Modules/Cloudflare.php:290
 #: src/Modules/LiteSpeed.php:353
+#: src/Modules/Stability.php:155
 msgid "Performance"
 msgstr "Wydajność"
 
@@ -1268,48 +1269,48 @@ msgstr "Cache Cloudflare"
 msgid "Add SHOUSE_CLOUDFLARE_TOKEN (an API token allowed only to purge this zone's cache) and SHOUSE_CLOUDFLARE_ZONE (the zone ID from the Cloudflare dashboard) to wp-config.php."
 msgstr "Dodaj do wp-config.php SHOUSE_CLOUDFLARE_TOKEN (token API z uprawnieniem tylko do czyszczenia cache tej strefy) i SHOUSE_CLOUDFLARE_ZONE (ID strefy z panelu Cloudflare)."
 
-#: src/Modules/Cloudflare.php:239
+#: src/Modules/Cloudflare.php:238
 msgid "Clear the whole Cloudflare cache"
 msgstr "Wyczyść cały cache Cloudflare"
 
 #. translators: %s: error message.
-#: src/Modules/Cloudflare.php:245
+#: src/Modules/Cloudflare.php:244
 #, php-format
 msgid "Cloudflare refused: %s"
 msgstr "Cloudflare odmówił: %s"
 
-#: src/Modules/Cloudflare.php:252
+#: src/Modules/Cloudflare.php:251
 msgid "Nothing cleared yet."
 msgstr "Jeszcze nic nie czyszczono."
 
 #. translators: 1: date and time, 2: "everything" or "N addresses".
-#: src/Modules/Cloudflare.php:261
+#: src/Modules/Cloudflare.php:260
 #, php-format
 msgid "Last cleared %1$s (%2$s)."
 msgstr "Ostatnio wyczyszczono %1$s (%2$s)."
 
 #. translators: 1: date and time, 2: error message.
-#: src/Modules/Cloudflare.php:263
+#: src/Modules/Cloudflare.php:262
 #, php-format
 msgid "The last call on %1$s failed: %2$s"
 msgstr "Ostatnie wywołanie %1$s się nie udało: %2$s"
 
-#: src/Modules/Cloudflare.php:277
+#: src/Modules/Cloudflare.php:276
 msgid "SafeHouse Cloudflare cache"
 msgstr "Cache Cloudflare w SafeHouse"
 
-#: src/Modules/Cloudflare.php:288
+#: src/Modules/Cloudflare.php:287
 msgid "Cloudflare refused to clear the cache"
 msgstr "Cloudflare odmówił wyczyszczenia cache"
 
 #. translators: %s: error message from Cloudflare.
-#: src/Modules/Cloudflare.php:295
+#: src/Modules/Cloudflare.php:294
 #, php-format
 msgid "Visitors may see old pages until the cache expires. Check the token and zone ID in wp-config.php. Cloudflare said: %s"
 msgstr "Odwiedzający mogą widzieć stare strony, dopóki cache nie wygaśnie. Sprawdź token i ID strefy w wp-config.php. Cloudflare odpowiedział: %s"
 
 #. translators: %d: number of addresses.
-#: src/Modules/Cloudflare.php:257
+#: src/Modules/Cloudflare.php:256
 #, php-format
 msgid "%d address"
 msgid_plural "%d addresses"
@@ -1318,7 +1319,7 @@ msgstr[1] "%d adresy"
 msgstr[2] "%d adresów"
 
 #. translators: %d: number of addresses.
-#: src/Modules/Cloudflare.php:257
+#: src/Modules/Cloudflare.php:256
 msgid "everything"
 msgstr "wszystko"
 
@@ -1376,35 +1377,24 @@ msgstr "Najniższa cena z 30 dni przed obniżką: %s"
 msgid "Database results are kept in Redis between requests. Values are signed; WordPress user, session and permission-option data stay outside persistent Redis. Use isolated Redis ACL credentials: signatures do not prevent replay of old cache data."
 msgstr "Wyniki zapytań do bazy pozostają w Redis między żądaniami. Wartości są podpisane; dane użytkowników i sesji WordPressa oraz opcje uprawnień nie trafiają do trwałego cache Redis. Używaj osobnych danych dostępu i reguł ACL Redis: podpisy nie chronią przed ponownym wstawieniem starych danych cache."
 
-#: src/Core/Queue.php:188
+#: src/Core/Queue.php:269
 msgid "SafeHouse delivery queue"
 msgstr "Kolejka zadań SafeHouse"
 
-#: src/Core/Queue.php:199
+#: src/Core/Queue.php:280
 msgid "SafeHouse has undelivered work"
 msgstr "SafeHouse ma zadania oczekujące na wykonanie"
 
-#: src/Core/Queue.php:199
+#: src/Core/Queue.php:280
 msgid "SafeHouse delivery queue is healthy"
 msgstr "Kolejka zadań SafeHouse działa poprawnie"
-
-#. translators: 1: pending jobs, 2: jobs awaiting retry.
-#: src/Core/Queue.php:206
-#, php-format
-msgid "Pending: %1$d. Awaiting retry: %2$d."
-msgstr "Oczekujące: %1$d. Do ponowienia: %2$d."
-
-#. translators: 1: pending jobs, 2: jobs awaiting retry.
-#: src/Core/Queue.php:206
-msgid "Alerts and cache purges are retained until the transport accepts them. Check SMTP, Cloudflare credentials, database access and WP-Cron if work remains pending. Mail acceptance does not confirm inbox delivery."
-msgstr "Powiadomienia i żądania czyszczenia cache pozostają w kolejce do czasu przyjęcia ich przez usługę. Jeśli zadania nadal oczekują, sprawdź SMTP, dane dostępu Cloudflare, dostęp do bazy i WP-Cron. Przyjęcie wiadomości przez serwer pocztowy nie potwierdza dostarczenia do skrzynki odbiorczej."
 
 #: src/Modules/Cloudflare.php:60
 msgid "Clears the Cloudflare cache after changes, for sites where Cloudflare caches whole pages (APO or a Cache Everything rule). Content, URL, taxonomy, stock, price and site-wide changes queue a whole-zone purge, covering old pages and arbitrary listings. Failed requests are retained and retried by WP-Cron. The API token and zone ID live in wp-config.php."
 msgstr "Czyści cache Cloudflare po zmianach w witrynach, w których Cloudflare przechowuje całe strony (APO lub reguła Cache Everything). Zmiany treści, adresów URL, taksonomii, stanów magazynowych, cen i całej witryny dodają do kolejki czyszczenie całej strefy, obejmujące wcześniejsze wersje stron i dowolne zestawienia. Nieudane żądania pozostają w kolejce, a WP-Cron je ponawia. Token API i ID strefy są w wp-config.php."
 
 #. translators: %s: error message.
-#: src/Modules/Cloudflare.php:245
+#: src/Modules/Cloudflare.php:244
 msgid "Cloudflare purge queued. Check the panel for delivery status."
 msgstr "Czyszczenie Cloudflare dodano do kolejki. Sprawdź stan wykonania w panelu."
 
@@ -1482,20 +1472,16 @@ msgstr "Wymagane jest niedawne, zakończone powodzeniem sprawdzenie podatności.
 msgid "Vulnerability data is unavailable or out of date. Previous findings remain visible; a clean result cannot be confirmed."
 msgstr "Dane o podatnościach są niedostępne lub nieaktualne. Wcześniejsze ustalenia pozostają widoczne; nie można potwierdzić braku podatności."
 
-#: src/Modules/Watch.php:51
+#: src/Modules/Watch.php:64
 msgid "Queues an alert when sensitive capabilities are granted or removed (including custom roles and individual grants), a plugin or theme appears or is activated, a mu-plugin or drop-in shows up, wp-config.php changes, or someone opens registration or changes the default role, admin e-mail or site address. Changes are also written to the activity log."
 msgstr "Dodaje powiadomienie do kolejki po nadaniu lub odebraniu istotnych uprawnień (także przez własne role i uprawnienia pojedynczego konta), dodaniu lub aktywacji wtyczki albo motywu, pojawieniu się mu-pluginu lub drop-inu, zmianie wp-config.php, otwarciu rejestracji albo zmianie domyślnej roli, e-maila administratora lub adresu witryny. Zmiany trafiają też do dziennika zdarzeń."
 
-#: src/Modules/Watch.php:263
+#: src/Modules/Watch.php:510
 msgid "Changes detected, but the alert could not be stored. The previous baseline was retained. Check database access and alert recipients."
 msgstr "Wykryto zmiany, ale nie udało się zapisać powiadomienia. Zachowano poprzedni stan porównawczy. Sprawdź dostęp do bazy i odbiorców powiadomień."
 
-#: src/Modules/Watch.php:273
-msgid "No baseline yet. It is recorded when monitoring starts."
-msgstr "Brak stanu porównawczego. Zostanie zapisany przy uruchomieniu monitorowania."
-
 #. translators: 1: number of privileged accounts, 2: number of plugins, 3: number of mu-plugins, 4: number of drop-ins, 5: number of site settings.
-#: src/Modules/Watch.php:278
+#: src/Modules/Watch.php:528
 #, php-format
 msgid "Watching %1$d privileged accounts, %2$d plugins, %3$d must-use plugins, %4$d drop-ins, wp-config.php and %5$d site settings."
 msgstr "Monitorowane: konta z istotnymi uprawnieniami — %1$d, wtyczki — %2$d, wtyczki must-use — %3$d, drop-iny — %4$d, wp-config.php oraz ustawienia witryny — %5$d."
@@ -1528,6 +1514,319 @@ msgstr "Publiczny cache LiteSpeed jest wstrzymany do czasu skonfigurowania regu�
 msgid "Apply the cookie vary rewrite rules shown in the SafeHouse LiteSpeed settings, restart LiteSpeed and run this test again. PHP response headers alone do not protect sessions created before activation on OpenLiteSpeed."
 msgstr "Zastosuj reguły rewrite dla ciasteczek vary pokazane w ustawieniach SafeHouse LiteSpeed, uruchom LiteSpeed ponownie i powtórz ten test. Same nagłówki odpowiedzi PHP nie chronią w OpenLiteSpeed sesji utworzonych przed aktywacją."
 
-#: src/Modules/Watch.php:407
+#: src/Modules/Watch.php:849
 msgid "Monitoring could not read the current state from the database. The previous baseline was retained. Check database access and try again."
 msgstr "Monitorowanie nie mogło odczytać bieżącego stanu z bazy danych. Poprzedni punkt odniesienia został zachowany. Sprawdź dostęp do bazy danych i spróbuj ponownie."
+
+#. translators: 1: retained jobs, 2: jobs with previous attempts, 3: paused jobs.
+#: src/Core/Queue.php:287
+#, php-format
+msgid "Pending: %1$d. Previously attempted: %2$d. Paused: %3$d."
+msgstr "Oczekujące: %1$d. Po wcześniejszych próbach: %2$d. Wstrzymane: %3$d."
+
+#. translators: 1: retained jobs, 2: jobs with previous attempts, 3: paused jobs.
+#: src/Core/Queue.php:287
+msgid "Failed jobs are retained and pause after five attempts. Unavailable handlers also pause. Correct the cause, then resume a bounded batch in Stability or with wp shouse queue resume. Check SMTP, Cloudflare credentials, database access and WP-Cron. Mail acceptance does not confirm inbox delivery."
+msgstr "Nieudane zadania pozostają w kolejce i są wstrzymywane po pięciu próbach. Zadania bez dostępnej obsługi również są wstrzymywane. Usuń przyczynę, a potem wznów ograniczoną partię w module Stabilność lub poleceniem wp shouse queue resume. Sprawdź SMTP, dane dostępu Cloudflare, dostęp do bazy i WP-Cron. Przyjęcie wiadomości przez serwer pocztowy nie potwierdza dostarczenia do skrzynki odbiorczej."
+
+#: src/Modules/Stability.php:31
+msgid "Stability"
+msgstr "Stabilność"
+
+#: src/Modules/Stability.php:35
+msgid "Records slow requests and PHP failures locally, and checks background queues. Observations help investigate a cause; they never automatically disable another plugin or cancel its work."
+msgstr "Zapisuje lokalnie wolne żądania i błędy PHP oraz sprawdza kolejki zadań w tle. Obserwacje pomagają ustalić przyczynę; nigdy nie powodują automatycznego wyłączenia innej wtyczki ani anulowania jej zadań."
+
+#: src/Modules/Stability.php:46
+msgid "Email about recorded PHP failures"
+msgstr "E-mail o zapisanych błędach PHP"
+
+#: src/Modules/Stability.php:47
+msgid "One summary per hour at most, delivered by the SafeHouse queue when cron runs."
+msgstr "Najwyżej jedno podsumowanie na godzinę, wysyłane z kolejki SafeHouse podczas uruchomienia crona."
+
+#: src/Modules/Stability.php:77
+msgid "Check background queues"
+msgstr "Sprawdź kolejki zadań w tle"
+
+#: src/Modules/Stability.php:79
+msgid "Stop detailed sampling"
+msgstr "Zatrzymaj szczegółowe próbkowanie"
+
+#: src/Modules/Stability.php:81
+msgid "Sample requests for 15 minutes"
+msgstr "Próbkuj żądania przez 15 minut"
+
+#: src/Modules/Stability.php:83
+msgid "Resume up to 20 paused SafeHouse jobs"
+msgstr "Wznów do 20 wstrzymanych zadań SafeHouse"
+
+#: src/Modules/Stability.php:89
+msgid "Settings are locked in wp-config.php."
+msgstr "Ustawienia są zablokowane w wp-config.php."
+
+#: src/Modules/Stability.php:93
+msgid "Background queue observations updated. Partial results are labelled in the panel."
+msgstr "Zaktualizowano obserwacje kolejek zadań w tle. Niepełne wyniki są oznaczone w panelu."
+
+#: src/Modules/Stability.php:93
+msgid "The observations could not be saved. Check database access."
+msgstr "Nie udało się zapisać obserwacji. Sprawdź dostęp do bazy danych."
+
+#: src/Modules/Stability.php:100
+msgid "Detailed sampling starts with subsequent requests and expires automatically after 15 minutes."
+msgstr "Szczegółowe próbkowanie rozpocznie się od kolejnych żądań i wyłączy się automatycznie po 15 minutach."
+
+#: src/Modules/Stability.php:107
+msgid "Detailed sampling stopped. Basic incident recording remains active."
+msgstr "Zatrzymano szczegółowe próbkowanie. Podstawowy zapis incydentów pozostaje aktywny."
+
+#. translators: %d: number of retained delivery jobs.
+#: src/Modules/Stability.php:113
+#, php-format
+msgid "%d retained jobs resumed. Delivery runs separately; check the cause of failure before resuming more."
+msgstr "Wznowione zadania zachowane w kolejce: %d. Wykonanie odbywa się osobno; sprawdź przyczynę błędu przed wznowieniem kolejnych."
+
+#: src/Modules/Stability.php:130
+msgid "SafeHouse stability observations"
+msgstr "Obserwacje stabilności SafeHouse"
+
+#: src/Modules/Stability.php:152
+msgid "Review the stability observations"
+msgstr "Sprawdź obserwacje stabilności"
+
+#: src/Modules/Stability.php:152
+msgid "No substantial delay found in the latest bounded check"
+msgstr "Ostatnie sprawdzenie w ograniczonym zakresie nie wykazało znacznych opóźnień"
+
+#: src/Modules/Stability.php:158
+msgid "Observations can be incomplete. A clean sample does not rule out a failure. Check collection time, queue age and hosting logs."
+msgstr "Obserwacje mogą być niepełne. Brak problemów w próbce nie wyklucza awarii. Sprawdź czas zebrania danych, wiek zadań w kolejce i logi hostingu."
+
+#: src/Modules/Stability.php:159
+msgid "Open Stability"
+msgstr "Otwórz moduł Stabilność"
+
+#. translators: %s: local date and time.
+#: src/Modules/Stability.php:170
+#, php-format
+msgid "Detailed sampling is active until %s."
+msgstr "Szczegółowe próbkowanie jest aktywne do %s."
+
+#: src/Modules/Stability.php:173
+msgid "Background work"
+msgstr "Zadania w tle"
+
+#: src/Modules/Stability.php:175
+msgid "No background queue observations yet. Run a check below; scheduled checks then run hourly."
+msgstr "Brak obserwacji kolejek zadań w tle. Uruchom sprawdzenie poniżej; zaplanowane sprawdzenia będą następnie wykonywane co godzinę."
+
+#. translators: %s: local date and time.
+#: src/Modules/Stability.php:178
+#, php-format
+msgid "Last checked: %s."
+msgstr "Ostatnie sprawdzenie: %s."
+
+#: src/Modules/Stability.php:180
+msgid "These observations are out of date. Run a new check and verify the site cron runner."
+msgstr "Te obserwacje są nieaktualne. Uruchom nowe sprawdzenie i sprawdź mechanizm uruchamiania crona witryny."
+
+#: src/Modules/Stability.php:185
+msgid "Visitor-triggered WP-Cron is disabled. This can be intentional when a hosting cron runner is configured."
+msgstr "Uruchamianie WP-Cron przez odwiedzających jest wyłączone. Może to być celowe, jeśli zadania cron uruchamia hosting."
+
+#. translators: %s: local date and time, or an unknown-state label.
+#: src/Modules/Stability.php:189
+#, php-format
+msgid "Last scheduled stability check: %s."
+msgstr "Ostatnie zaplanowane sprawdzenie stabilności: %s."
+
+#. translators: %s: local date and time, or an unknown-state label.
+#: src/Modules/Stability.php:189
+msgid "not observed"
+msgstr "nie zaobserwowano"
+
+#. translators: 1: pending jobs, 2: jobs with failed attempts, 3: paused jobs.
+#: src/Modules/Stability.php:193
+#, php-format
+msgid "SafeHouse delivery: %1$d pending, %2$d with failed attempts, %3$d paused."
+msgstr "Kolejka zadań SafeHouse: oczekujące — %1$d, po nieudanych próbach — %2$d, wstrzymane — %3$d."
+
+#: src/Modules/Stability.php:195
+msgid "SafeHouse queue storage is unavailable. The displayed counts cannot confirm that the queue is empty."
+msgstr "Tabela kolejki SafeHouse jest niedostępna. Wyświetlane liczniki nie pozwalają potwierdzić, że kolejka jest pusta."
+
+#: src/Modules/Stability.php:198
+msgid "Repeated failures are retained for review. Fix the mail transport or cache integration before resuming jobs. Third-party queues are never changed here."
+msgstr "Zadania z powtarzającymi się błędami są zachowywane do sprawdzenia. Napraw wysyłkę poczty lub integrację cache przed wznowieniem zadań. Kolejki innych wtyczek nigdy nie są tutaj zmieniane."
+
+#: src/Modules/Stability.php:200
+msgid "Recent observations"
+msgstr "Ostatnie obserwacje"
+
+#: src/Modules/Stability.php:203
+msgid "Incident storage is unavailable. Check database access; no clean result can be confirmed."
+msgstr "Tabela incydentów jest niedostępna. Sprawdź dostęp do bazy; nie można potwierdzić braku problemów."
+
+#: src/Modules/Stability.php:205
+msgid "No recent observations were recorded. This does not confirm that every request completed successfully."
+msgstr "Nie zapisano ostatnio żadnych obserwacji. Nie potwierdza to, że każde żądanie zakończyło się powodzeniem."
+
+#: src/Modules/Stability.php:207
+msgid "Recent stability observations"
+msgstr "Ostatnie obserwacje stabilności"
+
+#: src/Modules/Stability.php:207
+msgid "Last seen"
+msgstr "Ostatni zapis"
+
+#: src/Modules/Stability.php:207
+msgid "Observation"
+msgstr "Obserwacja"
+
+#: src/Modules/Stability.php:207
+msgid "Context / location"
+msgstr "Kontekst / miejsce"
+
+#. translators: 1: observed duration in seconds, 2: peak memory, 3: saved observations.
+#: src/Modules/Stability.php:211
+#, php-format
+msgid "%1$s s; %2$s peak; %3$d samples"
+msgstr "%1$s s; szczytowe zużycie pamięci: %2$s; próbki: %3$d"
+
+#. translators: 1: measured HTTP calls, 2: measured duration in seconds.
+#: src/Modules/Stability.php:214
+#, php-format
+msgid "%1$d HTTP calls; %2$s s measured"
+msgstr "Wywołania HTTP: %1$d; zmierzony czas: %2$s s"
+
+#: src/Modules/Stability.php:216
+msgid "undetermined"
+msgstr "nie ustalono"
+
+#: src/Modules/Stability.php:220
+msgid "Location identifies where an error surfaced or a slow HTTP call originated; it is not proof of the cause. Recovery Mode and hosting logs remain essential for failures before loading, exhausted workers and killed processes."
+msgstr "Miejsce wskazuje, gdzie wystąpił błąd lub skąd pochodziło wolne wywołanie HTTP; nie dowodzi przyczyny problemu. Tryb odzyskiwania WordPressa i logi hostingu pozostają niezbędne przy awariach przed załadowaniem wtyczki, wyczerpaniu dostępnych procesów obsługi i przerwaniu procesów."
+
+#: src/Modules/Stability.php:227
+msgid "not present"
+msgstr "brak"
+
+#: src/Modules/Stability.php:235
+msgid "a complete check was not possible; inspect the scheduler and hosting logs"
+msgstr "pełne sprawdzenie nie było możliwe; sprawdź harmonogram zadań i logi hostingu"
+
+#. translators: %d: observed scheduled events or pending actions.
+#: src/Modules/Stability.php:242
+#, php-format
+msgid "%d scheduled or pending items observed"
+msgstr "Zaobserwowane zadania zaplanowane lub oczekujące: %d"
+
+#: src/Modules/Stability.php:244
+msgid "partial check; totals may be higher"
+msgstr "niepełne sprawdzenie; rzeczywiste liczby mogą być wyższe"
+
+#. translators: %s: age of the oldest observed overdue task.
+#: src/Modules/Stability.php:262
+#, php-format
+msgid "Oldest observed overdue item: %s ago."
+msgstr "Najstarsze zaobserwowane zaległe zadanie: termin minął %s temu."
+
+#: src/Modules/Stability.php:288
+msgid "PHP failure"
+msgstr "Błąd PHP"
+
+#: src/Modules/Stability.php:289
+msgid "Memory exhausted"
+msgstr "Wyczerpana pamięć"
+
+#: src/Modules/Stability.php:290
+msgid "Execution time limit"
+msgstr "Limit czasu wykonania"
+
+#: src/Modules/Stability.php:291
+msgid "High memory use"
+msgstr "Wysokie zużycie pamięci"
+
+#: src/Modules/Stability.php:292
+msgid "Slow request"
+msgstr "Wolne żądanie"
+
+#: src/Modules/Stability.php:293
+msgid "Diagnostic sample"
+msgstr "Próbka diagnostyczna"
+
+#: src/Modules/Watch.php:252
+msgid "The inventory needs more time. Run a background check to finish it in batches."
+msgstr "Sprawdzenie stanu wymaga więcej czasu. Uruchom sprawdzenie w tle, aby ukończyć je partiami."
+
+#: src/Modules/Watch.php:503
+#: src/Modules/Watch.php:513
+msgid "The inventory is continuing in the background. The previous baseline stays in place until it finishes."
+msgstr "Sprawdzanie stanu jest kontynuowane w tle. Poprzedni stan porównawczy pozostaje zachowany do zakończenia sprawdzenia."
+
+#: src/Modules/Stability.php:98
+msgid "The sampling session could not be saved. Check database access."
+msgstr "Nie udało się zapisać sesji próbkowania. Sprawdź dostęp do bazy danych."
+
+#: src/Modules/Stability.php:105
+msgid "Detailed sampling could not be stopped. Check database access."
+msgstr "Nie udało się zatrzymać szczegółowego próbkowania. Sprawdź dostęp do bazy danych."
+
+#: src/Modules/Stability.php:232
+msgid "cron data exceeds the 1 MiB inspection limit; inspect it through the hosting tools"
+msgstr "dane crona przekraczają limit sprawdzania wynoszący 1 MiB; sprawdź je narzędziami hostingu"
+
+#: src/Modules/Stability.php:233
+msgid "this scheduler storage is not supported by the bounded check"
+msgstr "ten mechanizm przechowywania zadań nie jest obsługiwany przez sprawdzenie w ograniczonym zakresie"
+
+#: src/Modules/Stability.php:234
+msgid "the inspection reached its time or memory limit; inspect the scheduler through the hosting tools"
+msgstr "sprawdzanie osiągnęło limit czasu lub pamięci; sprawdź harmonogram zadań narzędziami hostingu"
+
+#. translators: %d: number of overdue events in the bounded observation.
+#: src/Modules/Stability.php:249
+#, php-format
+msgid "%d overdue events observed."
+msgstr "Zaobserwowane zaległe zadania: %d."
+
+#. translators: 1: running actions, 2: failed actions in the bounded observation.
+#: src/Modules/Stability.php:252
+#, php-format
+msgid "%1$d running and %2$d failed actions observed."
+msgstr "Zaobserwowane zadania: wykonywane — %1$d, nieudane — %2$d."
+
+#. translators: %s: age of the oldest observed Action Scheduler claim.
+#: src/Modules/Stability.php:256
+#, php-format
+msgid "Oldest worker claim: %s ago. Its age alone does not confirm a stuck job."
+msgstr "Najstarsza rezerwacja zadań: %s temu. Sam jej wiek nie potwierdza, że zadanie utknęło."
+
+#: src/Modules/Stability.php:276
+msgid "Administration"
+msgstr "Panel administracyjny"
+
+#: src/Modules/Stability.php:277
+msgid "Login"
+msgstr "Logowanie"
+
+#: src/Modules/Stability.php:278
+msgid "Scheduled task"
+msgstr "Zaplanowane zadanie"
+
+#: src/Modules/Stability.php:279
+msgid "Command line"
+msgstr "Wiersz poleceń"
+
+#: src/Modules/Stability.php:282
+msgid "Website request"
+msgstr "Żądanie do witryny"
+
+#: src/Modules/Watch.php:523
+msgid "No baseline yet. It will be recorded by the scheduled background check."
+msgstr "Brak stanu porównawczego. Zostanie zapisany podczas zaplanowanego sprawdzenia w tle."
+
+#: src/Modules/Stability.php:172
+msgid "Basic recording observes requests over 3 seconds, high memory use and PHP failures after SafeHouse loads. Detailed sampling adds HTTP timing for about 10% of requests, up to 20 calls per sampled request. At most one observation is saved per 10 seconds site-wide. Storage is capped at 256 groups; the panel shows the last 7 days and scheduled cleanup removes older records. Counts are recorded samples, not traffic totals."
+msgstr "Podstawowy zapis obejmuje żądania trwające ponad 3 sekundy, wysokie zużycie pamięci i błędy PHP po załadowaniu SafeHouse. Szczegółowe próbkowanie dodaje pomiary czasu HTTP dla około 10% żądań, do 20 wywołań na próbkowane żądanie. W całej witrynie zapisywana jest najwyżej jedna obserwacja na 10 sekund. Zapis jest ograniczony do 256 grup; panel pokazuje ostatnie 7 dni, a zaplanowane czyszczenie usuwa starsze rekordy. Liczniki pokazują zapisane próbki, a nie cały ruch."

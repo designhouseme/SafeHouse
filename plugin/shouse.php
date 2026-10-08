@@ -64,4 +64,5 @@ add_action(
 	}
 );
 
+SafeHouse\Core\RuntimeMonitor::start();
 add_action( 'plugins_loaded', [ SafeHouse\Plugin::class, 'boot' ] );

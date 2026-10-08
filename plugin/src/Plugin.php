@@ -26,6 +26,7 @@ final class Plugin {
 		Modules\Lockdown::class,
 		Modules\Watch::class,
 		Modules\PluginHealth::class,
+		Modules\Stability::class,
 		Modules\Tweaks::class,
 		Modules\Duplicate::class,
 		Modules\Smtp::class,
@@ -94,6 +95,7 @@ final class Plugin {
 		}
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			Cli::register();
+			\WP_CLI::add_command( 'shouse stability', Core\StabilityCommand::class );
 		}
 	}
 
@@ -144,6 +146,7 @@ final class Plugin {
 		wp_clear_scheduled_hook( 'shouse_queue' );
 		wp_clear_scheduled_hook( 'shouse_cloudflare_purge' );
 		wp_clear_scheduled_hook( 'shouse_watch_continue' );
+		delete_option( 'shouse_stability_session' );
 		ObjectCache::deactivate();
 	}
 }

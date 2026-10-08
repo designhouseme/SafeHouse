@@ -15,6 +15,7 @@ $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}shouse_log" ); // phpcs:ignor
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}shouse_login" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- prefix only.
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}shouse_price_history" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- prefix only.
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}shouse_jobs" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- prefix only.
+$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}shouse_incidents" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- prefix only.
 // Also the names from before the rename to SafeHouse, in case the plugin is removed before it ever ran.
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wphouse_log" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- prefix only.
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wphouse_login" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- prefix only.

@@ -88,6 +88,15 @@
 .shouse-note { margin: 8px 0 0; padding: 6px 10px; background: #f0f6fc; border-left: 3px solid #72aee6; }
 .shouse-covered { margin-left: 8px; color: #646970; font-style: italic; }
 .shouse-tasks { display: flex; flex-wrap: wrap; gap: 8px; }
+.shouse-stability h3 { margin: 24px 0 8px; }
+.shouse-stability__table { max-width: 100%; overflow-x: auto; }
+.shouse-stability__table table { table-layout: fixed; }
+.shouse-stability__table th { box-sizing: border-box; }
+.shouse-stability__table th:first-child { width: 20%; }
+.shouse-stability__table th:nth-child(2) { width: 43%; }
+.shouse-stability__table th,
+.shouse-stability__table td { overflow-wrap: anywhere; }
+.shouse-stability__table code { white-space: normal; }
 .shouse textarea.code { font-family: Consolas, Monaco, monospace; font-size: 12px; }
 
 /* integrations and general */

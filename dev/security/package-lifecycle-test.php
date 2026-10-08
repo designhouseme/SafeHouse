@@ -8,6 +8,7 @@
  * Return local empty update responses for WordPress.org's core/plugin/theme checks to avoid
  * core's expected connection warnings when asserting that debug.log stays empty.
  * Sequence: install --activate; seed; safe-mode on; safe; safe-mode off; active;
+ * deactivate; inactive; optionally legacy-queue; replace ZIP --activate; updated;
  * deactivate; inactive; activate; reactivated; prepare-uninstall; uninstall --deactivate; uninstalled.
  * Phase names above are arguments to wp eval-file; lifecycle actions are regular wp commands.
  */
@@ -31,7 +32,12 @@ $assert = static function ( bool $ok, string $label ) use ( &$checks ): void {
 	WP_CLI::log( 'PASS: ' . $label );
 };
 $table = $wpdb->prefix . 'shouse_jobs';
-$rows = static fn() => (array) $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i ORDER BY id', $table ), ARRAY_A );
+$rows = static function () use ( $wpdb, $table ): array {
+	$rows = (array) $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i ORDER BY id', $table ), ARRAY_A );
+	foreach ( $rows as &$row ) { ksort( $row ); }
+	return $rows;
+};
+$incidents = static fn() => (array) $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i WHERE component = %s ORDER BY slot', $wpdb->prefix . 'shouse_incidents', 'plugin:lifecyclefixture' ), ARRAY_A );
 $cron = static function (): array {
 	$hooks = [];
 	foreach ( _get_cron_array() as $events ) {
@@ -55,8 +61,10 @@ switch ( $mode ) {
 		$assert( ! file_exists( dirname( SHOUSE_FILE ) . '/.git' ) && ! file_exists( dirname( SHOUSE_FILE ) . '/dev' ), 'installed package has no development checkout' );
 		$assert_pins();
 		$assert( SafeHouse\Modules\Omnibus::maybe_install( true ), 'optional price-history schema can be installed from the package' );
-		$assert( 4 === count( $tables() ), 'all four SafeHouse tables are present' );
-		$assert( '2' === get_option( 'shouse_queue_db_version' ) && '2' === get_option( 'shouse_omnibus_db_version' ), 'queue and price-history schema versions are recorded' );
+		$assert( 5 === count( $tables() ), 'all five SafeHouse tables are present' );
+		$assert( '2' === get_option( 'shouse_queue_db_version' ) && '2' === get_option( 'shouse_omnibus_db_version' ) && '1' === get_option( 'shouse_stability_db_version' ), 'queue, price-history and incident schema versions are recorded' );
+		$wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->options} SET option_value = '0' WHERE option_name = %s", 'shouse_stability_write_after' ) );
+		$assert( SafeHouse\Core\RuntimeMonitor::record( 'slow', 'cli', 'plugin:lifecyclefixture', 0, 3500, MB_IN_BYTES ), 'incident observation is stored in the installed schema' );
 		$p = Plugin::instance();
 		$p->settings->set_module_enabled( 'watch', true );
 		$p->settings->set_module_enabled( 'tweaks', false );
@@ -78,8 +86,10 @@ switch ( $mode ) {
 		set_transient( 'shouse_lifecycle_fixture', 'fixture', HOUR_IN_SECONDS );
 		set_site_transient( 'shouse_lifecycle_fixture', 'fixture', HOUR_IN_SECONDS );
 		wp_schedule_single_event( time() + 600, 'shouse_cloudflare_purge' );
+		wp_schedule_single_event( time() + 600, 'shouse_watch_continue' );
+		update_option( 'shouse_stability_session', time() + 900, false );
 		$assert( in_array( 'shouse_hourly', $cron(), true ) && in_array( 'shouse_daily', $cron(), true ) && in_array( 'shouse_queue', $cron(), true ) && in_array( 'shouse_cloudflare_purge', $cron(), true ), 'all four lifecycle cron hooks are represented' );
-		update_option( 'lifecycle_package_expected', [ 'rows' => $rows(), 'floor' => $floor, 'settings' => $stored ], false );
+		update_option( 'lifecycle_package_expected', [ 'rows' => $rows(), 'floor' => $floor, 'settings' => $stored, 'incidents' => $incidents() ], false );
 		WP_CLI::log( 'Artifact version: ' . SHOUSE_VERSION . '; WordPress ' . get_bloginfo( 'version' ) . '; PHP ' . PHP_VERSION );
 		break;
 	case 'safe':
@@ -88,31 +98,48 @@ switch ( $mode ) {
 		$assert( [] === array_filter( array_keys( $p->modules() ), [ $p, 'is_running' ] ), 'safe mode stops every module, including pinned-on modules' );
 		$assert( $metadata['settings'] === $p->settings->all(), 'safe mode preserves saved settings' );
 		$assert( $metadata['rows'] === $rows(), 'safe mode preserves both pending jobs and retry metadata' );
+		$assert( $metadata['incidents'] === $incidents(), 'safe mode preserves the recorded incident' );
 		$assert( has_action( 'shouse_queue', [ Queue::class, 'run' ] ) !== false, 'queue recovery hook remains available in safe mode' );
 		break;
 	case 'active':
 	case 'reactivated':
+	case 'updated':
 		$assert( ! SafeHouse\Core\SafeMode::active(), 'normal mode resumes in a fresh request' );
 		$assert_pins();
 		$assert( $metadata['rows'] === $rows(), 'deactivation/reactivation or safe-mode round trip preserves queued payloads and retry metadata exactly' );
 		$assert( $metadata['floor'] === get_option( 'shouse_update_floor' ) && $metadata['floor'] === get_option( 'shouse_advisory_floor' ), 'both security floors survive lifecycle changes' );
 		$assert( $metadata['settings'] === Plugin::instance()->settings->all(), 'saved settings survive lifecycle changes' );
+		$assert( $metadata['incidents'] === $incidents(), 'recorded incident survives ZIP replacement and reactivation' );
+		$assert( 5 === count( $tables() ) && '2' === get_option( 'shouse_queue_db_version' ), 'all five tables and current queue schema survive lifecycle changes' );
+		if ( 'updated' === $mode ) {
+			$dispatch = (array) $wpdb->get_col( $wpdb->prepare( 'SHOW INDEX FROM %i WHERE Key_name = %s', $table, 'dispatch' ), 4 );
+			$handler_dispatch = (array) $wpdb->get_col( $wpdb->prepare( 'SHOW INDEX FROM %i WHERE Key_name = %s', $table, 'handler_dispatch' ), 4 );
+			$assert( [ 'paused', 'available_at', 'id' ] === $dispatch && [ 'queue', 'paused', 'available_at', 'id' ] === $handler_dispatch, 'v1-to-v2 upgrade installs both dispatch indexes without replacing legacy data' );
+		}
 		$assert( in_array( 'shouse_hourly', $cron(), true ) && in_array( 'shouse_daily', $cron(), true ), 'recurring processing is scheduled after activation' );
 		break;
 	case 'inactive':
 		$assert( ! is_plugin_active( 'shouse/shouse.php' ) && ! class_exists( Plugin::class ), 'deactivated package does not boot' );
 		$assert( [] === $cron(), 'deactivation removes every SafeHouse cron event' );
 		$assert( $metadata['rows'] === $rows(), 'deactivation retains both queued jobs exactly' );
-		$assert( 4 === count( $tables() ), 'deactivation retains all data tables' );
+		$assert( 5 === count( $tables() ), 'deactivation retains all data tables' );
+		$assert( false === get_option( 'shouse_stability_session' ), 'deactivation stops the temporary diagnostic session' );
 		$assert( $metadata['settings'] === get_option( 'shouse_settings' ) && $metadata['floor'] === get_option( 'shouse_update_floor' ), 'deactivation retains settings and security floor' );
+		$assert( $metadata['incidents'] === $incidents(), 'deactivation preserves the recorded incident' );
+		break;
+	case 'legacy-queue':
+		$assert( ! is_plugin_active( 'shouse/shouse.php' ), 'legacy queue staging requires an inactive disposable plugin' );
+		$assert( false !== $wpdb->query( $wpdb->prepare( 'ALTER TABLE %i DROP INDEX dispatch, DROP INDEX handler_dispatch, DROP COLUMN paused', $table ) ), 'fixture stages the previous queue schema without deleting its jobs' );
+		update_option( 'shouse_queue_db_version', '1', false );
+		$assert( 2 === count( $rows() ) && '1' === get_option( 'shouse_queue_db_version' ), 'legacy queue retains both jobs before ZIP update' );
 		break;
 	case 'prepare-uninstall':
 		$assert( false !== file_put_contents( WP_CONTENT_DIR . '/shouse-safe-mode', '' ) && false !== file_put_contents( WP_CONTENT_DIR . '/wphouse-safe-mode', '' ), 'current and legacy rescue flags exist before uninstall' );
-		$assert( 2 === count( $rows() ) && 4 === count( $tables() ), 'uninstall starts with queued work and all tables' );
+		$assert( 2 === count( $rows() ) && 5 === count( $tables() ), 'uninstall starts with queued work and all tables' );
 		break;
 	case 'uninstalled':
 		$assert( ! is_dir( WP_PLUGIN_DIR . '/shouse' ) && ! class_exists( Plugin::class ), 'uninstall removes the package files' );
-		$assert( [] === $tables(), 'uninstall removes log, login, price-history and job tables' );
+		$assert( [] === $tables(), 'uninstall removes log, login, price-history, job and incident tables' );
 		$names = (array) $wpdb->get_col( "SELECT option_name FROM {$wpdb->options}" );
 		$left = array_values( array_filter( $names, static fn( $name ) => (bool) preg_match( '/^(?:(?:_site)?_transient_(?:timeout_)?)?(?:shouse_|wphouse_)/', $name ) ) );
 		$assert( [] === $left, 'uninstall removes all current/legacy options, floors, queue state and transients' );
