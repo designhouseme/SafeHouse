@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-08T18:28:53+00:00\n"
+"POT-Creation-Date: 2026-10-09T18:14:05+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: shouse\n"
@@ -267,6 +267,14 @@ msgstr ""
 msgid "%s ago"
 msgstr ""
 
+#: src/Core/Honeypot.php:40
+msgid "Leave this field empty"
+msgstr ""
+
+#: src/Core/Honeypot.php:44
+msgid "JavaScript and cookies are required to submit this form. Please enable them and reload the page."
+msgstr ""
+
 #: src/Core/Net.php:129
 msgid "SafeHouse and Cloudflare"
 msgstr ""
@@ -297,7 +305,7 @@ msgstr ""
 
 #: src/Core/Net.php:155
 #: src/Core/Queue.php:283
-#: src/Modules/Hardening.php:270
+#: src/Modules/Hardening.php:293
 #: src/Modules/LoginLimits.php:411
 #: src/Modules/PluginHealth.php:356
 #: src/Modules/Vulnerabilities.php:319
@@ -364,99 +372,99 @@ msgstr ""
 msgid "The downloaded SafeHouse package does not match the signed checksum. Update cancelled."
 msgstr ""
 
-#: src/Modules/Bots.php:81
+#: src/Modules/Bots.php:80
 msgid "Bot protection"
 msgstr ""
 
-#: src/Modules/Bots.php:85
+#: src/Modules/Bots.php:84
 msgid "Stops automated sign-ups, spam comments, password-reset floods, login attempts and fake orders. A honeypot works on its own; Cloudflare Turnstile is added when its keys are in wp-config.php."
 msgstr ""
 
-#: src/Modules/Bots.php:92
+#: src/Modules/Bots.php:91
 msgid "Honeypot on registration, lost password and comments"
 msgstr ""
 
-#: src/Modules/Bots.php:93
-msgid "An invisible trap field plus proof that a person used the form in a browser. Needs no outside service. Visitors with JavaScript turned off cannot register, reset a password or comment."
+#: src/Modules/Bots.php:92
+msgid "A rotating trap field and a short-lived, signed browser challenge tied to the form. Needs JavaScript and cookies, but no outside service. Automated browsers can still pass; use Turnstile for stronger checks."
 msgstr ""
 
-#: src/Modules/Bots.php:97
+#: src/Modules/Bots.php:96
 msgid "Turnstile on login"
 msgstr ""
 
-#: src/Modules/Bots.php:98
+#: src/Modules/Bots.php:97
 msgid "wp-login.php, login forms made with wp_login_form() and the WooCommerce login form."
 msgstr ""
 
-#: src/Modules/Bots.php:102
+#: src/Modules/Bots.php:101
 msgid "Turnstile on registration"
 msgstr ""
 
-#: src/Modules/Bots.php:103
+#: src/Modules/Bots.php:102
 msgid "WordPress and WooCommerce My Account registration."
 msgstr ""
 
-#: src/Modules/Bots.php:107
+#: src/Modules/Bots.php:106
 msgid "Turnstile on lost password"
 msgstr ""
 
-#: src/Modules/Bots.php:111
+#: src/Modules/Bots.php:110
 msgid "Turnstile on comments and reviews"
 msgstr ""
 
-#: src/Modules/Bots.php:112
+#: src/Modules/Bots.php:111
 msgid "For visitors who are not logged in."
 msgstr ""
 
-#: src/Modules/Bots.php:116
+#: src/Modules/Bots.php:115
 msgid "Turnstile on checkout"
 msgstr ""
 
-#: src/Modules/Bots.php:117
+#: src/Modules/Bots.php:116
 msgid "Classic and block checkout, including orders sent straight to the Store API. Express payment buttons outside the checkout page (such as Apple Pay or Google Pay on product pages) cannot pass this check, so turn it off on sites that use them."
 msgstr ""
 
-#: src/Modules/Bots.php:121
+#: src/Modules/Bots.php:120
 msgid "When Cloudflare cannot be reached"
 msgstr ""
 
-#: src/Modules/Bots.php:122
+#: src/Modules/Bots.php:121
 msgid "Applies only when this server cannot reach Cloudflare, or Cloudflare rejects the secret key. A visitor whose browser blocks Turnstile is still asked to try again."
 msgstr ""
 
-#: src/Modules/Bots.php:124
+#: src/Modules/Bots.php:123
 msgid "Let the submission through and log it"
 msgstr ""
 
-#: src/Modules/Bots.php:125
+#: src/Modules/Bots.php:124
 msgid "Block the submission"
 msgstr ""
 
-#: src/Modules/Bots.php:182
-msgid "Leave this field empty"
+#: src/Modules/Bots.php:303
+msgid "The form check could not finish. Enable cookies and JavaScript, then submit again."
 msgstr ""
 
-#: src/Modules/Bots.php:333
-msgid "This looks like an automated submission. Please make sure JavaScript is on and try again."
+#: src/Modules/Bots.php:336
+msgid "The form check did not pass. Reload the page, allow cookies and JavaScript, and try again."
 msgstr ""
 
-#: src/Modules/Bots.php:350
+#: src/Modules/Bots.php:354
 msgid "The anti-bot check is unavailable right now. Please try again in a few minutes."
 msgstr ""
 
-#: src/Modules/Bots.php:353
+#: src/Modules/Bots.php:357
 msgid "The anti-bot check did not pass. Please wait for it to finish and try again."
 msgstr ""
 
-#: src/Modules/Bots.php:392
+#: src/Modules/Bots.php:379
 msgid "Turnstile is off: add SHOUSE_TURNSTILE_SITE_KEY and SHOUSE_TURNSTILE_SECRET_KEY to wp-config.php. The honeypot works without them."
 msgstr ""
 
-#: src/Modules/Bots.php:394
+#: src/Modules/Bots.php:381
 msgid "Turnstile is off: wp-config.php has Cloudflare test keys, which always give the same answer and are not allowed on a production site."
 msgstr ""
 
-#: src/Modules/Bots.php:396
+#: src/Modules/Bots.php:383
 msgid "Turnstile is on, with keys from wp-config.php."
 msgstr ""
 
@@ -552,115 +560,131 @@ msgstr ""
 msgid "%s (copy)"
 msgstr ""
 
-#: src/Modules/Hardening.php:74
+#: src/Modules/Hardening.php:76
 msgid "Hardening"
 msgstr ""
 
-#: src/Modules/Hardening.php:78
+#: src/Modules/Hardening.php:80
 msgid "Safe defaults: no code editor in wp-admin, no username discovery, no admin-level role for new accounts, generic login errors, no version disclosure, XML-RPC off and basic security headers. Adds a registration check to Site Health."
 msgstr ""
 
-#: src/Modules/Hardening.php:85
+#: src/Modules/Hardening.php:87
 msgid "Disable the theme/plugin file editor"
 msgstr ""
 
-#: src/Modules/Hardening.php:89
+#: src/Modules/Hardening.php:91
 msgid "Block username discovery"
 msgstr ""
 
-#: src/Modules/Hardening.php:90
+#: src/Modules/Hardening.php:92
 msgid "For visitors who are not logged in: ?author=N scans, the REST users endpoint, the users sitemap and author data in oEmbed."
 msgstr ""
 
-#: src/Modules/Hardening.php:94
+#: src/Modules/Hardening.php:96
 msgid "Keep new accounts out of admin-level roles"
 msgstr ""
 
-#: src/Modules/Hardening.php:95
+#: src/Modules/Hardening.php:97
 msgid "If the default role for new accounts can manage users, plugins, options, the shop or raw HTML (for example after a database attack), new accounts get Subscriber instead."
 msgstr ""
 
-#: src/Modules/Hardening.php:99
+#: src/Modules/Hardening.php:101
 msgid "Generic login errors"
 msgstr ""
 
-#: src/Modules/Hardening.php:100
+#: src/Modules/Hardening.php:102
 msgid "One message for a wrong username or a wrong password, on wp-login.php and the WooCommerce login form."
 msgstr ""
 
-#: src/Modules/Hardening.php:104
+#: src/Modules/Hardening.php:106
 msgid "Hide the WordPress version"
 msgstr ""
 
-#: src/Modules/Hardening.php:108
+#: src/Modules/Hardening.php:110
+msgid "Reduce passive WordPress discovery"
+msgstr ""
+
+#: src/Modules/Hardening.php:111
+msgid "Remove REST API discovery links, RSD, Windows Live Writer and shortlinks from page metadata and headers. REST endpoints and asset versions keep working. Some publishing clients may need manual configuration; this does not hide WordPress from a determined scanner."
+msgstr ""
+
+#: src/Modules/Hardening.php:115
 msgid "Disable XML-RPC"
 msgstr ""
 
-#: src/Modules/Hardening.php:109
+#: src/Modules/Hardening.php:116
 msgid "xmlrpc.php answers 403. The WordPress mobile app and old desktop editors stop working with this site. Skipped automatically when Jetpack or WooPayments is active."
 msgstr ""
 
-#: src/Modules/Hardening.php:113
+#: src/Modules/Hardening.php:120
+msgid "Disable XML-RPC pingbacks"
+msgstr ""
+
+#: src/Modules/Hardening.php:121
+msgid "Remove pingback methods and the X-Pingback header, including when Jetpack or WooPayments needs authenticated XML-RPC. Other XML-RPC methods are unchanged."
+msgstr ""
+
+#: src/Modules/Hardening.php:125
 msgid "Basic security headers"
 msgstr ""
 
-#: src/Modules/Hardening.php:114
+#: src/Modules/Hardening.php:126
 msgid "X-Content-Type-Options, Referrer-Policy and X-Frame-Options (same origin). Pages served from a full-page cache may not get them."
 msgstr ""
 
-#: src/Modules/Hardening.php:118
+#: src/Modules/Hardening.php:130
 msgid "HSTS (1 year, this domain only)"
 msgstr ""
 
-#: src/Modules/Hardening.php:119
+#: src/Modules/Hardening.php:131
 msgid "Only on HTTPS. Browsers will refuse plain HTTP for a year, so turn it on only when HTTPS works everywhere on this domain."
 msgstr ""
 
-#: src/Modules/Hardening.php:189
+#: src/Modules/Hardening.php:212
 msgid "Sorry, you are not allowed to list users."
 msgstr ""
 
-#: src/Modules/Hardening.php:226
+#: src/Modules/Hardening.php:249
 msgid "SafeHouse registration check"
 msgstr ""
 
-#: src/Modules/Hardening.php:244
+#: src/Modules/Hardening.php:267
 msgid "New accounts are set to get a role that can manage the site"
 msgstr ""
 
 #. translators: %s: role name, e.g. Administrator.
-#: src/Modules/Hardening.php:247
+#: src/Modules/Hardening.php:270
 #, php-format
 msgid "The default role for new accounts is %s, which can manage users, plugins, settings or the shop, or post raw HTML. Attackers set this so that they can register their own administrator. Change it in Settings → General and check who changed it."
 msgstr ""
 
-#: src/Modules/Hardening.php:251
+#: src/Modules/Hardening.php:274
 msgid "Until then SafeHouse gives new accounts the Subscriber role."
 msgstr ""
 
-#: src/Modules/Hardening.php:255
+#: src/Modules/Hardening.php:278
 msgid "Anyone can register an account"
 msgstr ""
 
 #. translators: %s: role name, e.g. Subscriber.
-#: src/Modules/Hardening.php:258
+#: src/Modules/Hardening.php:281
 #, php-format
 msgid "The \"Anyone can register\" setting is on, with %s as the role for new accounts. Bots use open registration for spam accounts and to probe plugins that trust any logged-in user. If the site does not need WordPress accounts, turn it off in Settings → General. WooCommerce customer accounts have their own setting and keep working."
 msgstr ""
 
-#: src/Modules/Hardening.php:263
+#: src/Modules/Hardening.php:286
 msgid "Registration is closed"
 msgstr ""
 
-#: src/Modules/Hardening.php:264
+#: src/Modules/Hardening.php:287
 msgid "Only administrators can create WordPress accounts."
 msgstr ""
 
-#: src/Modules/Hardening.php:274
+#: src/Modules/Hardening.php:297
 msgid "Open general settings"
 msgstr ""
 
-#: src/Modules/Hardening.php:306
+#: src/Modules/Hardening.php:329
 msgid "<strong>Error:</strong> The username, email address or password is incorrect."
 msgstr ""
 

@@ -1,0 +1,198 @@
+SafeHouse bot protection: defensive source research
+Reviewed: 2026-10-09
+
+Sources were read only. No scanners, credential attacks, exploit code or external
+targets were executed. These repositories describe useful request patterns, not
+proof that any particular visitor is malicious.
+
+1. WPScan sends login requests containing log and pwd without reproducing every
+   field in the HTML form. A hidden field that rejects only nonempty values can
+   therefore be bypassed by omitting it altogether. Server-side validation must
+   enforce the expected challenge and dynamic field on protected handlers.
+   https://github.com/wpscanteam/wpscan/blob/master/lib/wpscan/target/platform/wordpress.rb
+
+2. WPScan identifies accounts through login error differences, REST user lists,
+   author redirects and author-page HTML. Generic authentication errors and
+   selective enumeration controls reduce disclosure, but hiding one URL does
+   not cover every channel.
+   https://github.com/wpscanteam/wpscan/blob/master/app/finders/users/login_error_messages.rb
+   https://github.com/wpscanteam/wpscan/blob/master/app/finders/users/wp_json_api.rb
+   https://github.com/wpscanteam/wpscan/blob/master/app/finders/users/author_id_brute_forcing.rb
+
+3. WPScan and Nuclei include authentication through XML-RPC. Public HTML form
+   protection does not cover that separate authentication channel. WordPress's
+   xmlrpc_enabled filter only controls methods requiring authentication; it
+   does not disable pingbacks or other unauthenticated methods.
+   https://github.com/wpscanteam/wpscan/blob/master/app/finders/passwords/xml_rpc.rb
+   https://github.com/projectdiscovery/nuclei-templates/blob/main/http/vulnerabilities/wordpress/wp-xmlrpc-brute-force.yaml
+   https://developer.wordpress.org/reference/hooks/xmlrpc_enabled/
+
+4. Nuclei identifies WordPress from the homepage, installer, feeds, generator
+   metadata, paths, plugin comments and asset versions. WPProbe matches public
+   REST routes, including the ?rest_route=/ form, against plugin signatures and
+   finds themes in HTML. Removing a generator reduces one source of information;
+   there is no universal WordPress hiding. Asset version parameters also serve
+   cache invalidation, and public REST routes may be required by integrations.
+   https://github.com/projectdiscovery/nuclei-templates/blob/main/http/technologies/wordpress-detect.yaml
+   https://github.com/Chocapikk/wpprobe
+
+5. WordPress nonces explicitly are not single-use tokens and do not prevent
+   replay. Default guest nonces share user ID 0. SafeHouse's browser challenge is
+   separately signed and bound to its form, comment target, browser cookie and
+   short validity window. It is stateless: a valid challenge can intentionally
+   be reused in the same browser within that window. This is bounded replay,
+   not one-time consumption, proof of humanity or an authentication factor.
+   https://developer.wordpress.org/apis/security/nonces/
+
+Implementation threat limits
+
+- Rotating trap names, server-side signatures, browser binding and timing raise
+  the cost for naive submissions and static replay. A browser-capable bot can
+  request a fresh challenge, retain the cookie, wait and leave the trap empty.
+- The local honeypot protects the supported public registration, password-reset
+  and guest-comment handlers. It does not protect login, checkout, arbitrary
+  plugin forms, vulnerable plugin endpoints or XML-RPC by itself. Existing
+  authentication limits, optional Turnstile and hardening remain separate.
+- Minimum age is only a signal within this challenge protocol; arbitrary mouse
+  movement, User-Agent names and a fast password-manager submission are not
+  reliable proof of abuse. The challenge requires cookies and JavaScript.
+- The bootstrap response must not be cached. Cached page markup carries no live
+  browser challenge; the browser obtains one separately and can refresh it.
+- Do not create request-proportional database rows for stateless challenges,
+  keep raw passwords/cookies in logs, or delay PHP workers to simulate a tarpit.
+  Bound payload sizes and log repeat suppression matter under bot floods.
+- Obfuscation and telemetry supplement patching, least privilege, backups and
+  actual access control. They do not fix a vulnerable WordPress/plugin version.
+   https://developer.wordpress.org/advanced-administration/security/hardening/
+
+Local regression fixture
+
+Run only on a disposable WP_ENVIRONMENT_TYPE=local installation with SafeHouse:
+  wp eval-file /path/to/dev/security-honeypot-test.php
+
+The fixture checks the public verifier with real WordPress salts and form hooks.
+It creates signed local inputs for boundary cases without executing a bot or
+contacting an external service. Same-browser replay within the validity window
+is explicitly tested as accepted, documenting the stateless design limit.
+
+Follow-up: actual bot and crawler source code (reviewed 2026-10-09)
+
+These are source-code observations, not executions of the third-party programs
+against SafeHouse. Frameworks and browser automation are also used legitimately.
+Repository existence does not establish that it causes traffic on this site.
+
+WordPress-specific bots
+
+1. v4r1able/wordpress-comment-bot, V4/wpcomment.php
+   sendComment() fetches the article and extracts comment_post_ID. The helper
+   findWpCommentsPost() probes known comment-handler paths and recognizes 405.
+   It then posts a fixed six-field map. There is no JavaScript runtime or cURL
+   cookie jar in this implementation. sendCommentMultiple() repeats the work
+   for a list of article URLs. Last modification of this file: 2022-10-09.
+   https://github.com/v4r1able/wordpress-comment-bot/blob/33df96206f8f134e1898f12db8aa3b45c1b06892/V4/wpcomment.php#L27-L108
+   Inference: the unmodified bot omits SafeHouse's required challenge and trap;
+   it should be refused. Merely checking whether a trap is filled is insufficient.
+
+2. phyesix/wcb.php, published 2021-06-19
+   The main loop extracts both comment_post_ID and the form action from HTML
+   using regular expressions, then posts known comment fields with PHP cURL.
+   This variant discovers the submission URL from markup rather than relying
+   solely on a fixed handler path. No browser JavaScript runs.
+   https://gist.github.com/phyesix/f7050a60ffd664a5af488fbb9a9af529
+   Inference: changing a public action URL alone does not defeat this mechanism.
+
+3. umitozay/wordpress-comment-bot, index.php
+   post_comment() sends a fixed six-field map directly to wp-comments-post.php.
+   The caller supplies the post ID; it does not fetch the form before posting.
+   check_comment_published() subsequently fetches the site and looks for the
+   comment text. No cookie jar or target-page JavaScript is configured.
+   https://github.com/umitozay/wordpress-comment-bot/blob/main/index.php
+   Inference: reject missing protection fields as well as populated traps.
+
+4. Panz05/WordPress-Automate-Comments, Automate_Comments.py (2022 sample)
+   Uses Selenium Chrome and selects only author, email and comment by name.
+   send_keys() fills them, with three waits totaling seven seconds, then
+   WebElement.submit() submits the form. It does not indiscriminately fill
+   every input. A genuine browser supplies JavaScript execution and cookies.
+   https://github.com/Panz05/WordPress-Automate-Comments/blob/master/Automate_Comments.py
+   Inference: JS execution, a cookie, an empty hidden trap and elapsed time do
+   not distinguish this class of automation from a visitor. SafeHouse's own
+   submit listener obtains a challenge and waits on behalf of the form user.
+   This specific third-party script has not been executed against SafeHouse.
+
+5. hecker-bots/wpbot, script.py
+   Uses Python requests to post JSON to /wp-json/wp/v2/comments, optionally
+   retaining a requests.Session. It does not use the HTML comment form.
+   https://github.com/hecker-bots/wpbot/blob/main/script.py
+   This is not evidence of a working bypass of default WordPress: core denies
+   anonymous REST comment creation unless rest_allow_anonymous_comments permits
+   it, and the script does not supply a REST cookie-auth nonce. Sites exposing
+   additional anonymous API writes require an explicit protection policy.
+   https://github.com/WordPress/WordPress/blob/master/wp-includes/rest-api/endpoints/class-wp-rest-comments-controller.php
+
+Browser crawler internals
+
+6. Crawlee, BrowserCrawler and PlaywrightCrawler
+   browser-crawler.ts persists and reapplies session cookies around browser
+   work. playwright-crawler.ts navigates a Playwright Page and exposes it to
+   the application requestHandler. Actual form interactions are application
+   code, not something a default link crawler automatically performs.
+   https://github.com/apify/crawlee/blob/master/packages/browser-crawler/src/internals/browser-crawler.ts
+   https://github.com/apify/crawlee/blob/master/packages/playwright-crawler/src/internals/playwright-crawler.ts
+
+7. Scrapling, DynamicSession / SyncSession
+   DynamicSession.start() launches a persistent Chromium context. fetch()
+   navigates, waits and invokes an optional caller-provided page_action(page).
+   SyncSession initializes cookies and reuses a browser context in its normal
+   flow. Proxy-specific flows can create a separate context.
+   https://github.com/D4Vinci/Scrapling/blob/main/scrapling/engines/_browsers/_controllers.py
+   https://github.com/D4Vinci/Scrapling/blob/main/scrapling/engines/_browsers/_base.py
+   Source inspection confirms browser automation capabilities, not claims that
+   the project can always bypass Turnstile or every anti-bot product.
+
+HTTP crawler form and link handling
+
+8. Katana v1.6.1
+   bodyFormTagParser() reads action/method and selects input, select, textarea
+   without testing CSS visibility. FormInputFillSuggestions() preserves an
+   existing nonempty value but uses a fallback placeholder for otherwise
+   unhandled empty fields, including hidden inputs. This applies when the
+   form-filling path is enabled; it is not a claim about every default crawl.
+   https://github.com/projectdiscovery/katana/blob/v1.6.1/pkg/engine/parser/parser.go#L525
+   https://github.com/projectdiscovery/katana/blob/v1.6.1/pkg/utils/formfill.go#L126
+   bodyATagParser() extracts href values without checking rendered visibility;
+   scope and queue filters still decide whether candidates are visited.
+   https://github.com/projectdiscovery/katana/blob/v1.6.1/pkg/engine/parser/parser.go#L173
+   The standard HTTP flow also retains cookies.
+   https://github.com/projectdiscovery/katana/blob/v1.6.1/pkg/engine/standard/crawl.go#L58
+
+9. Scrapy 2.13.3
+   FormRequest.from_response() / _get_inputs() include hidden inputs, preserve
+   existing values and serialize empty values as empty strings. Merely rotating
+   the name of an empty trap therefore does not stop form serialization.
+   https://github.com/scrapy/scrapy/blob/2.13.3/scrapy/http/request/form.py#L63
+   https://github.com/scrapy/scrapy/blob/2.13.3/scrapy/http/request/form.py#L159
+   CookiesMiddleware persists response cookies and adds them to later requests.
+   https://github.com/scrapy/scrapy/blob/2.13.3/scrapy/downloadermiddlewares/cookies.py#L70
+   The link extractor works from HTML, without testing CSS visibility.
+   https://github.com/scrapy/scrapy/blob/2.13.3/scrapy/linkextractors/lxmlhtml.py#L92
+   Inference: an unadapted HTTP form-serialization flow still lacks SafeHouse's
+   fresh challenge, despite correctly copying the empty trap. It can be adapted
+   to a public protocol; it does not need a human to maintain cookies.
+
+Consequences for the current implementation
+
+- The local challenge authenticates its signed context, not a human. Even an
+  HTTP-only client can implement a public challenge protocol; JavaScript is a
+  requirement of the supplied visitor UI, not a cryptographic requirement for
+  an adversarial client. Do not describe cookie or HMAC validation as proof of
+  a real browser.
+- A browser bot that fills only visible fields can let bots.js do issuance and
+  waiting. The random trap name does not force such a bot to solve anything.
+- The highest-value next protections are bounded server-side submission and
+  issuance budgets, an explicit policy for other write APIs, and stronger
+  verification where appropriate. One-time challenges constrain replay but
+  do not stop a bot obtaining fresh challenges; they also require atomic,
+  bounded persistence and careful handling of legitimate form retries.
+- A hidden-link visit by itself is not sufficient evidence for a permanent
+  address ban: ordinary link checkers and crawlers may follow those links.

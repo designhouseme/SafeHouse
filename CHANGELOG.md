@@ -4,6 +4,10 @@ Each release needs a `## x.y.z` section; its body is shown in the WordPress "Vie
 
 ## Unreleased
 
+- Bot protection: replace the shared static proof with rotating trap names and signed, browser/form/post-bound challenges, fresh outside page caches, valid for 20 minutes with a server-enforced minimum age. Accessible retry handling, no per-challenge database writes; same-browser replay within that window remains possible.
+- Hardening: independent XML-RPC pingback blocking even with Jetpack/WooPayments, plus opt-in reduction of REST/RSD/Writer/shortlink discovery metadata. REST endpoints and asset cache busting remain available.
+- Added adversarial honeypot, real-browser cache/retry and hardening integration regressions. Purge HTML and asset caches when upgrading the honeypot protocol.
+
 - Stability module: bounded local PHP incident observations, temporary HTTP timing samples, read-only WP-Cron/Action Scheduler diagnostics, Site Health and WP-CLI controls. No automatic third-party plugin deactivation or job cancellation.
 - Cooperative time/memory budgets and one worker per site for SafeHouse delivery. Five failed attempts pause retained jobs for explicit review and resumption. Alert and Cloudflare transport no longer runs inline in ordinary requests.
 - Targeted privilege-change checks and resumable full inventory reconciliation preserve immediate grant/revoke alerts without enumerating every account per user change.
