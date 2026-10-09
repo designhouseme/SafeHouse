@@ -16,6 +16,7 @@ if ( ! defined( 'WP_CLI' ) || ! WP_CLI || 'local' !== wp_get_environment_type() 
 	exit( 1 );
 }
 
+use SafeHouse\Core\FormGuard;
 use SafeHouse\Core\Queue;
 use SafeHouse\Core\Settings;
 use SafeHouse\Core\Signature;
@@ -48,6 +49,16 @@ $cron = static function (): array {
 	return $hooks;
 };
 $tables = static fn() => (array) $wpdb->get_col( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $wpdb->prefix . 'shouse_' ) . '%' ) );
+$guard_table = $wpdb->prefix . 'shouse_form_guard';
+$guard_proof = hash( 'sha256', 'lifecycle-proof' );
+$guard_subject = hash( 'sha256', 'lifecycle-browser' );
+$guard_owner = hash( 'sha256', 'issue|browser|' . $guard_subject );
+$guard_rows = static fn() => (array) $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i WHERE fingerprint IN (%s,%s) ORDER BY pool,kind,slot', $guard_table, $guard_proof, $guard_owner ), ARRAY_A );
+$assert_guard_schema = static function () use ( $assert, $wpdb, $tables, $guard_table ): void {
+	$assert( in_array( $guard_table, $tables(), true ) && '2' === get_option( 'shouse_form_guard_db_version' ), 'bounded form guard table and schema version 2 are present' );
+	$owner = (array) $wpdb->get_results( $wpdb->prepare( 'SHOW INDEX FROM %i WHERE Key_name = %s', $guard_table, 'owner' ), ARRAY_A );
+	$assert( [ 'pool', 'kind', 'fingerprint' ] === array_column( $owner, 'Column_name' ) && [] === array_filter( array_column( $owner, 'Non_unique' ), static fn( $value ) => 0 !== (int) $value ), 'form guard enforces unique owners across alternate counter slots' );
+};
 $assert_pins = static function () use ( $assert ): void {
 	$p = Plugin::instance();
 	$assert( false === $p->settings->forced( 'watch' ) && ! $p->is_running( 'watch' ), 'pinned-off Watch stays stopped' );
@@ -62,8 +73,13 @@ switch ( $mode ) {
 		$assert( is_readable( dirname( SHOUSE_FILE ) . '/LICENSE' ), 'the distribution includes its license' );
 		$assert_pins();
 		$assert( SafeHouse\Modules\Omnibus::maybe_install( true ), 'optional price-history schema can be installed from the package' );
-		$assert( 5 === count( $tables() ), 'all five SafeHouse tables are present' );
+		$assert( 6 === count( $tables() ), 'all six SafeHouse tables are present' );
 		$assert( '2' === get_option( 'shouse_queue_db_version' ) && '2' === get_option( 'shouse_omnibus_db_version' ) && '1' === get_option( 'shouse_stability_db_version' ), 'queue, price-history and incident schema versions are recorded' );
+		$assert_guard_schema();
+		$proof = FormGuard::issue( 'register', $guard_proof, time() + 1200 );
+		$assert( '' === $proof['reason'] && is_int( $proof['slot'] ), 'installed form guard issues a proof' );
+		$assert( '' === FormGuard::consume( 'register', $proof['slot'], $guard_proof ) && '' === FormGuard::budget( 'register', 'issue', 'browser', $guard_subject, 20, 600 ), 'consumed proof and browser quota are persisted for lifecycle checks' );
+		$assert( 2 === count( $guard_rows() ), 'lifecycle fixture contains both replay and rate state' );
 		$wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->options} SET option_value = '0' WHERE option_name = %s", 'shouse_stability_write_after' ) );
 		$assert( SafeHouse\Core\RuntimeMonitor::record( 'slow', 'cli', 'plugin:lifecyclefixture', 0, 3500, MB_IN_BYTES ), 'incident observation is stored in the installed schema' );
 		$p = Plugin::instance();
@@ -90,7 +106,7 @@ switch ( $mode ) {
 		wp_schedule_single_event( time() + 600, 'shouse_watch_continue' );
 		update_option( 'shouse_stability_session', time() + 900, false );
 		$assert( in_array( 'shouse_hourly', $cron(), true ) && in_array( 'shouse_daily', $cron(), true ) && in_array( 'shouse_queue', $cron(), true ) && in_array( 'shouse_cloudflare_purge', $cron(), true ), 'all four lifecycle cron hooks are represented' );
-		update_option( 'lifecycle_package_expected', [ 'rows' => $rows(), 'floor' => $floor, 'settings' => $stored, 'incidents' => $incidents() ], false );
+		update_option( 'lifecycle_package_expected', [ 'rows' => $rows(), 'floor' => $floor, 'settings' => $stored, 'incidents' => $incidents(), 'guard' => $guard_rows() ], false );
 		WP_CLI::log( 'Artifact version: ' . SHOUSE_VERSION . '; WordPress ' . get_bloginfo( 'version' ) . '; PHP ' . PHP_VERSION );
 		break;
 	case 'safe':
@@ -100,6 +116,7 @@ switch ( $mode ) {
 		$assert( $metadata['settings'] === $p->settings->all(), 'safe mode preserves saved settings' );
 		$assert( $metadata['rows'] === $rows(), 'safe mode preserves both pending jobs and retry metadata' );
 		$assert( $metadata['incidents'] === $incidents(), 'safe mode preserves the recorded incident' );
+		$assert( $metadata['guard'] === $guard_rows(), 'safe mode preserves consumed proofs and rate counters' );
 		$assert( has_action( 'shouse_queue', [ Queue::class, 'run' ] ) !== false, 'queue recovery hook remains available in safe mode' );
 		break;
 	case 'active':
@@ -111,7 +128,9 @@ switch ( $mode ) {
 		$assert( $metadata['floor'] === get_option( 'shouse_update_floor' ) && $metadata['floor'] === get_option( 'shouse_advisory_floor' ), 'both security floors survive lifecycle changes' );
 		$assert( $metadata['settings'] === Plugin::instance()->settings->all(), 'saved settings survive lifecycle changes' );
 		$assert( $metadata['incidents'] === $incidents(), 'recorded incident survives ZIP replacement and reactivation' );
-		$assert( 5 === count( $tables() ) && '2' === get_option( 'shouse_queue_db_version' ), 'all five tables and current queue schema survive lifecycle changes' );
+		$assert( 6 === count( $tables() ) && '2' === get_option( 'shouse_queue_db_version' ), 'all six tables and current queue schema survive lifecycle changes' );
+		$assert_guard_schema();
+		$assert( $metadata['guard'] === $guard_rows(), 'ZIP replacement and reactivation preserve consumed proofs and rate counters exactly' );
 		if ( 'updated' === $mode ) {
 			$dispatch = (array) $wpdb->get_col( $wpdb->prepare( 'SHOW INDEX FROM %i WHERE Key_name = %s', $table, 'dispatch' ), 4 );
 			$handler_dispatch = (array) $wpdb->get_col( $wpdb->prepare( 'SHOW INDEX FROM %i WHERE Key_name = %s', $table, 'handler_dispatch' ), 4 );
@@ -123,7 +142,9 @@ switch ( $mode ) {
 		$assert( ! is_plugin_active( 'shouse/shouse.php' ) && ! class_exists( Plugin::class ), 'deactivated package does not boot' );
 		$assert( [] === $cron(), 'deactivation removes every SafeHouse cron event' );
 		$assert( $metadata['rows'] === $rows(), 'deactivation retains both queued jobs exactly' );
-		$assert( 5 === count( $tables() ), 'deactivation retains all data tables' );
+		$assert( 6 === count( $tables() ), 'deactivation retains all six data tables' );
+		$assert_guard_schema();
+		$assert( $metadata['guard'] === $guard_rows(), 'deactivation retains consumed proofs and rate counters exactly' );
 		$assert( false === get_option( 'shouse_stability_session' ), 'deactivation stops the temporary diagnostic session' );
 		$assert( $metadata['settings'] === get_option( 'shouse_settings' ) && $metadata['floor'] === get_option( 'shouse_update_floor' ), 'deactivation retains settings and security floor' );
 		$assert( $metadata['incidents'] === $incidents(), 'deactivation preserves the recorded incident' );
@@ -136,11 +157,11 @@ switch ( $mode ) {
 		break;
 	case 'prepare-uninstall':
 		$assert( false !== file_put_contents( WP_CONTENT_DIR . '/shouse-safe-mode', '' ) && false !== file_put_contents( WP_CONTENT_DIR . '/wphouse-safe-mode', '' ), 'current and legacy rescue flags exist before uninstall' );
-		$assert( 2 === count( $rows() ) && 5 === count( $tables() ), 'uninstall starts with queued work and all tables' );
+		$assert( 2 === count( $rows() ) && 6 === count( $tables() ) && 2 === count( $guard_rows() ), 'uninstall starts with queued work, form guard state and all six tables' );
 		break;
 	case 'uninstalled':
 		$assert( ! is_dir( WP_PLUGIN_DIR . '/shouse' ) && ! class_exists( Plugin::class ), 'uninstall removes the package files' );
-		$assert( [] === $tables(), 'uninstall removes log, login, price-history, job and incident tables' );
+		$assert( [] === $tables(), 'uninstall removes log, login, price-history, job, incident and form guard tables' );
 		$names = (array) $wpdb->get_col( "SELECT option_name FROM {$wpdb->options}" );
 		$left = array_values( array_filter( $names, static fn( $name ) => (bool) preg_match( '/^(?:(?:_site)?_transient_(?:timeout_)?)?(?:shouse_|wphouse_)/', $name ) ) );
 		$assert( [] === $left, 'uninstall removes all current/legacy options, floors, queue state and transients' );

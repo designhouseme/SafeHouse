@@ -137,6 +137,7 @@ final class Plugin {
 		}
 		Core\Migration::run();
 		Log::install();
+		Core\FormGuard::install();
 		self::schedule_events();
 	}
 
