@@ -1,5 +1,5 @@
 /**
- * SafeHouse bot protection in the browser: the honeypot proof and Cloudflare Turnstile widgets.
+ * SafeHouse bot protection in the browser: form challenges and Cloudflare Turnstile widgets.
  * Loaded only where one of the forms is printed, and on the block checkout.
  */
 ( function () {
@@ -16,23 +16,132 @@
 		Array.prototype.forEach.call( ( root || document ).querySelectorAll( selector ), fn );
 	}
 
-	/* Honeypot: the proof goes in on the first keypress, tap or click inside the form. */
+	// Serialize issuance so two forms on a fresh page do not race to set the browser cookie.
+	var challengeQueue = Promise.resolve();
+
+	function resumeForm( form, submitter ) {
+		if ( form.requestSubmit ) {
+			form.requestSubmit( submitter || undefined );
+		} else {
+			// Preserve WooCommerce's submit-button discriminator in older browsers.
+			var button;
+			if ( submitter && submitter.name ) {
+				button = document.createElement( 'input' );
+				button.type = 'hidden';
+				button.name = submitter.name;
+				button.value = submitter.value;
+				form.appendChild( button );
+			}
+			HTMLFormElement.prototype.submit.call( form );
+			if ( button ) {
+				button.remove();
+			}
+		}
+	}
+
+	/* Cached HTML contains no usable proof. Fetch a fresh, browser-bound challenge on interaction. */
 	function armHoneypot( box ) {
 		var form = box.closest( 'form' );
-		if ( ! form || form.shouseHoneypot ) {
+		if ( ! form || box.shouseHoneypot ) {
 			return;
 		}
-		form.shouseHoneypot = true;
-		var write = function () {
-			var input = form.querySelector( 'input[name="shouse_proof"]' );
-			if ( input ) {
-				input.value = box.getAttribute( 'data-proof' ) || '';
+		var proof = box.querySelector( 'input[name="shouse_challenge"]' );
+		var trap = box.querySelector( '[data-shouse-trap]' );
+		// Old cached markup cannot produce a v2 challenge; the server returns reload guidance.
+		if ( ! proof || ! trap || ! config.challengeUrl ) { return; }
+		var state = { pending: null, expires: 0, ready: 0 };
+		box.shouseHoneypot = state;
+		var status = box.parentNode.querySelector( '.shouse-hp-status' );
+		var target = function () {
+			var post = form.elements.namedItem( 'comment_post_ID' );
+			return box.getAttribute( 'data-form' ) === 'comments' && post ? post.value : ( box.getAttribute( 'data-target' ) || '0' );
+		};
+		state.valid = function () {
+			return state.inactive || ( proof.value && Date.now() < state.expires && state.target === target() );
+		};
+		state.prepare = function () {
+			if ( state.pending ) {
+				return state.pending;
+			}
+			if ( state.valid() ) {
+				return Promise.resolve();
+			}
+			proof.value = '';
+			state.pending = challengeQueue.then( function () {
+				var controller = new AbortController();
+				var timer = setTimeout( function () { controller.abort(); }, WAIT_MS );
+				var issuedTarget = target();
+				var body = new URLSearchParams( {
+					action: 'shouse_challenge',
+					form: box.getAttribute( 'data-form' ),
+					target: issuedTarget,
+				} );
+				return fetch( config.challengeUrl, {
+					method: 'POST', credentials: 'same-origin', cache: 'no-store',
+					headers: { 'X-SHouse-Form': '1' }, body: body, signal: controller.signal,
+				} ).then( function ( response ) {
+					// An open/cached page may outlive module disable or safe mode. WordPress returns
+					// exactly 400/0 for an unregistered AJAX action; defer to the real form handler.
+					if ( response.status === 400 ) {
+						return response.text().then( function ( body ) {
+							if ( body.trim() === '0' ) { return { inactive: true }; }
+							throw new Error( 'challenge' );
+						} );
+					}
+					if ( ! response.ok ) { throw new Error( 'challenge' ); }
+					return response.json();
+				} ).then( function ( result ) {
+					if ( result.inactive ) { state.inactive = true; return; }
+					var data = result.data;
+					if ( ! result.success || ! data || typeof data.challenge !== 'string' || typeof data.trap !== 'string' ) {
+						throw new Error( 'challenge' );
+					}
+					// Never clear a populated trap: changing its name must not erase bot evidence.
+					trap.name = data.trap;
+					proof.value = data.challenge;
+					state.expires = Date.now() + Math.max( 0, data.expiresIn - 30 ) * 1000;
+					state.ready = Date.now() + data.wait + 100;
+					state.target = issuedTarget;
+					if ( status ) { status.textContent = ''; status.hidden = true; }
+				} ).finally( function () { clearTimeout( timer ); } );
+			} ).catch( function ( error ) {
+				if ( status ) { status.textContent = config.challengeError; status.hidden = false; }
+				throw error;
+			} ).finally( function () { state.pending = null; } );
+			challengeQueue = state.pending.catch( function () {} );
+			return state.pending;
+		};
+		var prepare = function () {
+			if ( form.contains( box ) ) {
+				state.prepare().catch( function () {} );
 			}
 		};
-		[ 'keydown', 'pointerdown', 'touchstart', 'input' ].forEach( function ( type ) {
-			form.addEventListener( type, write, { once: true, passive: true } );
+		[ 'focusin', 'pointerdown', 'input' ].forEach( function ( type ) {
+			form.addEventListener( type, prepare, { passive: true } );
 		} );
 	}
+
+	// The submit path also handles autofill, keyboard-only use and very fast submissions.
+	document.addEventListener( 'submit', function ( event ) {
+		var form = event.target;
+		var box = form.querySelector ? form.querySelector( '.shouse-hp' ) : null;
+		if ( ! box ) { return; }
+		armHoneypot( box );
+		var state = box.shouseHoneypot;
+		if ( ! state ) { return; }
+		if ( state.valid() && Date.now() >= state.ready ) { return; }
+		event.preventDefault();
+		event.stopImmediatePropagation();
+		if ( state.submitting ) { return; }
+		state.submitting = true;
+		var submitter = event.submitter && event.submitter.form === form ? event.submitter : null;
+		state.prepare().then( function () {
+			return new Promise( function ( resolve ) { setTimeout( resolve, Math.max( 0, state.ready - Date.now() ) ); } );
+		} ).then( function () {
+			state.submitting = false;
+			if ( document.contains( form ) && form.contains( box ) ) { resumeForm( form, submitter ); }
+		} ).catch( function () { state.submitting = false; } );
+	}, true );
 
 	/* Turnstile */
 	function field( el, create ) {
@@ -122,11 +231,7 @@
 			el.shouseResume = function () {
 				clearTimeout( timer );
 				form.shouseSending = true;
-				if ( form.requestSubmit ) {
-					form.requestSubmit( submitter || undefined );
-				} else {
-					form.submit();
-				}
+				resumeForm( form, submitter );
 				form.shouseSending = false;
 			};
 		},

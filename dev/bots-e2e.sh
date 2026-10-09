@@ -6,6 +6,7 @@
 # Test orders stay on the dev site.
 set -euo pipefail
 cd "$(dirname "$0")"
+source ./env.sh
 U=http://localhost:${WP_PORT:-8894}
 wp() { ./wp.sh "$@" 2>/dev/null; }
 

@@ -21,6 +21,7 @@ use WP_REST_Request;
 use WP_User;
 use SafeHouse\Core\AbstractModule;
 use SafeHouse\Core\Compat;
+use SafeHouse\Core\Honeypot;
 use SafeHouse\Core\Log;
 use SafeHouse\Core\Turnstile;
 
@@ -28,8 +29,6 @@ defined( 'ABSPATH' ) || exit;
 
 final class Bots extends AbstractModule {
 
-	private const TRAP           = 'shouse_url';
-	private const PROOF          = 'shouse_proof';
 	private const STORE_CHECKOUT = '#^/wc/store(?:/v\d+)?/checkout(?:/|$)#i';
 	private const FORMS          = [ 'login', 'register', 'lostpassword', 'comments', 'checkout' ];
 	private const WIDGET_HOOKS   = [
@@ -90,7 +89,7 @@ final class Bots extends AbstractModule {
 			'honeypot'               => [
 				'type'  => 'toggle',
 				'label' => __( 'Honeypot on registration, lost password and comments', 'shouse' ),
-				'help'  => __( 'An invisible trap field plus proof that a person used the form in a browser. Needs no outside service. Visitors with JavaScript turned off cannot register, reset a password or comment.', 'shouse' ),
+				'help'  => __( 'A rotating trap field and a short-lived, signed browser challenge tied to the form. Needs JavaScript and cookies, but no outside service. Automated browsers can still pass; use Turnstile for stronger checks.', 'shouse' ),
 			],
 			'turnstile_login'        => [
 				'type'  => 'toggle',
@@ -139,6 +138,7 @@ final class Bots extends AbstractModule {
 		}
 
 		if ( $this->honeypot ) {
+			Honeypot::boot();
 			foreach ( self::HONEYPOT_HOOKS as $hook ) {
 				add_action( $hook, [ $this, 'print_honeypot' ] );
 			}
@@ -177,11 +177,8 @@ final class Bots extends AbstractModule {
 
 	public function print_honeypot(): void {
 		$this->enqueue();
-		// Off-screen rather than display:none, which simple bots skip. aria-hidden and tabindex keep it from people.
-		echo '<div class="shouse-hp" data-proof="' . esc_attr( self::proof() ) . '" aria-hidden="true" style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden">'
-			. '<label>' . esc_html__( 'Leave this field empty', 'shouse' ) . ' <input type="text" name="' . esc_attr( self::TRAP ) . '" value="" tabindex="-1" autocomplete="off"></label>'
-			. '<input type="hidden" name="' . esc_attr( self::PROOF ) . '" value="">'
-			. '</div>';
+		$form = self::WIDGET_HOOKS[ current_action() ] ?? '';
+		echo Honeypot::markup( $form, 'comments' === $form ? (int) get_the_ID() : 0 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by Honeypot::markup().
 	}
 
 	public function print_widget(): void {
@@ -297,11 +294,13 @@ final class Bots extends AbstractModule {
 		if ( wp_script_is( 'shouse-bots' ) ) {
 			return;
 		}
-		wp_enqueue_script( 'shouse-bots', plugins_url( 'assets/bots.js', SHOUSE_FILE ), $checkout ? [ 'wp-api-fetch' ] : [], SHOUSE_VERSION, [ 'in_footer' => true ] );
+		wp_enqueue_script( 'shouse-bots', plugins_url( 'assets/bots.js', SHOUSE_FILE ), $checkout ? [ 'wp-api-fetch' ] : [], SHOUSE_VERSION . '-forms-v2', [ 'in_footer' => true ] );
 		$config = [
-			'sitekey'  => $this->turnstile ? Turnstile::site_key() : '',
-			'checkout' => $checkout,
-			'header'   => Turnstile::HEADER,
+			'sitekey'        => $this->turnstile ? Turnstile::site_key() : '',
+			'checkout'       => $checkout,
+			'header'         => Turnstile::HEADER,
+			'challengeUrl'   => admin_url( 'admin-ajax.php', 'relative' ),
+			'challengeError' => __( 'The form check could not finish. Enable cookies and JavaScript, then submit again.', 'shouse' ),
 		];
 		wp_add_inline_script( 'shouse-bots', 'window.shouseBots = ' . wp_json_encode( $config ) . ';', 'before' );
 		if ( $this->turnstile ) {
@@ -328,9 +327,14 @@ final class Bots extends AbstractModule {
 
 	/** '' when the submission may go on, otherwise the message to show. */
 	private function verdict( string $form, bool $honeypot, ?object $operation = null ): string {
-		if ( $honeypot && $this->honeypot && ! self::honeypot_passed() ) {
-			$this->note( $form, 'honeypot' );
-			return __( 'This looks like an automated submission. Please make sure JavaScript is on and try again.', 'shouse' );
+		if ( $honeypot && $this->honeypot ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- bound to the challenge; core validates the target post.
+			$target = 'comments' === $form && isset( $_POST['comment_post_ID'] ) && is_scalar( $_POST['comment_post_ID'] ) ? absint( $_POST['comment_post_ID'] ) : 0;
+			$reason = Honeypot::check( $form, $target );
+			if ( '' !== $reason ) {
+				$this->note( $form, 'honeypot_' . $reason );
+				return __( 'The form check did not pass. Reload the page, allow cookies and JavaScript, and try again.', 'shouse' );
+			}
 		}
 		if ( ! isset( $this->turnstile[ $form ] ) ) {
 			return '';
@@ -351,23 +355,6 @@ final class Bots extends AbstractModule {
 		}
 		$this->note( $form, 'turnstile' );
 		return __( 'The anti-bot check did not pass. Please wait for it to finish and try again.', 'shouse' );
-	}
-
-	/**
-	 * The trap must be present and empty, and the proof must match. bots.js writes the proof on
-	 * the first keypress, tap or click in the form, so a bot that only fetches and posts fails.
-	 */
-	private static function honeypot_passed(): bool {
-		// phpcs:disable WordPress.Security.NonceVerification.Missing -- compared only, never stored.
-		$trap  = isset( $_POST[ self::TRAP ] ) ? wp_unslash( $_POST[ self::TRAP ] ) : null; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		$proof = isset( $_POST[ self::PROOF ] ) ? wp_unslash( $_POST[ self::PROOF ] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		// phpcs:enable
-		return '' === $trap && is_string( $proof ) && hash_equals( self::proof(), $proof );
-	}
-
-	/** Same for every visitor, so cached pages keep working. It only has to be absent from bare POSTs. */
-	private static function proof(): string {
-		return substr( wp_hash( 'shouse-bots-proof' ), 0, 20 );
 	}
 
 	private static function posted_to_wp_login(): bool {

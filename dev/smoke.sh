@@ -18,6 +18,7 @@ has_woo=$(wp eval 'echo class_exists("WooCommerce") ? 1 : 0;')
 backup=$(wp option get shouse_settings --format=json || echo '{}')
 [ "$has_wf" = 1 ] && wf=$(wp eval 'echo (int) wfConfig::get("loginSec_disableAuthorScan"), (int) wfConfig::get("loginSec_maskLoginErrors");')
 restore() {
+	[ -z "${hp_jar:-}" ] || rm -f "$hp_jar"
 	wp option update shouse_settings "$backup" --format=json >/dev/null
 	[ "$has_wf" = 1 ] && wp eval "wfConfig::set('loginSec_disableAuthorScan', ${wf:0:1}); wfConfig::set('loginSec_maskLoginErrors', ${wf:1:1});" >/dev/null
 	wp shouse lock >/dev/null
@@ -93,27 +94,52 @@ reg_before=$(wp option get users_can_register); woo_reg_before=$(wp option get w
 wp option update users_can_register 1 >/dev/null
 [ "$has_woo" = 1 ] && wp option update woocommerce_enable_myaccount_registration yes >/dev/null
 n=$RANDOM
-proof=$(curl -s "$U/wp-login.php?action=register" | grep -o 'data-proof="[^"]*"' | head -1 | sed 's/data-proof="//;s/"//')
-check "honeypot printed on registration"  1   "$([ -n "$proof" ] && echo 1 || echo 0)"
-check "register without proof refused"    200 "$(code -d "user_login=bot$n&user_email=bot$n@example.test&shouse_url=&shouse_proof=" "$U/wp-login.php?action=register")"
-check "register with filled trap refused" 200 "$(code -d "user_login=bot$n&user_email=bot$n@example.test&shouse_url=http://spam.test&shouse_proof=$proof" "$U/wp-login.php?action=register")"
-check "register with proof accepted"      302 "$(code -d "user_login=hp$n&user_email=hp$n@example.test&shouse_url=&shouse_proof=$proof" "$U/wp-login.php?action=register")"
-check "lost password without proof"       200 "$(code -d "user_login=admin" "$U/wp-login.php?action=lostpassword")"
-check "lost password with proof"          302 "$(code -d "user_login=admin&shouse_url=&shouse_proof=$proof" "$U/wp-login.php?action=lostpassword")"
-check "comment without proof refused"     403 "$(code -d "comment_post_ID=1&author=a&email=a@b.test&comment=bot$n" "$U/wp-comments-post.php")"
-check "comment with proof accepted"       302 "$(code -d "comment_post_ID=1&author=a&email=a@b.test&comment=human$n&shouse_url=&shouse_proof=$proof" "$U/wp-comments-post.php")"
+hp_jar=$(mktemp)
+hp_issue() { # <cookie jar> <form> <target>; return URL-encoded challenge and empty rotating trap.
+	local fields
+	fields=$(curl -fsS -c "$1" -b "$1" -H 'X-SHouse-Form: 1' \
+		-d "action=shouse_challenge&form=$2&target=$3" "$U/wp-admin/admin-ajax.php" | python3 -c '
+import json, sys, urllib.parse
+result = json.load(sys.stdin)
+if result.get("success") is not True:
+    raise SystemExit("Honeypot challenge request failed")
+data = result["data"]
+if not isinstance(data.get("challenge"), str) or not data["challenge"] or not isinstance(data.get("trap"), str) or not data["trap"]:
+    raise SystemExit("Honeypot challenge response is incomplete")
+print(urllib.parse.urlencode({"shouse_challenge": data["challenge"], data["trap"]: ""}))
+') || return 1
+	sleep 1.1 # The client waits for the challenge; the server must never sleep.
+	printf '%s' "$fields"
+}
+check "honeypot printed on registration"  1   "$(curl -s -c "$hp_jar" -b "$hp_jar" "$U/wp-login.php?action=register" | grep -c 'class="shouse-hp" data-form="register"')"
+reg_fields=$(hp_issue "$hp_jar" register 0)
+check "registration challenge issued"     1   "$([ -n "$reg_fields" ] && echo 1 || echo 0)"
+check "register without proof refused"    200 "$(code -c "$hp_jar" -b "$hp_jar" -d "user_login=bot$n&user_email=bot$n@example.test" "$U/wp-login.php?action=register")"
+check "register with filled trap refused" 200 "$(code -c "$hp_jar" -b "$hp_jar" -d "user_login=bot$n&user_email=bot$n@example.test&${reg_fields}http%3A%2F%2Fspam.test" "$U/wp-login.php?action=register")"
+check "register with proof accepted"      302 "$(code -c "$hp_jar" -b "$hp_jar" -d "user_login=hp$n&user_email=hp$n@example.test&$reg_fields" "$U/wp-login.php?action=register")"
+check "lost password without proof"       200 "$(code -c "$hp_jar" -b "$hp_jar" -d "user_login=admin" "$U/wp-login.php?action=lostpassword")"
+check "reset rejects registration proof"  200 "$(code -c "$hp_jar" -b "$hp_jar" -d "user_login=admin&$reg_fields" "$U/wp-login.php?action=lostpassword")"
+reset_fields=$(hp_issue "$hp_jar" lostpassword 0)
+check "lost password with proof"          302 "$(code -c "$hp_jar" -b "$hp_jar" -d "user_login=admin&$reset_fields" "$U/wp-login.php?action=lostpassword")"
+check "comment without proof refused"     403 "$(code -c "$hp_jar" -b "$hp_jar" -d "comment_post_ID=1&author=a&email=a@b.test&comment=bot$n" "$U/wp-comments-post.php")"
+check "comment rejects registration proof" 403 "$(code -c "$hp_jar" -b "$hp_jar" -d "comment_post_ID=1&author=a&email=a@b.test&comment=bot$n&$reg_fields" "$U/wp-comments-post.php")"
+comment_fields=$(hp_issue "$hp_jar" comments 1)
+check "comment with proof accepted"       302 "$(code -c "$hp_jar" -b "$hp_jar" -d "comment_post_ID=1&author=a&email=a@b.test&comment=human$n&$comment_fields" "$U/wp-comments-post.php")"
 check "login has no honeypot"             302 "$(code -b "wordpress_test_cookie=WP%20Cookie%20check" -d "log=admin&pwd=$SHOUSE_DEV_ADMIN_PASSWORD&testcookie=1" "$U/wp-login.php")"
 check "admin password reset unaffected"   true "$(wp eval 'var_export(true === retrieve_password("admin"));')"
 if [ "$has_woo" = 1 ]; then
-	woo_register() { # <email> <extra fields>
-		local jar nonce
+	woo_register() { # <email> <challenge form, or empty for no challenge>
+		local jar nonce fields
 		jar=$(mktemp)
 		nonce=$(curl -s -c "$jar" -b "$jar" "$MA" | grep -o 'name="woocommerce-register-nonce" value="[^"]*"' | sed 's/.*value="//;s/"//')
-		code -c "$jar" -b "$jar" -d "email=$1&woocommerce-register-nonce=$nonce&_wp_http_referer=%2F&register=1$2" "$MA"
+		fields=''
+		if [ -n "$2" ]; then fields=$(hp_issue "$jar" "$2" 0); fi
+		code -c "$jar" -b "$jar" -d "email=$1&woocommerce-register-nonce=$nonce&_wp_http_referer=%2F&register=1&$fields" "$MA"
 		rm -f "$jar"
 	}
 	check "Woo register without proof"      200 "$(woo_register "wbot$n@example.test" "")"
-	check "Woo register with proof"         302 "$(woo_register "whp$n@example.test" "&shouse_url=&shouse_proof=$proof")"
+	check "Woo rejects reset proof"         200 "$(woo_register "wbot$n@example.test" lostpassword)"
+	check "Woo register with proof"         302 "$(woo_register "whp$n@example.test" register)"
 fi
 
 # Cloudflare test keys: this site key always issues XXXX.DUMMY.TOKEN.XXXX, the 1x secret accepts it, the 2x secret rejects all.
@@ -128,7 +154,10 @@ check "login without token refused"       200 "$(wlogin "")"
 check "login with token accepted"         302 "$(wlogin "&cf-turnstile-response=$T")"
 # The accepted comment above would trip the 15-second flood check.
 wp comment delete "$(wp comment list --search="human$n" --field=comment_ID)" --force >/dev/null
-check "comment without token refused"     403 "$(code -d "comment_post_ID=1&author=a&email=a@b.test&comment=t$n&shouse_url=&shouse_proof=$proof" "$U/wp-comments-post.php")"
+comment_fields=$(hp_issue "$hp_jar" comments 1)
+check "comment without token refused"     403 "$(code -c "$hp_jar" -b "$hp_jar" -d "comment_post_ID=1&author=a&email=a@b.test&comment=t$n&$comment_fields" "$U/wp-comments-post.php")"
+rm -f "$hp_jar"
+hp_jar=''
 if [ "$has_woo" = 1 ]; then
 	SA="$U/wp-json/wc/store/v1"
 	# A valid body, so that WooCommerce's own parameter check (400) does not answer first.

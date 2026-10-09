@@ -1,5 +1,5 @@
 // Browser checks for plugin/assets/bots.js, run by dev/bots-e2e.sh (which prepares the site).
-// Env: U (site URL), PRODUCT_ID, CLASSIC_PATH (page with [woocommerce_checkout]), OUT (screenshots).
+// Env: U (site URL), SHOUSE_DEV_ADMIN_PASSWORD, PRODUCT_ID, CLASSIC_PATH (checkout page), OUT (screenshots).
 // Playwright is resolved from PLAYWRIGHT_PATH or any node_modules on the way up.
 import { createRequire } from 'node:module';
 import { mkdirSync } from 'node:fs';
@@ -7,6 +7,10 @@ import { mkdirSync } from 'node:fs';
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PLAYWRIGHT_PATH ?? 'playwright');
 const U = process.env.U;
+const adminPassword = process.env.SHOUSE_DEV_ADMIN_PASSWORD;
+if (!adminPassword) {
+	throw new Error('SHOUSE_DEV_ADMIN_PASSWORD is required; run through dev/bots-e2e.sh.');
+}
 const OUT = process.env.OUT ?? 'build/e2e';
 const n = process.env.RUN_ID;
 mkdirSync(OUT, { recursive: true });
@@ -31,7 +35,7 @@ async function fresh() {
 	const { ctx, page } = await fresh();
 	await page.goto(`${U}/wp-login.php`);
 	await page.fill('#user_login', 'admin');
-	await page.fill('#user_pass', 'admin');
+	await page.fill('#user_pass', adminPassword);
 	await Promise.all([page.waitForURL(/wp-admin/, { timeout: 30000 }).catch(() => {}), page.click('#wp-submit')]);
 	check('wp-login: early submit waits for the token', page.url().includes('/wp-admin'), page.url());
 	check('wp-login: no script errors', page.errors.length === 0, page.errors.join(' | '));
