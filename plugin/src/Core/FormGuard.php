@@ -211,8 +211,11 @@ final class FormGuard {
 	 * The unique owner index serializes allocation even when contenders try different slots.
 	 * The subject must already be a site-keyed HMAC, never a raw IP, cookie or request field.
 	 * Fixed windows can admit up to two limits across a boundary; refusals do not prolong a window.
+	 *
+	 * @param int|null $retry_at Receives the refused counter's expiry, or null when not rate limited.
 	 */
-	public static function budget( string $form, string $stage, string $kind, string $subject, int $limit, int $window ): string {
+	public static function budget( string $form, string $stage, string $kind, string $subject, int $limit, int $window, ?int &$retry_at = null ): string {
+		$retry_at = null;
 		if ( ! isset( self::FORMS[ $form ] ) || ! in_array( $stage, [ 'issue', 'submit' ], true ) || ! in_array( $kind, [ 'browser', 'ip' ], true ) || ! self::fingerprint( $subject ) || $limit < 1 || $limit > 1000000 || $window < 1 || $window > DAY_IN_SECONDS ) {
 			return 'context';
 		}
@@ -228,7 +231,7 @@ final class FormGuard {
 		global $wpdb;
 		$previous = $wpdb->suppress_errors( true );
 		try {
-			$existing = self::take_existing( $form, $fingerprint, $limit, $now, $expires );
+			$existing = self::take_existing( $form, $fingerprint, $limit, $now, $expires, $retry_at );
 			if ( null !== $existing ) {
 				return $existing;
 			}
@@ -252,7 +255,7 @@ final class FormGuard {
 					}
 				}
 				// A parallel request may have claimed another slot for this owner. Reuse its counter.
-				$existing = self::take_existing( $form, $fingerprint, $limit, $now, $expires );
+				$existing = self::take_existing( $form, $fingerprint, $limit, $now, $expires, $retry_at );
 				if ( null !== $existing ) {
 					return $existing;
 				}
@@ -264,7 +267,7 @@ final class FormGuard {
 	}
 
 	/** Null means no owner exists; only a conditional UPDATE may grant allowance. */
-	private static function take_existing( string $form, string $fingerprint, int $limit, int $now, int $expires ): ?string {
+	private static function take_existing( string $form, string $fingerprint, int $limit, int $now, int $expires, ?int &$retry_at ): ?string {
 		global $wpdb;
 		// A second attempt handles allocation between our first UPDATE and the following SELECT.
 		for ( $attempt = 0; $attempt < 2; ++$attempt ) {
@@ -283,6 +286,7 @@ final class FormGuard {
 				return null;
 			}
 			if ( (int) $row['expires_at'] > $now && (int) $row['hits'] >= $limit ) {
+				$retry_at = (int) $row['expires_at'];
 				return 'rate_limited';
 			}
 		}

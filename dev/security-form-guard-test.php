@@ -2,6 +2,7 @@
 /** Atomic/bounded form storage regressions: wp eval-file /tests/security-form-guard-test.php. */
 
 use SafeHouse\Core\FormGuard;
+use SafeHouse\Core\Honeypot;
 
 if ( ! defined( 'ABSPATH' ) || 'local' !== wp_get_environment_type() || ! class_exists( FormGuard::class ) ) {
 	throw new RuntimeException( 'Requires a disposable WP_ENVIRONMENT_TYPE=local WordPress with SafeHouse.' );
@@ -27,6 +28,25 @@ $hash = static fn( string $input ): string => hash( 'sha256', 'form-guard-fixtur
 $owner = static fn( string $subject, string $stage = 'issue', string $kind = 'browser' ): string => hash( 'sha256', $stage . '|' . $kind . '|' . $subject );
 $slot = static fn( string $fingerprint ): int => (int) hexdec( substr( $fingerprint, 0, 7 ) ) % 32768;
 $filters = [];
+$retry_response = static function ( string $reason, ?int $retry_at ): array {
+	// Capture the actual JSON error without terminating WP-CLI or sleeping across a window.
+	$stop = new RuntimeException( 'form-guard-retry-response' );
+	$die = static function () use ( $stop ): never { throw $stop; };
+	$handler = static fn(): Closure => $die;
+	add_filter( 'wp_doing_ajax', '__return_true', PHP_INT_MAX );
+	add_filter( 'wp_die_ajax_handler', $handler, PHP_INT_MAX );
+	ob_start();
+	try {
+		( new ReflectionMethod( Honeypot::class, 'unavailable' ) )->invoke( null, $reason, $retry_at );
+	} catch ( RuntimeException $error ) {
+		if ( $stop !== $error ) throw $error;
+	} finally {
+		$body = ob_get_clean();
+		remove_filter( 'wp_doing_ajax', '__return_true', PHP_INT_MAX );
+		remove_filter( 'wp_die_ajax_handler', $handler, PHP_INT_MAX );
+	}
+	return json_decode( $body, true, 512, JSON_THROW_ON_ERROR );
+};
 $clear_options = static function () use ( $wpdb, $options ): void {
 	foreach ( $options as $option ) {
 		$wpdb->delete( $wpdb->options, [ 'option_name' => $option ] );
@@ -89,14 +109,25 @@ try {
 	$assert( 'rate_limited' === FormGuard::budget( 'register', 'issue', 'browser', $subject, 3, 600 ), 'quota rejects the first request beyond its boundary' );
 	$counter_slot = $slot( $owner( $subject ) );
 	$before = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %i WHERE pool=1 AND kind=2 AND slot=%d', $table, $counter_slot ), ARRAY_A );
-	FormGuard::budget( 'register', 'issue', 'browser', $subject, 3, 600 );
+	$retry_at = null;
+	FormGuard::budget( 'register', 'issue', 'browser', $subject, 3, 600, $retry_at );
 	$after = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %i WHERE pool=1 AND kind=2 AND slot=%d', $table, $counter_slot ), ARRAY_A );
 	$assert( $before === $after && '3' === $after['hits'], 'refusals do not increment counters or extend lockout' );
+	$assert( (int) $after['expires_at'] === $retry_at, 'rate refusal reports the actual fixed-window deadline stored in its counter' );
+	$started = time();
+	$response = $retry_response( 'rate_limited', $retry_at );
+	$finished = time();
+	$retry = $response['data']['retryAfter'] ?? null;
+	$assert( false === $response['success'] && 'rate_limited' === $response['data']['reason'] && is_int( $retry ) && $retry >= max( 1, $retry_at - $finished ) && $retry <= max( 1, $retry_at - $started ), 'rate response waits only for the refused counter window to finish' );
+	$response = $retry_response( 'rate_limited', time() - 1 );
+	$assert( 1 === $response['data']['retryAfter'], 'response delayed past the refused window boundary waits one second rather than a new full window' );
+	$response = $retry_response( 'storage', $retry_at );
+	$assert( 60 === $response['data']['retryAfter'], 'storage failures retain their independent retry delay' );
 	$assert( '' === FormGuard::budget( 'comments', 'issue', 'browser', $subject, 3, 600 ), 'another form keeps an independent quota pool' );
 	$assert( '' === FormGuard::budget( 'register', 'submit', 'browser', $subject, 3, 600 ), 'issuance and submission accounting are separate' );
 	$assert( '' === FormGuard::budget( 'register', 'issue', 'ip', $subject, 3, 600 ), 'browser and IP accounting are separate' );
 	$wpdb->update( $table, [ 'expires_at' => time() - 1 ], [ 'pool' => 1, 'kind' => 2, 'slot' => $counter_slot ] );
-	$assert( '' === FormGuard::budget( 'register', 'issue', 'browser', $subject, 3, 600 ), 'expired accounting window resets on demand without cron' );
+	$assert( '' === FormGuard::budget( 'register', 'issue', 'browser', $subject, 3, 600, $retry_at ) && null === $retry_at, 'expired accounting window resets on demand without cron or a stale retry deadline' );
 	$assert( '1' === $wpdb->get_var( $wpdb->prepare( 'SELECT hits FROM %i WHERE pool=1 AND kind=2 AND slot=%d', $table, $counter_slot ) ), 'reset window begins with one accepted request' );
 
 	// Find a real deterministic collision; a different subject must never evict the first owner.

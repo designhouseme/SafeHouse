@@ -81,9 +81,10 @@ final class Honeypot {
 		} else {
 			$cookie = $browser['value'];
 		}
-		$reason = self::budget( $form, 'issue', $cookie );
+		$retry_at = null;
+		$reason   = self::budget( $form, 'issue', $cookie, $retry_at );
 		if ( '' !== $reason ) {
-			self::unavailable( $reason );
+			self::unavailable( $reason, $retry_at );
 		}
 		if ( $renew ) {
 			if ( headers_sent() || ! setcookie(
@@ -175,10 +176,10 @@ final class Honeypot {
 	}
 
 	/** Domain-separated hashes keep raw cookies and addresses out of persistent counters. */
-	private static function budget( string $form, string $stage, string $cookie ): string {
+	private static function budget( string $form, string $stage, string $cookie, ?int &$retry_at = null ): string {
 		$limit   = 'issue' === $stage ? 20 : self::SUBMIT_LIMITS[ $form ];
 		$subject = hash_hmac( 'sha256', 'budget|browser|' . $cookie, self::key() );
-		$reason  = FormGuard::budget( $form, $stage, 'browser', $subject, $limit, self::RATE_SECONDS );
+		$reason  = FormGuard::budget( $form, $stage, 'browser', $subject, $limit, self::RATE_SECONDS, $retry_at );
 		if ( '' !== $reason ) {
 			return $reason;
 		}
@@ -190,16 +191,17 @@ final class Honeypot {
 		// put in one bucket. Cookie resets cannot reset a correctly configured IP budget.
 		$limit   = 'issue' === $stage ? 200 : self::SUBMIT_LIMITS[ $form ] * 20;
 		$subject = hash_hmac( 'sha256', 'budget|ip|' . $ip, self::key() );
-		return FormGuard::budget( $form, $stage, 'ip', $subject, $limit, self::RATE_SECONDS );
+		return FormGuard::budget( $form, $stage, 'ip', $subject, $limit, self::RATE_SECONDS, $retry_at );
 	}
 
 	private static function fingerprint( string $payload, string $cookie ): string {
 		return hash_hmac( 'sha256', 'ticket|' . $payload . '|' . $cookie, self::key() );
 	}
 
-	private static function unavailable( string $reason ): never {
+	private static function unavailable( string $reason, ?int $retry_at = null ): never {
 		$limited = 'rate_limited' === $reason;
-		$retry   = $limited ? self::RATE_SECONDS : 60;
+		// Use the refused row's deadline: the window can roll over while the request finishes.
+		$retry = $limited ? max( 1, ( $retry_at ?? 0 ) - time() ) : 60;
 		header( 'Retry-After: ' . $retry );
 		wp_send_json_error(
 			[
