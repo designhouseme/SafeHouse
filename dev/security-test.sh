@@ -26,7 +26,7 @@ wp core install --url=http://wordpress --title='SafeHouse security tests' --admi
 	--admin_password="$SHOUSE_DEV_ADMIN_PASSWORD" --admin_email=admin@example.test --skip-email
 wp plugin activate shouse
 wp eval 'echo "WordPress ", get_bloginfo("version"), "; PHP ", PHP_VERSION, "\n";'
-for fixture in security-auth-test.php security/duplicate.php security/outbox.php security/watch-read-test.php security/watch-budget-test.php security/queue-budget-test.php security/stability-diagnostics-test.php signed-data-wp-test.php download-transport-test.php security-omnibus-test.php ols/cache-hooks-test.php; do
+for fixture in security-auth-test.php security-honeypot-test.php security-hardening-test.php security/duplicate.php security/outbox.php security/watch-read-test.php security/watch-budget-test.php security/queue-budget-test.php security/stability-diagnostics-test.php signed-data-wp-test.php download-transport-test.php security-omnibus-test.php ols/cache-hooks-test.php; do
 	wp eval-file "/tests/$fixture"
 done
 wp eval-file /tests/security/queue-race.php seed
