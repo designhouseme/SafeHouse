@@ -7,6 +7,7 @@
 .DS_Store
 /.playwright-mcp/
 /docs/research/
+/dev/BOT-PROTECTION-NOTES.txt
 /site/public/assets/src/
 /site/.vercel/
 /site/.env*
