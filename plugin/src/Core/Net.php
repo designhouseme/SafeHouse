@@ -99,6 +99,100 @@ final class Net {
 		return $remote;
 	}
 
+	/**
+	 * A conservative address for anonymous quotas, or null when the visitor is unknown.
+	 * Unlike log attribution, this never falls back to a known shared proxy address.
+	 * Callers must hash the result before persistence. Real IPv6 visitors share a /64;
+	 * IPv4-mapped IPv6 is first normalized to IPv4 so alternate spelling cannot reset a quota.
+	 */
+	public static function quota_subject(): ?string {
+		// Validate raw strings rather than sanitizing malformed input into a valid address.
+		$remote = self::quota_ip( $_SERVER['REMOTE_ADDR'] ?? null ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized,WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Strict raw IP validation; do not repair malformed input.
+		if ( '' === $remote ) {
+			return null;
+		}
+
+		$cloudflare = self::behind_cloudflare();
+		if ( $cloudflare && self::from_cloudflare( $remote ) ) {
+			$visitor = self::quota_ip( $_SERVER['HTTP_CF_CONNECTING_IP'] ?? null ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized,WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Strict raw single-IP validation.
+			return self::quota_address( $visitor );
+		}
+
+		if ( ! $cloudflare && self::is_trusted_proxy( $remote ) ) {
+			$header = defined( 'SHOUSE_PROXY_HEADER' ) ? SHOUSE_PROXY_HEADER : 'HTTP_X_FORWARDED_FOR';
+			if ( ! is_string( $header ) || ! preg_match( '/^HTTP_[A-Z0-9_]{1,80}$/D', $header ) ) {
+				return null;
+			}
+			$value = $_SERVER[ $header ] ?? null; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized,WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Bounded, strictly validated raw IP list; never rendered.
+			if ( ! is_string( $value ) || '' === $value ) {
+				return null;
+			}
+			// Appending proxies may retain an arbitrary client-supplied left prefix. Inspect
+			// only the bounded right suffix; that prefix cannot disable a trustworthy IP quota.
+			$truncated = strlen( $value ) > 2048;
+			$parts     = explode( ',', substr( $value, -2048 ) );
+			$visited   = 0;
+			for ( $index = count( $parts ) - 1; $index >= 0 && $visited < 32; --$index, ++$visited ) {
+				if ( 0 === $index && $truncated ) {
+					// A cut-off token must never become valid just because its prefix was removed.
+					return null;
+				}
+				$candidate = self::quota_ip( trim( $parts[ $index ], ' ' ) );
+				if ( '' === $candidate ) {
+					return null;
+				}
+				if ( ! self::is_trusted_proxy( $candidate ) ) {
+					return self::quota_address( $candidate );
+				}
+			}
+			return null;
+		}
+
+		// Forged forwarding headers cannot opt a direct public connection out of quotas.
+		return self::quota_address( $remote );
+	}
+
+	/** Parse and canonicalize a single address without accepting ports, lists or mapped aliases. */
+	private static function quota_ip( mixed $value ): string {
+		if ( ! is_string( $value ) || strlen( $value ) > 45 || '' === self::valid_ip( $value ) ) {
+			return '';
+		}
+		$packed = inet_pton( $value );
+		if ( false === $packed ) {
+			return '';
+		}
+		if ( 16 === strlen( $packed ) && str_repeat( "\0", 10 ) . "\xff\xff" === substr( $packed, 0, 12 ) ) {
+			$packed = substr( $packed, 12 );
+		}
+		$canonical = inet_ntop( $packed );
+		return false === $canonical ? '' : $canonical;
+	}
+
+	/** Refuse shared/unknown address space and group genuine IPv6 hosts by their /64 prefix. */
+	private static function quota_address( string $ip ): ?string {
+		if ( '' === $ip || false === filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) || self::from_cloudflare( $ip ) ) {
+			return null;
+		}
+		$packed = inet_pton( $ip );
+		if ( false === $packed ) {
+			return null;
+		}
+		if ( 4 === strlen( $packed ) ) {
+			// PHP's private/reserved flags do not cover all shared or special-use IPv4 space.
+			foreach ( [ '100.64.0.0/10', '192.0.0.0/24', '192.0.2.0/24', '198.18.0.0/15', '198.51.100.0/24', '203.0.113.0/24', '224.0.0.0/4' ] as $range ) {
+				if ( self::in_range( $ip, $range ) ) {
+					return null;
+				}
+			}
+			return $ip;
+		}
+		if ( ! self::in_range( $ip, '2000::/3' ) || self::in_range( $ip, '2001:db8::/32' ) ) {
+			return null;
+		}
+		$prefix = inet_ntop( substr( $packed, 0, 8 ) . str_repeat( "\0", 8 ) );
+		return false === $prefix ? null : $prefix . '/64';
+	}
+
 	/** The site sits behind Cloudflare: the settings page says so, or SHOUSE_TRUSTED_PROXIES is 'cloudflare'. */
 	public static function behind_cloudflare(): bool {
 		if ( defined( 'SHOUSE_TRUSTED_PROXIES' ) ) {
