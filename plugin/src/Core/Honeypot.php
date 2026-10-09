@@ -1,11 +1,11 @@
 <?php
 /**
- * Stateless form challenges, bound to a short-lived browser cookie and one form context.
+ * One-use form challenges, bound to a short-lived browser cookie and one form context.
  *
  * Cached pages contain only placeholders. A same-origin request issues a fresh challenge;
  * the server checks its signature, age and rotating empty trap when the form is submitted.
- * This raises the cost of simple scripted submissions; it is not proof of a human and a
- * challenge can be reused by its browser during its lifetime. Nothing is written to the DB.
+ * Atomic, bounded storage prevents replay and limits issuance and submissions. This raises
+ * the cost of scripted submissions; it is not proof of a human or distributed flood control.
  *
  * @package SafeHouse
  */
@@ -22,8 +22,15 @@ final class Honeypot {
 	private const LIFETIME       = 1200;
 	private const COOKIE_SECONDS = 86400;
 	private const WAIT_MS        = 1000;
+	private const RATE_SECONDS   = 600;
+	private const SUBMIT_LIMITS  = [
+		'register'     => 5,
+		'lostpassword' => 5,
+		'comments'     => 10,
+	];
 
 	public static function boot(): void {
+		FormGuard::maybe_install();
 		add_action( 'wp_ajax_shouse_challenge', [ self::class, 'endpoint' ] );
 		add_action( 'wp_ajax_nopriv_shouse_challenge', [ self::class, 'endpoint' ] );
 	}
@@ -67,9 +74,18 @@ final class Honeypot {
 		}
 		$browser = self::browser();
 		$now     = time();
-		if ( null === $browser || $browser['issued'] + self::COOKIE_SECONDS - $now <= self::LIFETIME ) {
+		$renew   = null === $browser || $browser['issued'] + self::COOKIE_SECONDS - $now <= self::LIFETIME;
+		if ( $renew ) {
 			$payload = '1.' . $now . '.' . bin2hex( random_bytes( 32 ) );
 			$cookie  = $payload . '.' . hash_hmac( 'sha256', 'cookie|' . $payload, self::key() );
+		} else {
+			$cookie = $browser['value'];
+		}
+		$reason = self::budget( $form, 'issue', $cookie );
+		if ( '' !== $reason ) {
+			self::unavailable( $reason );
+		}
+		if ( $renew ) {
 			if ( headers_sent() || ! setcookie(
 				self::cookie_name(),
 				$cookie,
@@ -83,10 +99,13 @@ final class Honeypot {
 			) ) {
 				wp_send_json_error( [ 'reason' => 'browser' ], 503 );
 			}
-		} else {
-			$cookie = $browser['value'];
 		}
-		$payload = '1.' . $form . '.' . $target . '.' . self::milliseconds() . '.' . bin2hex( random_bytes( 16 ) );
+		$payload = '2.' . $form . '.' . $target . '.' . self::milliseconds() . '.' . bin2hex( random_bytes( 16 ) );
+		$ticket  = FormGuard::issue( $form, self::fingerprint( $payload, $cookie ), $now + self::LIFETIME );
+		if ( null === $ticket['slot'] ) {
+			self::unavailable( $ticket['reason'] );
+		}
+		$payload .= '.' . $ticket['slot'];
 		wp_send_json_success(
 			[
 				'challenge' => $payload . '.' . self::sign_challenge( $payload, $cookie ),
@@ -98,7 +117,9 @@ final class Honeypot {
 	}
 
 	/** Empty string on success; otherwise a finite, non-sensitive reason suitable for logs. */
-	public static function check( string $form, int $target = 0 ): string {
+	public static function check( string $form, int $target = 0, ?object $operation = null ): string {
+		/** @var \WeakMap<object, array<string, string>>|null $results */
+		static $results = null;
 		if ( ! self::valid_context( $form, $target ) ) {
 			return 'context';
 		}
@@ -106,7 +127,7 @@ final class Honeypot {
 		if ( null === $challenge || '' === $challenge ) {
 			return 'missing';
 		}
-		if ( ! preg_match( '/\A1\.(register|lostpassword|comments)\.(0|[1-9][0-9]{0,18})\.([1-9][0-9]{12,15})\.([a-f0-9]{32})\.([a-f0-9]{64})\z/', $challenge, $parts ) ) {
+		if ( ! preg_match( '/\A2\.(register|lostpassword|comments)\.(0|[1-9][0-9]{0,18})\.([1-9][0-9]{12,15})\.([a-f0-9]{32})\.(0|[1-9][0-9]{0,4})\.([a-f0-9]{64})\z/', $challenge, $parts ) ) {
 			return 'tampered';
 		}
 		if ( $parts[1] !== $form || self::decimal( $parts[2] ) !== $target ) {
@@ -117,7 +138,7 @@ final class Honeypot {
 			return 'browser';
 		}
 		$payload = substr( $challenge, 0, -65 );
-		if ( ! hash_equals( self::sign_challenge( $payload, $browser['value'] ), $parts[5] ) ) {
+		if ( ! hash_equals( self::sign_challenge( $payload, $browser['value'] ), $parts[6] ) ) {
 			return 'tampered';
 		}
 		$age = self::milliseconds() - (int) $parts[3];
@@ -130,7 +151,63 @@ final class Honeypot {
 		if ( '' !== self::post_value( self::trap( $payload, $browser['value'] ), 1 ) ) {
 			return 'trap';
 		}
-		return '';
+		// Only the same explicit handler operation may share a verdict. Revalidate signed inputs
+		// and the trap above even for a repeated hook; separate requests/operations consume once.
+		$key    = hash( 'sha256', $challenge . '|' . $browser['value'] );
+		$cached = [];
+		if ( null !== $operation ) {
+			$results ??= new \WeakMap();
+			$cached    = $results[ $operation ] ?? [];
+			if ( isset( $cached[ $key ] ) ) {
+				return $cached[ $key ];
+			}
+		}
+		$prefix = substr( $payload, 0, -( strlen( $parts[5] ) + 1 ) );
+		$reason = FormGuard::consume( $form, (int) $parts[5], self::fingerprint( $prefix, $browser['value'] ) );
+		if ( '' === $reason ) {
+			$reason = self::budget( $form, 'submit', $browser['value'] );
+		}
+		if ( null !== $operation ) {
+			$cached[ $key ]        = $reason;
+			$results[ $operation ] = $cached;
+		}
+		return $reason;
+	}
+
+	/** Domain-separated hashes keep raw cookies and addresses out of persistent counters. */
+	private static function budget( string $form, string $stage, string $cookie ): string {
+		$limit   = 'issue' === $stage ? 20 : self::SUBMIT_LIMITS[ $form ];
+		$subject = hash_hmac( 'sha256', 'budget|browser|' . $cookie, self::key() );
+		$reason  = FormGuard::budget( $form, $stage, 'browser', $subject, $limit, self::RATE_SECONDS );
+		if ( '' !== $reason ) {
+			return $reason;
+		}
+		$ip = Net::quota_subject();
+		if ( null === $ip ) {
+			return '';
+		}
+		// Shared networks get substantially broader limits; unknown proxy addresses are never
+		// put in one bucket. Cookie resets cannot reset a correctly configured IP budget.
+		$limit   = 'issue' === $stage ? 200 : self::SUBMIT_LIMITS[ $form ] * 20;
+		$subject = hash_hmac( 'sha256', 'budget|ip|' . $ip, self::key() );
+		return FormGuard::budget( $form, $stage, 'ip', $subject, $limit, self::RATE_SECONDS );
+	}
+
+	private static function fingerprint( string $payload, string $cookie ): string {
+		return hash_hmac( 'sha256', 'ticket|' . $payload . '|' . $cookie, self::key() );
+	}
+
+	private static function unavailable( string $reason ): never {
+		$limited = 'rate_limited' === $reason;
+		$retry   = $limited ? self::RATE_SECONDS : 60;
+		header( 'Retry-After: ' . $retry );
+		wp_send_json_error(
+			[
+				'reason'     => $reason,
+				'retryAfter' => $retry,
+			],
+			$limited ? 429 : 503
+		);
 	}
 
 	private static function valid_context( string $form, int $target ): bool {

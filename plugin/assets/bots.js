@@ -49,7 +49,7 @@
 		var trap = box.querySelector( '[data-shouse-trap]' );
 		// Old cached markup cannot produce a v2 challenge; the server returns reload guidance.
 		if ( ! proof || ! trap || ! config.challengeUrl ) { return; }
-		var state = { pending: null, expires: 0, ready: 0 };
+		var state = { pending: null, expires: 0, ready: 0, generation: 0, used: false, manualRetry: false, retryAt: 0 };
 		box.shouseHoneypot = state;
 		var status = box.parentNode.querySelector( '.shouse-hp-status' );
 		var target = function () {
@@ -57,15 +57,34 @@
 			return box.getAttribute( 'data-form' ) === 'comments' && post ? post.value : ( box.getAttribute( 'data-target' ) || '0' );
 		};
 		state.valid = function () {
-			return state.inactive || ( proof.value && Date.now() < state.expires && state.target === target() );
+			return state.inactive || ( ! state.used && proof.value && Date.now() < state.expires && state.target === target() );
 		};
-		state.prepare = function () {
+		state.invalidate = function () {
+			state.generation++;
+			state.used = true;
+			state.inactive = false;
+			state.expires = 0;
+			state.ready = 0;
+			// Keep the submitted value for later AJAX/FormData handlers. Only the next explicit
+			// submission may replace it; ordinary typing must not alter an in-flight payload.
+		};
+		state.afterSubmit = function ( event ) {
+			var generation = state.generation;
+			setTimeout( function () {
+				if ( ! event.shouseWaitingTurnstile && state.generation === generation ) { state.invalidate(); }
+			}, 0 );
+		};
+		state.prepare = function ( manual ) {
 			if ( state.pending ) {
 				return state.pending;
 			}
 			if ( state.valid() ) {
 				return Promise.resolve();
 			}
+			if ( ( ! manual && ( state.used || state.manualRetry ) ) || Date.now() < state.retryAt ) {
+				return Promise.reject( new Error( 'challenge-retry' ) );
+			}
+			var generation = state.generation;
 			proof.value = '';
 			state.pending = challengeQueue.then( function () {
 				var controller = new AbortController();
@@ -88,9 +107,22 @@
 							throw new Error( 'challenge' );
 						} );
 					}
+					if ( response.status === 429 || response.status === 503 ) {
+						return response.json().catch( function () { return {}; } ).then( function ( result ) {
+							var retry = Number( result.data && result.data.retryAfter ) || 0;
+							var header = response.headers.get( 'Retry-After' );
+							var headerWait = Number( header ) || Math.max( 0, ( Date.parse( header ) - Date.now() ) / 1000 ) || 0;
+							var error = new Error( 'challenge' );
+							error.retryAfter = Math.max( retry, headerWait ) || 60;
+							error.rate = response.status === 429;
+							error.unavailable = response.status === 503;
+							throw error;
+						} );
+					}
 					if ( ! response.ok ) { throw new Error( 'challenge' ); }
 					return response.json();
 				} ).then( function ( result ) {
+					if ( generation !== state.generation ) { throw new Error( 'challenge-stale' ); }
 					if ( result.inactive ) { state.inactive = true; return; }
 					var data = result.data;
 					if ( ! result.success || ! data || typeof data.challenge !== 'string' || typeof data.trap !== 'string' ) {
@@ -102,10 +134,20 @@
 					state.expires = Date.now() + Math.max( 0, data.expiresIn - 30 ) * 1000;
 					state.ready = Date.now() + data.wait + 100;
 					state.target = issuedTarget;
+					state.used = false;
+					state.manualRetry = false;
+					state.retryAt = 0;
 					if ( status ) { status.textContent = ''; status.hidden = true; }
 				} ).finally( function () { clearTimeout( timer ); } );
 			} ).catch( function ( error ) {
-				if ( status ) { status.textContent = config.challengeError; status.hidden = false; }
+				if ( generation === state.generation ) {
+					state.manualRetry = true;
+					state.retryAt = Date.now() + Math.max( 0, error.retryAfter || 0 ) * 1000;
+					if ( status ) {
+						status.textContent = ( error.rate && config.challengeRateError ) || ( error.unavailable && config.challengeUnavailableError ) || config.challengeError;
+						status.hidden = false;
+					}
+				}
 				throw error;
 			} ).finally( function () { state.pending = null; } );
 			challengeQueue = state.pending.catch( function () {} );
@@ -119,7 +161,15 @@
 		[ 'focusin', 'pointerdown', 'input' ].forEach( function ( type ) {
 			form.addEventListener( type, prepare, { passive: true } );
 		} );
+		form.addEventListener( 'reset', state.invalidate );
 	}
+	window.addEventListener( 'pageshow', function ( event ) {
+		if ( event.persisted ) {
+			each( '.shouse-hp', function ( box ) {
+				if ( box.shouseHoneypot ) { box.shouseHoneypot.invalidate(); }
+			} );
+		}
+	} );
 
 	// The submit path also handles autofill, keyboard-only use and very fast submissions.
 	document.addEventListener( 'submit', function ( event ) {
@@ -129,13 +179,13 @@
 		armHoneypot( box );
 		var state = box.shouseHoneypot;
 		if ( ! state ) { return; }
-		if ( state.valid() && Date.now() >= state.ready ) { return; }
+		if ( state.valid() && Date.now() >= state.ready ) { state.afterSubmit( event ); return; }
 		event.preventDefault();
 		event.stopImmediatePropagation();
 		if ( state.submitting ) { return; }
 		state.submitting = true;
 		var submitter = event.submitter && event.submitter.form === form ? event.submitter : null;
-		state.prepare().then( function () {
+		state.prepare( true ).then( function () {
 			return new Promise( function ( resolve ) { setTimeout( resolve, Math.max( 0, state.ready - Date.now() ) ); } );
 		} ).then( function () {
 			state.submitting = false;
@@ -221,6 +271,7 @@
 			}
 			event.preventDefault();
 			event.stopImmediatePropagation();
+			event.shouseWaitingTurnstile = true;
 			if ( el.shouseResume ) {
 				return;
 			}

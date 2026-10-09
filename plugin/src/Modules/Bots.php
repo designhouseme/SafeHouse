@@ -51,6 +51,9 @@ final class Bots extends AbstractModule {
 	/** @var list<object> One scope per authenticate call, including nested calls. */
 	private array $login_operations = [];
 
+	/** @var \WeakMap<object, true>|null Only scopes created for a particular wp_new_comment() call. */
+	private ?\WeakMap $comment_operations = null;
+
 	public function id(): string {
 		return 'bots';
 	}
@@ -89,7 +92,7 @@ final class Bots extends AbstractModule {
 			'honeypot'               => [
 				'type'  => 'toggle',
 				'label' => __( 'Honeypot on registration, lost password and comments', 'shouse' ),
-				'help'  => __( 'A rotating trap field and a short-lived, signed browser challenge tied to the form. Needs JavaScript and cookies, but no outside service. Automated browsers can still pass; use Turnstile for stronger checks.', 'shouse' ),
+				'help'  => __( 'A rotating trap field, one-use browser challenges and limits on repeated submissions. Needs JavaScript and cookies, but no outside service. Automated browsers can still pass within the limits; use Turnstile for stronger checks.', 'shouse' ),
 			],
 			'turnstile_login'        => [
 				'type'  => 'toggle',
@@ -166,7 +169,8 @@ final class Bots extends AbstractModule {
 			add_action( 'lostpassword_post', [ $this, 'check_lostpassword' ] );
 		}
 		if ( $this->honeypot || isset( $this->turnstile['comments'] ) ) {
-			add_filter( 'pre_comment_approved', [ $this, 'check_comment' ], 99 );
+			add_filter( 'preprocess_comment', [ $this, 'begin_comment' ], 1 );
+			add_filter( 'pre_comment_approved', [ $this, 'check_comment' ], 99, 2 );
 		}
 		if ( isset( $this->turnstile['checkout'] ) ) {
 			add_action( 'woocommerce_after_checkout_validation', [ $this, 'check_classic_checkout' ], 10, 2 );
@@ -244,12 +248,38 @@ final class Bots extends AbstractModule {
 		}
 	}
 
-	/** Only submissions through wp-comments-post.php (wp_handle_comment_submission) by visitors. */
-	public function check_comment( mixed $approved ): mixed {
+	/**
+	 * Core can check approval twice, including after content filtering. Carry one server-created
+	 * scope through that call; nested or subsequent wp_new_comment() calls get their own scope.
+	 * The private marker is not a comment column or metadata and is not persisted by core.
+	 *
+	 * @param array<string, mixed> $data Comment data.
+	 * @return array<string, mixed>
+	 */
+	public function begin_comment( array $data ): array {
+		if ( ! is_user_logged_in() && did_action( 'pre_comment_on_post' ) ) {
+			$scope                              = new \stdClass();
+			$this->comment_operations         ??= new \WeakMap();
+			$this->comment_operations[ $scope ] = true;
+			$data['_shouse_bot_operation']      = $scope;
+		}
+		return $data;
+	}
+
+	/**
+	 * Only submissions through wp-comments-post.php (wp_handle_comment_submission) by visitors.
+	 *
+	 * @param mixed                $approved Approval so far.
+	 * @param array<string, mixed> $data     Comment data, including the internal operation marker.
+	 */
+	public function check_comment( mixed $approved, array $data = [] ): mixed {
 		if ( is_wp_error( $approved ) || is_user_logged_in() || ! did_action( 'pre_comment_on_post' ) ) {
 			return $approved;
 		}
-		$error = $this->verdict( 'comments', true );
+		$scope  = $data['_shouse_bot_operation'] ?? null;
+		$scope  = is_object( $scope ) && isset( $this->comment_operations[ $scope ] ) ? $scope : null;
+		$target = isset( $data['comment_post_ID'] ) && is_scalar( $data['comment_post_ID'] ) ? absint( $data['comment_post_ID'] ) : null;
+		$error  = $this->verdict( 'comments', true, $scope, $target );
 		return '' === $error ? $approved : new WP_Error( 'shouse_bots', $error, 403 );
 	}
 
@@ -294,13 +324,15 @@ final class Bots extends AbstractModule {
 		if ( wp_script_is( 'shouse-bots' ) ) {
 			return;
 		}
-		wp_enqueue_script( 'shouse-bots', plugins_url( 'assets/bots.js', SHOUSE_FILE ), $checkout ? [ 'wp-api-fetch' ] : [], SHOUSE_VERSION . '-forms-v2', [ 'in_footer' => true ] );
+		wp_enqueue_script( 'shouse-bots', plugins_url( 'assets/bots.js', SHOUSE_FILE ), $checkout ? [ 'wp-api-fetch' ] : [], SHOUSE_VERSION . '-forms-v3', [ 'in_footer' => true ] );
 		$config = [
-			'sitekey'        => $this->turnstile ? Turnstile::site_key() : '',
-			'checkout'       => $checkout,
-			'header'         => Turnstile::HEADER,
-			'challengeUrl'   => admin_url( 'admin-ajax.php', 'relative' ),
-			'challengeError' => __( 'The form check could not finish. Enable cookies and JavaScript, then submit again.', 'shouse' ),
+			'sitekey'                   => $this->turnstile ? Turnstile::site_key() : '',
+			'checkout'                  => $checkout,
+			'header'                    => Turnstile::HEADER,
+			'challengeUrl'              => admin_url( 'admin-ajax.php', 'relative' ),
+			'challengeError'            => __( 'The form check could not finish. Enable cookies and JavaScript, then submit again.', 'shouse' ),
+			'challengeRateError'        => __( 'Too many attempts. Please wait a few minutes and try again.', 'shouse' ),
+			'challengeUnavailableError' => __( 'The form check is unavailable right now. Please try again in a few minutes.', 'shouse' ),
 		];
 		wp_add_inline_script( 'shouse-bots', 'window.shouseBots = ' . wp_json_encode( $config ) . ';', 'before' );
 		if ( $this->turnstile ) {
@@ -318,6 +350,10 @@ final class Bots extends AbstractModule {
 	}
 
 	private function add_verdict( WP_Error $errors, string $form, bool $honeypot ): WP_Error {
+		// Validation already failed: keep the one-use token available for a corrected request.
+		if ( $errors->has_errors() ) {
+			return $errors;
+		}
 		$error = $this->verdict( $form, $honeypot, $errors );
 		if ( '' !== $error ) {
 			$errors->add( 'shouse_bots', $error );
@@ -326,13 +362,19 @@ final class Bots extends AbstractModule {
 	}
 
 	/** '' when the submission may go on, otherwise the message to show. */
-	private function verdict( string $form, bool $honeypot, ?object $operation = null ): string {
+	private function verdict( string $form, bool $honeypot, ?object $operation = null, ?int $target = null ): string {
 		if ( $honeypot && $this->honeypot ) {
 			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- bound to the challenge; core validates the target post.
-			$target = 'comments' === $form && isset( $_POST['comment_post_ID'] ) && is_scalar( $_POST['comment_post_ID'] ) ? absint( $_POST['comment_post_ID'] ) : 0;
-			$reason = Honeypot::check( $form, $target );
+			$target ??= 'comments' === $form && isset( $_POST['comment_post_ID'] ) && is_scalar( $_POST['comment_post_ID'] ) ? absint( $_POST['comment_post_ID'] ) : 0;
+			$reason   = Honeypot::check( $form, $target, $operation );
 			if ( '' !== $reason ) {
 				$this->note( $form, 'honeypot_' . $reason );
+				if ( 'rate_limited' === $reason ) {
+					return __( 'Too many attempts. Please wait a few minutes and try again.', 'shouse' );
+				}
+				if ( in_array( $reason, [ 'storage', 'capacity' ], true ) ) {
+					return __( 'The form check is unavailable right now. Please try again in a few minutes.', 'shouse' );
+				}
 				return __( 'The form check did not pass. Reload the page, allow cookies and JavaScript, and try again.', 'shouse' );
 			}
 		}

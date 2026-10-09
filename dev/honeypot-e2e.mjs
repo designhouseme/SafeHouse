@@ -3,11 +3,14 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
-const U = process.env.U;
+const U = process.env.U || 'http://127.0.0.1:8897';
 const browser = await chromium.launch();
 const run = Date.now().toString(36);
 let checks = 0;
-function check(label, value) { assert.ok(value, label); checks++; console.log(`ok   ${label}`); }
+function check(label, value, detail = '') { assert.ok(value, detail ? `${label}: ${detail}` : label); checks++; console.log(`ok   ${label}`); }
+async function responseDetail(page, response) {
+	return `HTTP ${response?.status() ?? 'unknown'}: ${(await page.locator('body').innerText()).replace(/\s+/g, ' ').slice(0, 700)}`;
+}
 async function fresh() {
 	const ctx = await browser.newContext();
 	await ctx.route('**/*', route => new URL(route.request().url()).origin === U ? route.continue() : route.abort());
@@ -15,7 +18,110 @@ async function fresh() {
 	page.on('pageerror', error => { throw error; });
 	return { ctx, page };
 }
+async function issueQuotaFixture() {
+	const remaining = 600000 - (Date.now() % 600000);
+	if (remaining < 10000) await new Promise(resolve => setTimeout(resolve, Math.min(10000, remaining + 100)));
+	const { ctx } = await fresh();
+	try {
+		const issue = () => ctx.request.post(`${U}/wp-admin/admin-ajax.php`, {
+			form: { action: 'shouse_challenge', form: 'register', target: '0' }, headers: { 'X-SHouse-Form': '1' },
+		});
+		const first = await issue();
+		check('issuance quota fixture establishes the browser cookie', first.status() === 200 && (await ctx.cookies()).some(cookie => cookie.name.startsWith('shouse_')));
+		// The initial request consumed one slot. All concurrent requests retain that same cookie.
+		const responses = await Promise.all(Array.from({ length: 20 }, issue));
+		const accepted = responses.filter(response => response.status() === 200);
+		const rejected = responses.filter(response => response.status() === 429);
+		check('concurrent issuance allows exactly the remaining nineteen challenges', accepted.length === 19 && rejected.length === 1,
+			`statuses: ${responses.map(response => response.status()).join(', ')}`);
+		const retryHeader = Number(rejected[0].headers()['retry-after']);
+		const failure = await rejected[0].json();
+		check('real issuance limit returns Retry-After and a bounded JSON reason', Number.isFinite(retryHeader) && retryHeader > 0 && retryHeader <= 600 &&
+			failure.success === false && failure.data?.reason === 'rate_limited' && Number.isFinite(failure.data.retryAfter) && failure.data.retryAfter > 0 && failure.data.retryAfter <= 600);
+	} finally {
+		await ctx.close();
+	}
+}
+async function browserFixtures() {
+	for (const failure of [429, 503, 403, 'network']) {
+		const { ctx, page } = await fresh();
+		let mode = failure;
+		let requests = 0;
+		await page.route(`${U}/fixture`, route => route.fulfill({ contentType: 'text/html', body: `
+			<form><input name="author"><input name="email"><textarea name="comment"></textarea>
+			<div class="shouse-hp" data-form="comments" data-target="1"><input name="shouse_challenge" type="hidden"><input data-shouse-trap hidden></div>
+			<p class="shouse-hp-status" hidden role="status"></p><button type="submit">Send</button></form>` }));
+		await page.route(`${U}/challenge`, async route => {
+			requests++;
+			if (mode === 'network') return route.abort();
+			if (mode !== 200) return route.fulfill({ status: mode, contentType: 'application/json',
+				headers: { 'Retry-After': mode === 503 ? new Date(Date.now() + 60000).toUTCString() : '3' },
+				body: JSON.stringify({ success: false, data: { reason: 'fixture', retryAfter: 2 } }),
+			});
+			return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ success: true,
+				data: { challenge: `fixture-${requests}`, trap: `field_${requests}`, expiresIn: 1200, wait: 0 },
+			}) });
+		});
+		await page.goto(`${U}/fixture`);
+		await page.evaluate(url => {
+			window.shouseBots = { challengeUrl: url, challengeError: 'Check unavailable. Please try again.', challengeRateError: 'Too many attempts. Please wait and try again.', challengeUnavailableError: 'The form check is unavailable right now. Please try again in a few minutes.' };
+			window.submissions = [];
+			document.querySelector('form').addEventListener('submit', event => {
+				event.preventDefault();
+				const immediate = new FormData(event.target).get('shouse_challenge');
+				setTimeout(() => window.submissions.push({ immediate, deferred: new FormData(event.target).get('shouse_challenge') }), 0);
+			});
+		}, `${U}/challenge`);
+		await page.addScriptTag({ path: new URL('../plugin/assets/bots.js', import.meta.url).pathname });
+		await page.fill('[name="author"]', 'Selective browser bot');
+		await page.waitForFunction(() => document.querySelector('.shouse-hp').shouseHoneypot.manualRetry);
+		check(`${failure}: readable failure message`, await page.locator('.shouse-hp-status').isVisible());
+		if (failure === 503) check('503: availability message explains the server failure', (await page.locator('.shouse-hp-status').innerText()).includes('unavailable right now'));
+		await page.evaluate(() => {
+			for (let i = 0; i < 20; i++) document.querySelector('[name="author"]').dispatchEvent(new Event('input', { bubbles: true }));
+		});
+		check(`${failure}: input events do not repeat failed issuance`, requests === 1);
+		if (failure === 429 || failure === 503) {
+			check(`${failure}: server cooldown is retained`, await page.evaluate(() => document.querySelector('.shouse-hp').shouseHoneypot.retryAt > Date.now() + 2000));
+			await page.click('button');
+			check(`${failure}: early explicit retry respects cooldown`, requests === 1);
+			await page.evaluate(() => { document.querySelector('.shouse-hp').shouseHoneypot.retryAt = Date.now() - 1; });
+			await page.fill('[name="author"]', 'More typing after cooldown');
+			check(`${failure}: cooldown expiry still requires explicit retry`, requests === 1);
+		}
+		mode = 200;
+		await page.click('button');
+		await page.waitForFunction(() => window.submissions.length === 1);
+		const first = await page.evaluate(() => window.submissions[0]);
+		check(`${failure}: explicit retry recovers`, requests === 2 && !!first.immediate);
+		check(`${failure}: canceled submission retains proof for deferred FormData`, first.immediate === first.deferred && first.immediate === await page.locator('[name="shouse_challenge"]').inputValue());
+		await page.fill('[name="comment"]', 'AJAX form remains editable');
+		check(`${failure}: typing after submit preserves its payload`, requests === 2 && first.immediate === await page.locator('[name="shouse_challenge"]').inputValue());
+		await page.click('button');
+		await page.waitForFunction(() => window.submissions.length === 2);
+		check(`${failure}: canceled/AJAX retry obtains a fresh proof`, requests === 3 && first.immediate !== await page.locator('[name="shouse_challenge"]').inputValue());
+		if (failure === 429) {
+			for (const lifecycle of ['reset', 'pageshow']) {
+				await page.evaluate(() => document.querySelector('.shouse-hp').shouseHoneypot.prepare(true));
+				const before = await page.locator('[name="shouse_challenge"]').inputValue();
+				await page.evaluate(kind => {
+					if (kind === 'reset') document.querySelector('form').reset();
+					else window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }));
+				}, lifecycle);
+				check(`${lifecycle}: restored/reset form cannot reuse its previous proof`, await page.evaluate(() => !document.querySelector('.shouse-hp').shouseHoneypot.valid()));
+				const count = await page.evaluate(() => window.submissions.length);
+				await page.click('button');
+				await page.waitForFunction(n => window.submissions.length > n, count);
+				check(`${lifecycle}: next submit obtains a different proof`, before !== await page.locator('[name="shouse_challenge"]').inputValue());
+			}
+		}
+		await ctx.close();
+	}
+}
 try {
+	if (!process.env.SHOUSE_HP_FIXTURES_ONLY) await issueQuotaFixture();
+	if (!process.env.SHOUSE_HP_ISSUE_FIXTURE_ONLY) await browserFixtures();
+	if (!process.env.SHOUSE_HP_FIXTURES_ONLY && !process.env.SHOUSE_HP_ISSUE_FIXTURE_ONLY) {
 	const { ctx, page } = await fresh();
 	const url = `${U}/wp-admin/admin-ajax.php`;
 	const issue = (form = 'register', extra = {}) => ctx.request.post(url, {
@@ -43,8 +149,28 @@ try {
 	await page.fill('#author', 'Visitor');
 	await page.fill('#email', `visitor${run}@example.test`);
 	const [comment] = await Promise.all([page.waitForNavigation(), page.click('#submit')]);
-	check('comment target binding accepts the intended post', comment.status() < 400 && !(await page.content()).includes('form check did not pass'));
+	check('comment target binding accepts the intended post', comment.status() < 400 && !(await page.content()).includes('form check did not pass'), await responseDetail(page, comment));
 	await ctx.close();
+
+	// Simultaneous requests share one issued ticket and browser cookie, but distinct registration
+	// details: a successful single-use check must allow exactly one request to create an account.
+	const { ctx: replayCtx } = await fresh();
+	const replayIssued = await replayCtx.request.post(url, {
+		form: { action: 'shouse_challenge', form: 'register', target: '0' }, headers: { 'X-SHouse-Form': '1' },
+	});
+	assert.equal(replayIssued.status(), 200);
+	const replayTicket = (await replayIssued.json()).data;
+	await new Promise(resolve => setTimeout(resolve, replayTicket.wait + 150));
+	const replayResults = await Promise.all(Array.from({ length: 4 }, (_, i) => replayCtx.request.post(`${U}/wp-login.php?action=register`, {
+		form: { user_login: `replay${i}${run}`, user_email: `replay${i}${run}@example.test`,
+			shouse_challenge: replayTicket.challenge, [replayTicket.trap]: '', 'wp-submit': 'Register' },
+		maxRedirects: 0,
+	})));
+	const replayAccepted = replayResults.filter(result => result.status() === 302 && (result.headers().location || '').includes('checkemail=registered'));
+	check('concurrent reuse of one token creates exactly one registration', replayAccepted.length === 1);
+	const replayRejected = await Promise.all(replayResults.filter(result => !replayAccepted.includes(result)).map(result => result.text()));
+	check('remaining simultaneous requests fail the form check', replayRejected.every(body => body.includes('form check did not pass')));
+	await replayCtx.close();
 
 	// Replay exactly the same cached HTML in two independent browsers: cookies and tickets must differ.
 	const cachedContext = await browser.newContext();
@@ -102,6 +228,8 @@ try {
 	await disabledCtx.close();
 
 	const { ctx: widgetCtx, page: widgetPage } = await fresh();
+	let widgetIssues = 0;
+	widgetPage.on('request', request => { if (request.url().includes('admin-ajax.php') && (request.postData() || '').includes('action=shouse_challenge')) widgetIssues++; });
 	await widgetPage.goto(`${U}/wp-login.php?action=register`);
 	// Local delayed widget fixture exercises both submit interceptors; no outside service.
 	await widgetPage.evaluate(() => {
@@ -123,7 +251,32 @@ try {
 		widgetPage.waitForURL(/checkemail=registered/), widgetPage.click('#wp-submit'),
 	]);
 	check('honeypot and delayed Turnstile submit handlers cooperate', widgetRequest.postData().includes('cf-turnstile-response=local-widget'));
+	check('waiting for Turnstile does not issue a second challenge', widgetIssues === 1);
 	await widgetCtx.close();
+
+	// Mirrors a selective Selenium bot: use the real browser and fill only the known visible fields.
+	// Fresh legitimate challenges must not allow an unlimited comment stream in one browser session.
+	// Keep the short burst inside one fixed UTC quota window; a legitimate reset is not a failure.
+	const quotaWindowRemaining = 600000 - (Date.now() % 600000);
+	if (quotaWindowRemaining < 30000) await new Promise(resolve => setTimeout(resolve, Math.min(30000, quotaWindowRemaining + 100)));
+	const { ctx: selectiveCtx, page: selectivePage } = await fresh();
+	const selectiveProofs = [];
+	let limited = false;
+	for (let attempt = 1; attempt <= 11; attempt++) {
+		await selectivePage.goto(`${U}/?p=1`);
+		await selectivePage.fill('#comment', `Selective browser fixture ${run}-${attempt}`);
+		await selectivePage.fill('#author', 'Selective Visitor');
+		await selectivePage.fill('#email', `selective${run}@example.test`);
+		await selectivePage.waitForFunction(() => document.querySelector('[name="shouse_challenge"]').value.length > 0);
+		selectiveProofs.push(await selectivePage.locator('[name="shouse_challenge"]').inputValue());
+		const [response] = await Promise.all([selectivePage.waitForNavigation(), selectivePage.click('#submit')]);
+		if ((await selectivePage.content()).includes('Too many attempts. Please wait a few minutes and try again.')) { limited = true; break; }
+		check(`selective browser submission ${attempt} uses a valid fresh challenge`, response.status() < 400 && !(await selectivePage.content()).includes('form check did not pass'), await responseDetail(selectivePage, response));
+	}
+	check('selective browser eventually hits the server comment limit despite fresh proofs', limited);
+	check('selective browser used distinct challenges for every attempt', new Set(selectiveProofs).size === selectiveProofs.length);
+	await selectiveCtx.close();
+	}
 	console.log(`PASS: ${checks} honeypot browser/HTTP checks`);
 } finally {
 	await browser.close();

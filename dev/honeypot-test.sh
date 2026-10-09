@@ -22,7 +22,12 @@ done
 wp core install --url="http://localhost:$port" --title='SafeHouse honeypot tests' --admin_user=admin \
 	--admin_password="$SHOUSE_DEV_ADMIN_PASSWORD" --admin_email=admin@example.test --skip-email
 wp plugin activate shouse
+wp eval-file /tests/security-form-guard-test.php
+for mode in direct generic generic-real cloudflare cloudflare-option; do
+	wp eval-file /tests/security-net-quota-test.php "$mode"
+done
 wp eval-file /tests/security-honeypot-test.php
 wp eval-file /tests/security-hardening-test.php
 wp eval '$o=get_option("shouse_settings",[]); $o["modules"]["bots"]=true; $o["modules"]["tweaks"]=false; $o["modules"]["watch"]=false; $o["bots"]=["honeypot"=>true]; update_option("shouse_settings",$o); update_option("users_can_register",1); update_option("require_name_email",1);'
+wp config set SHOUSE_HP_BROWSER_TEST true --raw
 U="http://localhost:$port" node dev/honeypot-e2e.mjs

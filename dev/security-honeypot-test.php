@@ -3,11 +3,11 @@
  * Honeypot regressions on a disposable local WordPress with SafeHouse enabled.
  * Run: wp eval-file /path/to/dev/security-honeypot-test.php
  *
- * Signed local fixtures exercise the public check and real form filters. They
- * intentionally permit same-browser replay during the stateless challenge TTL.
+ * Signed local fixtures exercise one-use checks, bounded quotas and real form filters.
  */
 
 use SafeHouse\Core\Honeypot;
+use SafeHouse\Core\FormGuard;
 use SafeHouse\Modules\Bots;
 
 if ( ! defined( 'ABSPATH' ) || 'local' !== wp_get_environment_type() || ! class_exists( Honeypot::class ) ) {
@@ -46,9 +46,14 @@ $make_cookie = static function ( ?int $issued = null ) use ( $key ): string {
 	$payload = '1.' . ( $issued ?? time() ) . '.' . bin2hex( random_bytes( 32 ) );
 	return $payload . '.' . hash_hmac( 'sha256', 'cookie|' . $payload, $key );
 };
-$make_challenge = static function ( string $form = 'register', int $target = 0, ?int $issued = null, ?string $cookie = null ) use ( $key, $make_cookie, $now_ms, $wait_ms ): array {
+$make_challenge = static function ( string $form = 'register', int $target = 0, ?int $issued = null, ?string $cookie = null ) use ( $key, $make_cookie, $now_ms, $wait_ms, $lifetime ): array {
 	$cookie ??= $make_cookie();
-	$payload = '1.' . $form . '.' . $target . '.' . ( $issued ?? $now_ms() - $wait_ms - 1000 ) . '.' . bin2hex( random_bytes( 16 ) );
+	$payload = '2.' . $form . '.' . $target . '.' . ( $issued ?? $now_ms() - $wait_ms - 1000 ) . '.' . bin2hex( random_bytes( 16 ) );
+	$ticket = FormGuard::issue( $form, hash_hmac( 'sha256', 'ticket|' . $payload . '|' . $cookie, $key ), time() + $lifetime );
+	if ( null === $ticket['slot'] ) {
+		throw new RuntimeException( 'Fixture issuance failed: ' . $ticket['reason'] );
+	}
+	$payload .= '.' . $ticket['slot'];
 	$token = $payload . '.' . hash_hmac( 'sha256', 'challenge|' . $payload . '|' . $cookie, $key );
 	$trap = 'contact_' . substr( hash_hmac( 'sha256', 'trap|' . $payload . '|' . $cookie, $key ), 0, 20 );
 	return [ 'post' => [ Honeypot::FIELD => $token, $trap => '' ], 'cookie' => $cookie, 'trap' => $trap ];
@@ -66,7 +71,7 @@ $no_network = static function () use ( &$network_calls ): WP_Error {
 add_filter( 'pre_http_request', $no_network, PHP_INT_MAX );
 
 // Preserve unrelated plugin callbacks and restore every hook after the fixture.
-$hooks = [ 'registration_errors', 'woocommerce_process_registration_errors', 'lostpassword_post', 'pre_comment_approved', 'register_form', 'woocommerce_register_form', 'lostpassword_form', 'woocommerce_lostpassword_form', 'comment_form_after_fields', 'wp_ajax_shouse_challenge', 'wp_ajax_nopriv_shouse_challenge' ];
+$hooks = [ 'registration_errors', 'woocommerce_process_registration_errors', 'lostpassword_post', 'preprocess_comment', 'pre_comment_approved', 'register_form', 'woocommerce_register_form', 'lostpassword_form', 'woocommerce_lostpassword_form', 'comment_form_after_fields', 'wp_ajax_shouse_challenge', 'wp_ajax_nopriv_shouse_challenge' ];
 $hook_backup = [];
 foreach ( $hooks as $hook ) {
 	$hook_backup[ $hook ] = isset( $wp_filter[ $hook ] ) ? clone $wp_filter[ $hook ] : null;
@@ -82,6 +87,7 @@ foreach ( $hooks as $hook ) {
 
 try {
 	wp_set_current_user( 0 );
+	$_SERVER['REMOTE_ADDR'] = '127.0.0.1'; // Browser quotas here; trusted address parsing has its own fixture.
 	$settings = $settings_backup;
 	$settings['bots'] = [ 'honeypot' => true, 'turnstile_login' => false, 'turnstile_register' => false, 'turnstile_lostpassword' => false, 'turnstile_comments' => false, 'turnstile_checkout' => false ];
 	update_option( 'shouse_settings', $settings );
@@ -95,7 +101,7 @@ try {
 	}
 	$valid = $make_challenge();
 	$load( $valid );
-	$assert( '' === Honeypot::check( 'register' ) && '' === Honeypot::check( 'register' ), 'same-browser replay inside TTL is intentionally accepted (stateless, not one-time)' );
+	$assert( '' === Honeypot::check( 'register' ) && 'replayed' === Honeypot::check( 'register' ), 'a valid challenge succeeds once and same-browser replay is rejected inside TTL' );
 	$second = $make_challenge( 'register', 0, null, $valid['cookie'] );
 	$assert( $valid['trap'] !== $second['trap'], 'two challenges in one browser use different trap names' );
 	$load( $second );
@@ -140,6 +146,14 @@ try {
 	$_POST[ Honeypot::FIELD ] = $flip( $_POST[ Honeypot::FIELD ] );
 	$assert( 'tampered' === Honeypot::check( 'register' ), 'changed challenge signature is rejected' );
 	$load( $valid );
+	$parts = explode( '.', $_POST[ Honeypot::FIELD ] );
+	$parts[5] = (string) ( (int) $parts[5] + 1 );
+	$_POST[ Honeypot::FIELD ] = implode( '.', $parts );
+	$assert( 'tampered' === Honeypot::check( 'register' ), 'changing the signed storage slot cannot redirect consumption' );
+	$legacy = '1.register.0.' . ( $now_ms() - $wait_ms - 1000 ) . '.' . bin2hex( random_bytes( 16 ) );
+	$_POST[ Honeypot::FIELD ] = $legacy . '.' . hash_hmac( 'sha256', 'challenge|' . $legacy . '|' . $valid['cookie'], $key );
+	$assert( 'tampered' === Honeypot::check( 'register' ), 'old stateless tokens cannot opt out of one-use enforcement' );
+	$load( $valid );
 	$_POST[ Honeypot::FIELD ] = str_replace( '.register.', '.lostpassword.', $_POST[ Honeypot::FIELD ] );
 	$assert( 'tampered' === Honeypot::check( 'lostpassword' ), 'changing the signed form name cannot transplant a challenge' );
 	$load( $valid );
@@ -174,6 +188,26 @@ try {
 	$load( $make_challenge( 'register', 0, null, $make_cookie( time() + 60 ) ) );
 	$assert( 'browser' === Honeypot::check( 'register' ), 'fresh challenge bound to future browser cookie is rejected' );
 
+	$scoped = $make_challenge();
+	$load( $scoped );
+	$operation = new stdClass();
+	$assert( '' === Honeypot::check( 'register', 0, $operation ) && '' === Honeypot::check( 'register', 0, $operation ), 'repeated hooks in the same explicit operation share a successful verdict' );
+	$assert( 'replayed' === Honeypot::check( 'register', 0, new stdClass() ), 'another operation cannot reuse the first operation verdict' );
+	$assert( 'replayed' === Honeypot::check( 'register' ), 'an unscoped call cannot reuse an operation verdict' );
+	$_POST[ $scoped['trap'] ] = 'x';
+	$assert( 'trap' === Honeypot::check( 'register', 0, $operation ), 'a repeated operation still validates changed trap input' );
+
+	$rate_cookie = $make_cookie();
+	for ( $i = 0; $i < 6; ++$i ) {
+		$load( $make_challenge( 'register', 0, null, $rate_cookie ) );
+		$assert( ( $i < 5 ? '' : 'rate_limited' ) === Honeypot::check( 'register' ), 'registration budget counts a fresh signed challenge, attempt ' . ( $i + 1 ) );
+		$assert( 'replayed' === Honeypot::check( 'register' ), 'replay cannot increment or escape the submission budget, attempt ' . ( $i + 1 ) );
+	}
+	$load( $make_challenge( 'lostpassword', 0, null, $rate_cookie ) );
+	$assert( '' === Honeypot::check( 'lostpassword' ), 'registration exhaustion does not exhaust password resets' );
+	$load( $make_challenge() );
+	$assert( '' === Honeypot::check( 'register' ), 'another browser without a known address does not share an unknown-IP bucket' );
+
 	// Exercise the filters used by WordPress/WooCommerce public form handlers.
 	$pagenow = 'wp-login.php';
 	$_SERVER['REQUEST_METHOD'] = 'POST';
@@ -181,6 +215,13 @@ try {
 	$assert( $bot_error( apply_filters( 'registration_errors', new WP_Error(), '', '' ) ), 'WordPress public registration rejects a bare POST' );
 	$load( $make_challenge() );
 	$assert( ! $bot_error( apply_filters( 'registration_errors', new WP_Error(), '', '' ) ), 'WordPress public registration accepts a valid challenge' );
+	$correctable = $make_challenge();
+	$load( $correctable );
+	$validation = new WP_Error( 'invalid_email', 'Correct the email address.' );
+	$assert( $validation === apply_filters( 'registration_errors', $validation, '', '' ) && ! $bot_error( $validation ), 'existing validation errors are preserved without spending a ticket' );
+	$clean = new WP_Error();
+	$assert( ! $bot_error( apply_filters( 'registration_errors', $clean, '', '' ) ) && ! $bot_error( apply_filters( 'registration_errors', $clean, '', '' ) ), 'corrected registration can use the ticket and repeat its own validation hook' );
+	$assert( $bot_error( apply_filters( 'registration_errors', new WP_Error(), '', '' ) ), 'a new registration operation cannot reuse a consumed ticket' );
 	$pagenow = 'users.php';
 	$_POST = [];
 	$assert( ! $bot_error( apply_filters( 'registration_errors', new WP_Error(), '', '' ) ), 'internal WordPress user creation is not treated as a public form' );
@@ -236,6 +277,14 @@ try {
 	$assert( $bot_error( apply_filters( 'pre_comment_approved', 1, [] ) ), 'array comment target is rejected by handler context' );
 	$existing_error = new WP_Error( 'fixture_comment_error', 'Existing rejection.' );
 	$assert( $existing_error === $bots->check_comment( $existing_error ), 'existing comment rejection is preserved' );
+	$load( $make_challenge( 'comments', 123 ) );
+	$_POST['comment_post_ID'] = '123';
+	$comment_data = $bots->begin_comment( [ 'comment_post_ID' => 123 ] );
+	$assert( ! $bot_error( $bots->check_comment( 1, $comment_data ) ) && ! $bot_error( $bots->check_comment( 1, $comment_data ) ), 'core can check the same comment again after filtering without consuming twice' );
+	$second_comment = $bots->begin_comment( $comment_data );
+	$assert( $bot_error( $bots->check_comment( 1, $second_comment ) ), 'a second comment operation cannot inherit a consumed proof from its input data' );
+	$comment_data['comment_post_ID'] = 124;
+	$assert( $bot_error( $bots->check_comment( 1, $comment_data ) ), 'comment proof is also bound to the actual insertion target after filters' );
 
 	$markup = Honeypot::markup( 'comments', 123 );
 	$assert( str_contains( $markup, 'data-form="comments"' ) && str_contains( $markup, 'data-target="123"' ) && str_contains( $markup, 'name="' . Honeypot::FIELD . '" value=""' ), 'cacheable markup carries context and no live challenge' );
