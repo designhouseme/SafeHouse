@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-09T18:14:05+00:00\n"
+"POT-Creation-Date: 2026-10-09T19:08:53+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: shouse\n"
@@ -267,43 +267,43 @@ msgstr ""
 msgid "%s ago"
 msgstr ""
 
-#: src/Core/Honeypot.php:40
+#: src/Core/Honeypot.php:47
 msgid "Leave this field empty"
 msgstr ""
 
-#: src/Core/Honeypot.php:44
+#: src/Core/Honeypot.php:51
 msgid "JavaScript and cookies are required to submit this form. Please enable them and reload the page."
 msgstr ""
 
-#: src/Core/Net.php:129
+#: src/Core/Net.php:223
 msgid "SafeHouse and Cloudflare"
 msgstr ""
 
-#: src/Core/Net.php:140
+#: src/Core/Net.php:234
 msgid "Requests come through Cloudflare, but SafeHouse is not set up for it"
 msgstr ""
 
-#: src/Core/Net.php:141
+#: src/Core/Net.php:235
 msgid "Every visitor looks like a Cloudflare server: the activity log shows Cloudflare addresses and login limits cannot block by address. In SafeHouse → General, set \"Proxy in front of the site\" to Cloudflare."
 msgstr ""
 
-#: src/Core/Net.php:144
+#: src/Core/Net.php:238
 msgid "SafeHouse sees visitors' real addresses behind Cloudflare"
 msgstr ""
 
-#: src/Core/Net.php:145
+#: src/Core/Net.php:239
 msgid "The visitor address comes from Cloudflare's CF-Connecting-IP header, which is trusted only on connections from Cloudflare's own servers."
 msgstr ""
 
-#: src/Core/Net.php:148
+#: src/Core/Net.php:242
 msgid "SafeHouse is set up for Cloudflare, but this request did not come through it"
 msgstr ""
 
-#: src/Core/Net.php:149
+#: src/Core/Net.php:243
 msgid "That is fine when you reach the server directly. If the site no longer uses Cloudflare, set \"Proxy in front of the site\" back to none."
 msgstr ""
 
-#: src/Core/Net.php:155
+#: src/Core/Net.php:249
 #: src/Core/Queue.php:283
 #: src/Modules/Hardening.php:293
 #: src/Modules/LoginLimits.php:411
@@ -372,99 +372,109 @@ msgstr ""
 msgid "The downloaded SafeHouse package does not match the signed checksum. Update cancelled."
 msgstr ""
 
-#: src/Modules/Bots.php:80
+#: src/Modules/Bots.php:83
 msgid "Bot protection"
 msgstr ""
 
-#: src/Modules/Bots.php:84
+#: src/Modules/Bots.php:87
 msgid "Stops automated sign-ups, spam comments, password-reset floods, login attempts and fake orders. A honeypot works on its own; Cloudflare Turnstile is added when its keys are in wp-config.php."
 msgstr ""
 
-#: src/Modules/Bots.php:91
+#: src/Modules/Bots.php:94
 msgid "Honeypot on registration, lost password and comments"
 msgstr ""
 
-#: src/Modules/Bots.php:92
-msgid "A rotating trap field and a short-lived, signed browser challenge tied to the form. Needs JavaScript and cookies, but no outside service. Automated browsers can still pass; use Turnstile for stronger checks."
+#: src/Modules/Bots.php:95
+msgid "A rotating trap field, one-use browser challenges and limits on repeated submissions. Needs JavaScript and cookies, but no outside service. Automated browsers can still pass within the limits; use Turnstile for stronger checks."
 msgstr ""
 
-#: src/Modules/Bots.php:96
+#: src/Modules/Bots.php:99
 msgid "Turnstile on login"
 msgstr ""
 
-#: src/Modules/Bots.php:97
+#: src/Modules/Bots.php:100
 msgid "wp-login.php, login forms made with wp_login_form() and the WooCommerce login form."
 msgstr ""
 
-#: src/Modules/Bots.php:101
+#: src/Modules/Bots.php:104
 msgid "Turnstile on registration"
 msgstr ""
 
-#: src/Modules/Bots.php:102
+#: src/Modules/Bots.php:105
 msgid "WordPress and WooCommerce My Account registration."
 msgstr ""
 
-#: src/Modules/Bots.php:106
+#: src/Modules/Bots.php:109
 msgid "Turnstile on lost password"
 msgstr ""
 
-#: src/Modules/Bots.php:110
+#: src/Modules/Bots.php:113
 msgid "Turnstile on comments and reviews"
 msgstr ""
 
-#: src/Modules/Bots.php:111
+#: src/Modules/Bots.php:114
 msgid "For visitors who are not logged in."
 msgstr ""
 
-#: src/Modules/Bots.php:115
+#: src/Modules/Bots.php:118
 msgid "Turnstile on checkout"
 msgstr ""
 
-#: src/Modules/Bots.php:116
+#: src/Modules/Bots.php:119
 msgid "Classic and block checkout, including orders sent straight to the Store API. Express payment buttons outside the checkout page (such as Apple Pay or Google Pay on product pages) cannot pass this check, so turn it off on sites that use them."
 msgstr ""
 
-#: src/Modules/Bots.php:120
+#: src/Modules/Bots.php:123
 msgid "When Cloudflare cannot be reached"
 msgstr ""
 
-#: src/Modules/Bots.php:121
+#: src/Modules/Bots.php:124
 msgid "Applies only when this server cannot reach Cloudflare, or Cloudflare rejects the secret key. A visitor whose browser blocks Turnstile is still asked to try again."
 msgstr ""
 
-#: src/Modules/Bots.php:123
+#: src/Modules/Bots.php:126
 msgid "Let the submission through and log it"
 msgstr ""
 
-#: src/Modules/Bots.php:124
+#: src/Modules/Bots.php:127
 msgid "Block the submission"
 msgstr ""
 
-#: src/Modules/Bots.php:303
+#: src/Modules/Bots.php:333
 msgid "The form check could not finish. Enable cookies and JavaScript, then submit again."
 msgstr ""
 
-#: src/Modules/Bots.php:336
+#: src/Modules/Bots.php:334
+#: src/Modules/Bots.php:373
+msgid "Too many attempts. Please wait a few minutes and try again."
+msgstr ""
+
+#: src/Modules/Bots.php:335
+#: src/Modules/Bots.php:376
+msgid "The form check is unavailable right now. Please try again in a few minutes."
+msgstr ""
+
+#: src/Modules/Bots.php:378
 msgid "The form check did not pass. Reload the page, allow cookies and JavaScript, and try again."
 msgstr ""
 
-#: src/Modules/Bots.php:354
+#: src/Modules/Bots.php:396
 msgid "The anti-bot check is unavailable right now. Please try again in a few minutes."
 msgstr ""
 
-#: src/Modules/Bots.php:357
+#: src/Modules/Bots.php:399
 msgid "The anti-bot check did not pass. Please wait for it to finish and try again."
 msgstr ""
 
-#: src/Modules/Bots.php:379
+#: src/Modules/Bots.php:421
 msgid "Turnstile is off: add SHOUSE_TURNSTILE_SITE_KEY and SHOUSE_TURNSTILE_SECRET_KEY to wp-config.php. The honeypot works without them."
 msgstr ""
 
-#: src/Modules/Bots.php:381
+#: src/Modules/Bots.php:423
 msgid "Turnstile is off: wp-config.php has Cloudflare test keys, which always give the same answer and are not allowed on a production site."
 msgstr ""
 
-#: src/Modules/Bots.php:383
+#: src/Modules/Bots.php:425
 msgid "Turnstile is on, with keys from wp-config.php."
 msgstr ""
 

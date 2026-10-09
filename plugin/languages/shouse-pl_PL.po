@@ -352,7 +352,7 @@ msgstr "Nie znaleziono zamkniętych, porzuconych ani zapomnianych wtyczek"
 msgid "Some plugins need attention"
 msgstr "Niektóre wtyczki wymagają uwagi"
 
-#: src/Core/Net.php:155
+#: src/Core/Net.php:249
 #: src/Core/Queue.php:283
 #: src/Modules/Hardening.php:293
 #: src/Modules/LoginLimits.php:411
@@ -929,31 +929,41 @@ msgstr "Cache obiektów SafeHouse nie może połączyć się z Redisem"
 msgid "WordPress is using its own cache for now, so the site works but is slower. Reason: %s"
 msgstr "WordPress używa na razie własnego cache, więc strona działa, ale wolniej. Powód: %s"
 
-#: src/Modules/Bots.php:80
+#: src/Modules/Bots.php:83
 msgid "Bot protection"
 msgstr "Ochrona przed botami"
 
-#: src/Modules/Bots.php:84
+#: src/Modules/Bots.php:87
 msgid "Stops automated sign-ups, spam comments, password-reset floods, login attempts and fake orders. A honeypot works on its own; Cloudflare Turnstile is added when its keys are in wp-config.php."
 msgstr "Zatrzymuje automatyczne rejestracje, spam w komentarzach, zalew próśb o reset hasła, próby logowania i fałszywe zamówienia. Honeypot działa sam; Cloudflare Turnstile dochodzi, gdy jego klucze są w wp-config.php."
 
-#: src/Modules/Bots.php:91
+#: src/Modules/Bots.php:94
 msgid "Honeypot on registration, lost password and comments"
 msgstr "Honeypot przy rejestracji, resecie hasła i komentarzach"
 
-#: src/Modules/Bots.php:92
-msgid "A rotating trap field and a short-lived, signed browser challenge tied to the form. Needs JavaScript and cookies, but no outside service. Automated browsers can still pass; use Turnstile for stronger checks."
-msgstr "Zmienna nazwa pola pułapki i krótkotrwałe, podpisane wyzwanie powiązane z przeglądarką i formularzem. Wymaga JavaScriptu i plików cookie, bez zewnętrznej usługi. Automatyczne przeglądarki nadal mogą przejść weryfikację; silniejszą ochronę zapewnia Turnstile."
+#: src/Modules/Bots.php:95
+msgid "A rotating trap field, one-use browser challenges and limits on repeated submissions. Needs JavaScript and cookies, but no outside service. Automated browsers can still pass within the limits; use Turnstile for stronger checks."
+msgstr "Zmienna nazwa pola pułapki, jednorazowe wyzwania powiązane z przeglądarką i limity kolejnych zgłoszeń. Wymaga JavaScriptu i plików cookie, bez zewnętrznej usługi. Automatyczne przeglądarki nadal mogą przejść weryfikację w ramach limitów; silniejszą ochronę zapewnia Turnstile."
 
-#: src/Modules/Bots.php:303
+#: src/Modules/Bots.php:333
 msgid "The form check could not finish. Enable cookies and JavaScript, then submit again."
 msgstr "Nie udało się dokończyć weryfikacji formularza. Włącz pliki cookie i JavaScript, a następnie wyślij formularz ponownie."
 
-#: src/Modules/Bots.php:336
+#: src/Modules/Bots.php:334
+#: src/Modules/Bots.php:373
+msgid "Too many attempts. Please wait a few minutes and try again."
+msgstr "Zbyt wiele prób. Odczekaj kilka minut i spróbuj ponownie."
+
+#: src/Modules/Bots.php:335
+#: src/Modules/Bots.php:376
+msgid "The form check is unavailable right now. Please try again in a few minutes."
+msgstr "Weryfikacja formularza jest chwilowo niedostępna. Spróbuj ponownie za kilka minut."
+
+#: src/Modules/Bots.php:378
 msgid "The form check did not pass. Reload the page, allow cookies and JavaScript, and try again."
 msgstr "Formularz nie przeszedł weryfikacji. Odśwież stronę, zezwól na pliki cookie i JavaScript, a następnie spróbuj ponownie."
 
-#: src/Core/Honeypot.php:44
+#: src/Core/Honeypot.php:51
 msgid "JavaScript and cookies are required to submit this form. Please enable them and reload the page."
 msgstr "Wysłanie tego formularza wymaga JavaScriptu i plików cookie. Włącz je i odśwież stronę."
 
@@ -973,79 +983,79 @@ msgstr "Wyłącz pingbacki XML-RPC"
 msgid "Remove pingback methods and the X-Pingback header, including when Jetpack or WooPayments needs authenticated XML-RPC. Other XML-RPC methods are unchanged."
 msgstr "Usuń metody pingback i nagłówek X-Pingback, również gdy Jetpack lub WooPayments wymaga uwierzytelniania przez XML-RPC. Pozostałe metody XML-RPC pozostają bez zmian."
 
-#: src/Modules/Bots.php:96
+#: src/Modules/Bots.php:99
 msgid "Turnstile on login"
 msgstr "Turnstile przy logowaniu"
 
-#: src/Modules/Bots.php:97
+#: src/Modules/Bots.php:100
 msgid "wp-login.php, login forms made with wp_login_form() and the WooCommerce login form."
 msgstr "wp-login.php, formularze logowania z wp_login_form() i formularz logowania WooCommerce."
 
-#: src/Modules/Bots.php:101
+#: src/Modules/Bots.php:104
 msgid "Turnstile on registration"
 msgstr "Turnstile przy rejestracji"
 
-#: src/Modules/Bots.php:102
+#: src/Modules/Bots.php:105
 msgid "WordPress and WooCommerce My Account registration."
 msgstr "Rejestracja w WordPressie i na stronie Moje konto WooCommerce."
 
-#: src/Modules/Bots.php:106
+#: src/Modules/Bots.php:109
 msgid "Turnstile on lost password"
 msgstr "Turnstile przy resecie hasła"
 
-#: src/Modules/Bots.php:110
+#: src/Modules/Bots.php:113
 msgid "Turnstile on comments and reviews"
 msgstr "Turnstile przy komentarzach i opiniach"
 
-#: src/Modules/Bots.php:111
+#: src/Modules/Bots.php:114
 msgid "For visitors who are not logged in."
 msgstr "Dla niezalogowanych odwiedzających."
 
-#: src/Modules/Bots.php:115
+#: src/Modules/Bots.php:118
 msgid "Turnstile on checkout"
 msgstr "Turnstile przy zamówieniu"
 
-#: src/Modules/Bots.php:116
+#: src/Modules/Bots.php:119
 msgid "Classic and block checkout, including orders sent straight to the Store API. Express payment buttons outside the checkout page (such as Apple Pay or Google Pay on product pages) cannot pass this check, so turn it off on sites that use them."
 msgstr "Klasyczny i blokowy formularz zamówienia, także zamówienia wysyłane prosto do Store API. Przyciski szybkich płatności poza stroną zamówienia (np. Apple Pay lub Google Pay na stronie produktu) nie przejdą tej kontroli, więc na stronach, które ich używają, wyłącz tę opcję."
 
-#: src/Modules/Bots.php:120
+#: src/Modules/Bots.php:123
 msgid "When Cloudflare cannot be reached"
 msgstr "Gdy Cloudflare jest nieosiągalny"
 
-#: src/Modules/Bots.php:121
+#: src/Modules/Bots.php:124
 msgid "Applies only when this server cannot reach Cloudflare, or Cloudflare rejects the secret key. A visitor whose browser blocks Turnstile is still asked to try again."
 msgstr "Dotyczy tylko sytuacji, gdy ten serwer nie może połączyć się z Cloudflare albo Cloudflare odrzuca klucz tajny. Odwiedzający, którego przeglądarka blokuje Turnstile, i tak zobaczy prośbę o ponowną próbę."
 
-#: src/Modules/Bots.php:123
+#: src/Modules/Bots.php:126
 msgid "Let the submission through and log it"
 msgstr "Przepuść formularz i zapisz to w dzienniku"
 
-#: src/Modules/Bots.php:124
+#: src/Modules/Bots.php:127
 msgid "Block the submission"
 msgstr "Zablokuj formularz"
 
-#: src/Core/Honeypot.php:40
+#: src/Core/Honeypot.php:47
 msgid "Leave this field empty"
 msgstr "Zostaw to pole puste"
 
-#: src/Modules/Bots.php:354
+#: src/Modules/Bots.php:396
 msgid "The anti-bot check is unavailable right now. Please try again in a few minutes."
 msgstr "Weryfikacja antybotowa jest teraz niedostępna. Spróbuj ponownie za kilka minut."
 
-#: src/Modules/Bots.php:357
+#: src/Modules/Bots.php:399
 msgid "The anti-bot check did not pass. Please wait for it to finish and try again."
 msgstr "Weryfikacja antybotowa nie powiodła się. Poczekaj, aż się zakończy, i spróbuj ponownie."
 
-#: src/Modules/Bots.php:379
+#: src/Modules/Bots.php:421
 msgid "Turnstile is off: add SHOUSE_TURNSTILE_SITE_KEY and SHOUSE_TURNSTILE_SECRET_KEY to wp-config.php. The honeypot works without them."
 msgstr "Turnstile jest wyłączony: dodaj SHOUSE_TURNSTILE_SITE_KEY i SHOUSE_TURNSTILE_SECRET_KEY do wp-config.php. Honeypot działa bez nich."
 
-#: src/Modules/Bots.php:381
+#: src/Modules/Bots.php:423
 msgid "Turnstile is off: wp-config.php has Cloudflare test keys, which always give the same answer and are not allowed on a production site."
 msgstr "Turnstile jest wyłączony: w wp-config.php są testowe klucze Cloudflare, które zawsze dają tę samą odpowiedź i nie są dozwolone na stronie produkcyjnej."
 
-#: src/Modules/Bots.php:383
+#: src/Modules/Bots.php:425
 msgid "Turnstile is on, with keys from wp-config.php."
 msgstr "Turnstile jest włączony, z kluczami z wp-config.php."
 
@@ -1117,31 +1127,31 @@ msgstr "Ustawione w wp-config.php stałą SHOUSE_TRUSTED_PROXIES."
 msgid "With Cloudflare, SafeHouse takes the visitor address from Cloudflare's header, but only on connections that really come from Cloudflare. Login limits and the activity log depend on it."
 msgstr "Przy Cloudflare SafeHouse bierze adres odwiedzającego z nagłówka Cloudflare, ale tylko z połączeń, które naprawdę przychodzą z Cloudflare. Zależą od tego limity logowania i dziennik zdarzeń."
 
-#: src/Core/Net.php:129
+#: src/Core/Net.php:223
 msgid "SafeHouse and Cloudflare"
 msgstr "SafeHouse i Cloudflare"
 
-#: src/Core/Net.php:140
+#: src/Core/Net.php:234
 msgid "Requests come through Cloudflare, but SafeHouse is not set up for it"
 msgstr "Ruch idzie przez Cloudflare, ale SafeHouse nie jest na to ustawiony"
 
-#: src/Core/Net.php:141
+#: src/Core/Net.php:235
 msgid "Every visitor looks like a Cloudflare server: the activity log shows Cloudflare addresses and login limits cannot block by address. In SafeHouse → General, set \"Proxy in front of the site\" to Cloudflare."
 msgstr "Każdy odwiedzający wygląda jak serwer Cloudflare: dziennik pokazuje adresy Cloudflare, a limity logowania nie mogą blokować po adresie. W SafeHouse → Ogólne ustaw „Proxy przed stroną” na Cloudflare."
 
-#: src/Core/Net.php:144
+#: src/Core/Net.php:238
 msgid "SafeHouse sees visitors' real addresses behind Cloudflare"
 msgstr "SafeHouse widzi prawdziwe adresy odwiedzających za Cloudflare"
 
-#: src/Core/Net.php:145
+#: src/Core/Net.php:239
 msgid "The visitor address comes from Cloudflare's CF-Connecting-IP header, which is trusted only on connections from Cloudflare's own servers."
 msgstr "Adres odwiedzającego pochodzi z nagłówka CF-Connecting-IP, któremu ufamy tylko na połączeniach z serwerów Cloudflare."
 
-#: src/Core/Net.php:148
+#: src/Core/Net.php:242
 msgid "SafeHouse is set up for Cloudflare, but this request did not come through it"
 msgstr "SafeHouse jest ustawiony na Cloudflare, ale to żądanie nie przeszło przez Cloudflare"
 
-#: src/Core/Net.php:149
+#: src/Core/Net.php:243
 msgid "That is fine when you reach the server directly. If the site no longer uses Cloudflare, set \"Proxy in front of the site\" back to none."
 msgstr "To normalne, gdy łączysz się z serwerem bezpośrednio. Jeśli strona nie korzysta już z Cloudflare, ustaw „Proxy przed stroną” z powrotem na brak."
 

@@ -4,7 +4,8 @@ Each release needs a `## x.y.z` section; its body is shown in the WordPress "Vie
 
 ## Unreleased
 
-- Bot protection: replace the shared static proof with rotating trap names and signed, browser/form/post-bound challenges, fresh outside page caches, valid for 20 minutes with a server-enforced minimum age. Accessible retry handling, no per-challenge database writes; same-browser replay within that window remains possible.
+- Bot protection: rotating trap names and signed, one-use browser/form/post-bound challenges, fetched outside page caches, valid for 20 minutes with a one-second minimum age. Atomic consumption prevents replay; bounded database pools keep forms separate and reject temporarily if storage or capacity is unavailable.
+- Fixed ten-minute browser and reliable-IP budgets limit challenge issuance and submissions, with IPv6 grouped by /64. Automated browsers can still pass within the limits; distributed clients and cookie resets without a reliable IP remain limitations. Added accessible retry handling and Polish limit/unavailability messages.
 - Hardening: independent XML-RPC pingback blocking even with Jetpack/WooPayments, plus opt-in reduction of REST/RSD/Writer/shortlink discovery metadata. REST endpoints and asset cache busting remain available.
 - Added adversarial honeypot, real-browser cache/retry and hardening integration regressions. Purge HTML and asset caches when upgrading the honeypot protocol.
 
