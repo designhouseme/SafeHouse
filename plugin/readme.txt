@@ -4,7 +4,7 @@ Tags: security, hardening, captcha, vulnerability, woocommerce
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 0.2.1
+Stable tag: 0.3.0
 License: Apache-2.0
 License URI: https://www.apache.org/licenses/LICENSE-2.0
 
@@ -20,17 +20,19 @@ SafeHouse does not need Wordfence. When Wordfence is active, the SafeHouse featu
 
 On by default:
 
-* **Hardening:** no theme and plugin file editor; no username discovery for visitors (`?author=` scans, the REST users endpoint, the users sitemap, author data in oEmbed); one generic login error on wp-login.php and the WooCommerce login form; WordPress version hidden; XML-RPC off (left on when Jetpack or WooPayments needs it); basic security headers; new accounts never get an admin-level role, even when the default role was changed straight in the database. HSTS is available but off. Adds a registration check to Tools → Site Health.
+* **Hardening:** no theme and plugin file editor; no username discovery for visitors (`?author=` scans, the REST users endpoint, the users sitemap, author data in oEmbed); one generic login error on wp-login.php and the WooCommerce login form; WordPress version hidden; XML-RPC off (left on when Jetpack or WooPayments needs it); XML-RPC pingbacks blocked independently, including with Jetpack or WooPayments; basic security headers; new accounts never get an admin-level role, even when the default role was changed straight in the database. HSTS is available but off. Adds a registration check to Tools → Site Health.
 * **Change alerts:** an e-mail and a log entry when an administrator is added, a plugin or theme appears or is activated, a mu-plugin or drop-in shows up, wp-config.php changes, or someone opens registration or changes the default role for new accounts, the admin e-mail or the site address. A changed admin e-mail is also reported to the previous address.
 * **Plugin health:** a weekly check for plugins closed on WordPress.org, not updated for two years, not from WordPress.org, one-time tools left active, inactive leftovers, and plugins a SafeHouse module replaces. Also shown in Tools → Site Health.
 * **Vulnerability alerts:** for sites without Wordfence. Warns when the installed WordPress, a plugin or a theme has a known security vulnerability and names the version that fixes it. Urgent findings (CVSS 7 or higher, or no fix yet) appear on every admin screen; all findings appear in Site Health and are e-mailed once. While Wordfence is active the module stands down, because Wordfence warns about vulnerable software itself.
 * **Login limits:** stops password guessing on wp-login.php, the WooCommerce login form, XML-RPC and application passwords. Five failures from one address in 15 minutes lock it out for 15 minutes, and every further lockout lasts four times longer (up to 24 hours); IPv6 counts by /64. An account under attack is never locked for everyone: after ten failures in an hour it is paused only for devices that never logged into it, while devices that did (they carry a signed cookie) keep working. Behind Cloudflare or another proxy, set the proxy (see below), otherwise every visitor has the proxy's address and SafeHouse blocks no addresses at all. Stands down while Wordfence brute force protection is on.
 * **Omnibus price history:** records observed WooCommerce product and variation prices. A complete recorded window shows the lowest price from the 30 days before the reduction; shorter observation is labelled partial, and absent data is shown as unavailable. The regular price is never substituted for missing history. Changes through WordPress metadata hooks are observed; direct SQL price changes are not. History retention includes the window before a long active reduction. Upgrading the old schema starts a new observation period because earlier versions inferred timestamps; old records remain inspectable. Check reduced products with `wp shouse omnibus status`. This records evidence, not a guarantee of legal compliance.
 
+* **Stability:** bounded local PHP observations and background queue diagnostics, with temporary detailed sampling, Site Health and WP-CLI controls. See Stability below for operating limits.
+
 Off by default:
 
 * **Bot protection:** rotating trap fields and signed, one-use challenges guard registration, lost password and comments without an outside service. JavaScript and first-party cookies are required. Challenges are fetched outside page caches, expire after 20 minutes and require a one-second wait in the browser. Atomic database checks prevent reuse; fixed storage pools keep forms separate. Storage failure or unavailable capacity temporarily rejects submissions. In fixed ten-minute windows, each browser gets 20 challenges per form and 5 registration, 5 password-reset or 10 comment submissions. Reliable client IPs have broader limits: 200 challenges per form and 100/100/200 submissions respectively; IPv6 shares a /64. Unknown proxy addresses are not grouped together. Automated browsers can still pass within the limits; distributed clients and cookie resets without a reliable IP can evade browser quotas. Cloudflare Turnstile, when configured in wp-config.php, also guards login, registration, lost password, comments, reviews and both WooCommerce checkouts, including the Store API. You choose what happens when Cloudflare cannot be reached. Purge HTML and script caches when upgrading the protocol.
-* **Additional hardening:** disable XML-RPC pingbacks independently, including when Jetpack or WooPayments needs authenticated XML-RPC. Optional discovery reduction removes native REST/RSD/Writer/shortlink metadata; REST endpoints and asset versions stay available. This limits passive fingerprinting, not all WordPress detection.
+* **Discovery reduction:** removes native REST/RSD/Writer/shortlink metadata; REST endpoints and asset versions stay available. This limits passive fingerprinting, not all WordPress detection.
 * **Install lockdown:** nobody can install plugins or themes or upload ZIP files, not even through a vulnerable plugin that skips permission checks. Updates keep working. Unlock for 30 minutes when you need to install something.
 * **Tweaks:** separate switches for comments, front-end search, emojis, embeds, `<head>` clean-up, Heartbeat, self-pingbacks and the number of revisions kept.
 * **Duplicate posts and pages:** a "Duplicate" link that creates a draft copy with the content, taxonomies and custom fields. WooCommerce products keep WooCommerce's own duplicate action.
@@ -124,6 +126,14 @@ Apart from the SMTP and Redis servers you configure yourself, SafeHouse contacts
 SafeHouse sends no telemetry. The activity log stays in the site's database, stores the user and IP address of each event and deletes entries after 90 days. Pending security-alert recipients/bodies and cache purge jobs are stored until transport acceptance; regular mail and password-reset messages are not put in this outbox. Delivery retries need working WP-Cron; after five failed attempts, a retained job pauses until an operator resumes it. Site Health reports failures. SMTP acceptance is not inbox confirmation, and a crash can cause duplicate delivery.
 
 == Changelog ==
+
+= 0.3.0 =
+* Rotating honeypot traps and signed one-use browser/form-bound challenges, with bounded storage and browser/IP quotas.
+* Visible verification progress, clear connection errors, accurate retry countdowns and recovery after form reset, with Polish translations.
+* Independent XML-RPC pingback protection and optional discovery metadata reduction.
+* Stability observations, WP-Cron/Action Scheduler diagnostics, bounded delivery workers and resumable privilege inventory checks.
+* Expanded browser, security, ZIP lifecycle, WooCommerce and host recovery regressions.
+* After upgrading, purge HTML and script caches. Protected forms require JavaScript and first-party cookies; automated browsers can still pass within the quotas.
 
 = 0.2.1 =
 * Security fixes for account limits, proxy ranges, bot checks and duplication permissions.

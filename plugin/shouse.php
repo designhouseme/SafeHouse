@@ -3,7 +3,7 @@
  * Plugin Name:          SafeHouse
  * Plugin URI:           https://designhouse.me/
  * Description:          One plugin instead of a dozen small ones: hardening, install lockdown, change and vulnerability alerts, plugin health and everyday tweaks. Works alongside Wordfence, WooCommerce and the usual payment gateways.
- * Version:              0.2.1
+ * Version:              0.3.0
  * Requires at least:    6.6
  * Requires PHP:         8.1
  * Tested up to:         7.1
@@ -22,7 +22,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-const SHOUSE_VERSION = '0.2.1';
+const SHOUSE_VERSION = '0.3.0';
 const SHOUSE_FILE    = __FILE__;
 
 require __DIR__ . '/src/legacy.php'; // Old WPHOUSE_* constants from wp-config.php keep working.
