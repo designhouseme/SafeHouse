@@ -29,7 +29,9 @@ async function issueQuotaFixture() {
 		const first = await issue();
 		check('issuance quota fixture establishes the browser cookie', first.status() === 200 && (await ctx.cookies()).some(cookie => cookie.name.startsWith('shouse_')));
 		// The initial request consumed one slot. All concurrent requests retain that same cookie.
+		const burstStarted = Date.now();
 		const responses = await Promise.all(Array.from({ length: 20 }, issue));
+		const burstFinished = Date.now();
 		const accepted = responses.filter(response => response.status() === 200);
 		const rejected = responses.filter(response => response.status() === 429);
 		check('concurrent issuance allows exactly the remaining nineteen challenges', accepted.length === 19 && rejected.length === 1,
@@ -38,6 +40,11 @@ async function issueQuotaFixture() {
 		const failure = await rejected[0].json();
 		check('real issuance limit returns Retry-After and a bounded JSON reason', Number.isFinite(retryHeader) && retryHeader > 0 && retryHeader <= 600 &&
 			failure.success === false && failure.data?.reason === 'rate_limited' && Number.isFinite(failure.data.retryAfter) && failure.data.retryAfter > 0 && failure.data.retryAfter <= 600);
+		const windowEnd = (Math.floor(burstStarted / 600000) + 1) * 600000;
+		const earliestRetry = Math.max(1, Math.ceil((windowEnd - burstFinished) / 1000) - 1);
+		const latestRetry = Math.min(600, Math.ceil((windowEnd - burstStarted) / 1000) + 1);
+		check('real issuance Retry-After matches the remaining fixed-window budget', retryHeader === failure.data.retryAfter && retryHeader >= earliestRetry && retryHeader <= latestRetry,
+			`Retry-After ${retryHeader}; expected ${earliestRetry}–${latestRetry} seconds`);
 	} finally {
 		await ctx.close();
 	}
@@ -48,9 +55,9 @@ async function browserFixtures() {
 		let mode = failure;
 		let requests = 0;
 		await page.route(`${U}/fixture`, route => route.fulfill({ contentType: 'text/html', body: `
-			<form><input name="author"><input name="email"><textarea name="comment"></textarea>
+			<form aria-busy="false"><input name="author"><input name="email"><textarea name="comment"></textarea>
 			<div class="shouse-hp" data-form="comments" data-target="1"><input name="shouse_challenge" type="hidden"><input data-shouse-trap hidden></div>
-			<p class="shouse-hp-status" hidden role="status"></p><button type="submit">Send</button></form>` }));
+			<p class="shouse-hp-status" hidden role="status" aria-live="polite" aria-atomic="false"></p><button type="submit" name="task" value="publish" aria-busy="false">Send</button></form>` }));
 		await page.route(`${U}/challenge`, async route => {
 			requests++;
 			if (mode === 'network') return route.abort();
@@ -64,7 +71,12 @@ async function browserFixtures() {
 		});
 		await page.goto(`${U}/fixture`);
 		await page.evaluate(url => {
-			window.shouseBots = { challengeUrl: url, challengeError: 'Check unavailable. Please try again.', challengeRateError: 'Too many attempts. Please wait and try again.', challengeUnavailableError: 'The form check is unavailable right now. Please try again in a few minutes.' };
+			window.shouseBots = {
+				challengeUrl: url, challengeError: 'The form check could not finish. Please submit the form again.',
+				challengeRateError: 'Too many attempts. Please wait and try again.',
+				challengeUnavailableError: 'The form check is unavailable right now. Please try again in a few minutes.',
+				challengeWaiting: 'Checking the form…', challengeRetry: 'Try again in %s s.', challengeReady: 'You can submit the form again.',
+			};
 			window.submissions = [];
 			document.querySelector('form').addEventListener('submit', event => {
 				event.preventDefault();
@@ -76,16 +88,29 @@ async function browserFixtures() {
 		await page.fill('[name="author"]', 'Selective browser bot');
 		await page.waitForFunction(() => document.querySelector('.shouse-hp').shouseHoneypot.manualRetry);
 		check(`${failure}: readable failure message`, await page.locator('.shouse-hp-status').isVisible());
+		check(`${failure}: background failure preserves existing busy states`, await page.locator('form').getAttribute('aria-busy') === 'false' && await page.locator('button').getAttribute('aria-busy') === 'false');
 		if (failure === 503) check('503: availability message explains the server failure', (await page.locator('.shouse-hp-status').innerText()).includes('unavailable right now'));
+		if (failure === 403 || failure === 'network') check(`${failure}: retry guidance does not blame browser settings`,
+			await page.locator('.shouse-hp-status').innerText() === 'The form check could not finish. Please submit the form again.');
 		await page.evaluate(() => {
 			for (let i = 0; i < 20; i++) document.querySelector('[name="author"]').dispatchEvent(new Event('input', { bubbles: true }));
 		});
 		check(`${failure}: input events do not repeat failed issuance`, requests === 1);
 		if (failure === 429 || failure === 503) {
 			check(`${failure}: server cooldown is retained`, await page.evaluate(() => document.querySelector('.shouse-hp').shouseHoneypot.retryAt > Date.now() + 2000));
+			check(`${failure}: cooldown tells the visitor when to retry`, /Try again in \d+ s\./.test(await page.locator('.shouse-hp-status').innerText()));
+			check(`${failure}: the changing countdown is excluded from live announcements`,
+				await page.locator('.shouse-hp-status[aria-live="polite"] [role="timer"][aria-live="off"]').count() === 1 &&
+				await page.locator('.shouse-hp-status').getAttribute('aria-atomic') === 'false');
 			await page.click('button');
 			check(`${failure}: early explicit retry respects cooldown`, requests === 1);
-			await page.evaluate(() => { document.querySelector('.shouse-hp').shouseHoneypot.retryAt = Date.now() - 1; });
+			check(`${failure}: blocked clicks retain cooldown guidance and restore busy state`,
+				/Try again in \d+ s\./.test(await page.locator('.shouse-hp-status').innerText()) && await page.locator('button').getAttribute('aria-busy') === 'false');
+			// Shorten the fixture's server deadline so the normal timer, rather than a new click,
+			// must announce readiness. The real Retry-After duration is checked above separately.
+			await page.evaluate(() => { document.querySelector('.shouse-hp').shouseHoneypot.retryAt = Date.now() + 1200; });
+			await page.waitForFunction(() => document.querySelector('.shouse-hp-status').textContent.includes('You can submit the form again.'));
+			check(`${failure}: cooldown expiry changes the visible status without another request`, requests === 1 && await page.locator('.shouse-hp-status').isVisible());
 			await page.fill('[name="author"]', 'More typing after cooldown');
 			check(`${failure}: cooldown expiry still requires explicit retry`, requests === 1);
 		}
@@ -94,6 +119,7 @@ async function browserFixtures() {
 		await page.waitForFunction(() => window.submissions.length === 1);
 		const first = await page.evaluate(() => window.submissions[0]);
 		check(`${failure}: explicit retry recovers`, requests === 2 && !!first.immediate);
+		check(`${failure}: successful retry restores busy states and clears stale guidance`, await page.locator('form').getAttribute('aria-busy') === 'false' && await page.locator('button').getAttribute('aria-busy') === 'false' && !(await page.locator('.shouse-hp-status').isVisible()));
 		check(`${failure}: canceled submission retains proof for deferred FormData`, first.immediate === first.deferred && first.immediate === await page.locator('[name="shouse_challenge"]').inputValue());
 		await page.fill('[name="comment"]', 'AJAX form remains editable');
 		check(`${failure}: typing after submit preserves its payload`, requests === 2 && first.immediate === await page.locator('[name="shouse_challenge"]').inputValue());
@@ -118,9 +144,118 @@ async function browserFixtures() {
 		await ctx.close();
 	}
 }
+async function pendingFixtures() {
+	for (const outcome of ['success', 'failure', 'reset', 'reset-retry']) {
+		const { ctx, page } = await fresh();
+		const originalBusy = outcome === 'failure' ? null : outcome === 'reset' ? 'true' : 'false';
+		let release;
+		const delayedResponse = new Promise(resolve => { release = resolve; });
+		let requests = 0;
+		try {
+			await page.route(`${U}/pending-fixture`, route => route.fulfill({ contentType: 'text/html', body: `
+				<form aria-busy="false"><input name="author"><textarea name="comment"></textarea>
+				<div class="shouse-hp" data-form="comments" data-target="1"><input name="shouse_challenge" type="hidden"><input data-shouse-trap hidden></div>
+				<p class="shouse-hp-status" hidden role="status" aria-live="polite" aria-atomic="false"></p>
+				<button type="submit" name="task" value="publish"${originalBusy === null ? '' : ` aria-busy="${originalBusy}"`}>Send comment</button></form>` }));
+			await page.route(`${U}/delayed-challenge`, async route => {
+				const request = ++requests;
+				await delayedResponse;
+				if (outcome === 'failure') return route.abort();
+				return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ success: true,
+					data: { challenge: request === 1 ? 'delayed-proof' : 'fresh-after-reset', trap: `delayed-trap-${request}`, expiresIn: 1200, wait: 1000 },
+				}) });
+			});
+			await page.goto(`${U}/pending-fixture`);
+			await page.evaluate(url => {
+				window.shouseBots = {
+					challengeUrl: url, challengeError: 'The form check could not finish. Please submit the form again.',
+					challengeWaiting: 'Checking the form…', challengeRetry: 'Try again in %s s.', challengeReady: 'You can submit the form again.',
+				};
+				window.submissions = [];
+				document.querySelector('form').addEventListener('submit', event => {
+					event.preventDefault();
+					const data = new FormData(event.target, event.submitter);
+					window.submissions.push({ proof: data.get('shouse_challenge'), author: data.get('author'), task: data.get('task'),
+						submitterName: event.submitter?.name, submitterValue: event.submitter?.value,
+						busy: event.submitter?.getAttribute('aria-busy'), formBusy: event.target.getAttribute('aria-busy') });
+				});
+			}, `${U}/delayed-challenge`);
+			await page.addScriptTag({ path: new URL('../plugin/assets/bots.js', import.meta.url).pathname });
+			await page.fill('[name="author"]', 'Visitor awaiting verification');
+			await page.waitForFunction(() => !!document.querySelector('.shouse-hp').shouseHoneypot.pending);
+			check(`${outcome}: background preparation does not claim a submission is pending`,
+				!(await page.locator('.shouse-hp-status').isVisible()) && await page.locator('button').getAttribute('aria-busy') === originalBusy);
+			await page.click('button');
+			check(`${outcome}: delayed submission announces verification and marks only its button busy`,
+				await page.locator('.shouse-hp-status').innerText() === 'Checking the form…' &&
+				await page.locator('button').getAttribute('aria-busy') === 'true' && await page.locator('form').getAttribute('aria-busy') === 'false');
+			check(`${outcome}: waiting does not disable fields or replace the submit button`,
+				await page.locator('form :disabled').count() === 0 && await page.locator('button').innerText() === 'Send comment' &&
+				await page.locator('button').getAttribute('name') === 'task' && await page.locator('button').getAttribute('value') === 'publish');
+			await page.click('button');
+			check(`${outcome}: repeated pending click does not duplicate issuance or submission`, requests === 1 && await page.evaluate(() => window.submissions.length === 0));
+			if (outcome === 'reset' || outcome === 'reset-retry') {
+				await page.evaluate(() => document.querySelector('form').reset());
+				check(`${outcome}: canceling pending input restores the button and clears waiting guidance`,
+					await page.locator('button').getAttribute('aria-busy') === originalBusy && !(await page.locator('.shouse-hp-status').isVisible()));
+				if (outcome === 'reset-retry') {
+					await page.fill('[name="author"]', 'New input after reset');
+					await page.click('button');
+					check('reset-retry: immediate resubmission waits for the old fetch without racing cookie issuance',
+						requests === 1 && await page.evaluate(() => window.submissions.length === 0) &&
+						await page.locator('button').getAttribute('aria-busy') === 'true' &&
+						await page.locator('.shouse-hp-status').innerText() === 'Checking the form…');
+				}
+			}
+			release();
+			if (outcome === 'failure') {
+				await page.waitForFunction(() => document.querySelector('.shouse-hp').shouseHoneypot.manualRetry && !document.querySelector('.shouse-hp').shouseHoneypot.submitting);
+				check('pending failure: neutral guidance replaces the waiting message and restores absent busy attribute',
+					await page.locator('.shouse-hp-status').innerText() === 'The form check could not finish. Please submit the form again.' &&
+					await page.locator('button').getAttribute('aria-busy') === null && await page.locator('form').getAttribute('aria-busy') === 'false');
+				check('pending failure: entered data stays editable without submission',
+					await page.locator('[name="author"]').inputValue() === 'Visitor awaiting verification' &&
+					await page.locator('form :disabled').count() === 0 && await page.evaluate(() => window.submissions.length === 0));
+			} else if (outcome === 'success' || outcome === 'reset-retry') {
+				const expectedProof = outcome === 'reset-retry' ? 'fresh-after-reset' : 'delayed-proof';
+				const expectedAuthor = outcome === 'reset-retry' ? 'New input after reset' : 'Visitor awaiting verification';
+				await page.waitForFunction(proof => document.querySelector('[name="shouse_challenge"]').value === proof, expectedProof);
+				check(`${outcome}: waiting feedback continues during the minimum token age`,
+					await page.locator('.shouse-hp-status').innerText() === 'Checking the form…' &&
+					await page.locator('button').getAttribute('aria-busy') === 'true' && await page.evaluate(() => window.submissions.length === 0));
+				await page.waitForFunction(() => window.submissions.length === 1);
+				const sent = await page.evaluate(() => window.submissions[0]);
+				check(`${outcome}: resumed submission retains proof, fields and submitter discriminator`,
+					sent.proof === expectedProof && sent.author === expectedAuthor && sent.task === 'publish' &&
+					sent.submitterName === 'task' && sent.submitterValue === 'publish');
+				check(`${outcome}: busy states are restored before downstream submission handlers run`, sent.busy === originalBusy && sent.formBusy === 'false');
+				check(`${outcome}: waiting status is cleared after completion`, !(await page.locator('.shouse-hp-status').isVisible()));
+				if (outcome === 'reset-retry') {
+					await page.waitForTimeout(200);
+					check('reset-retry: old and new continuations produce exactly one submission using one fresh challenge',
+						requests === 2 && await page.evaluate(() => window.submissions.length === 1));
+				}
+			} else {
+				await page.waitForFunction(() => !document.querySelector('.shouse-hp').shouseHoneypot.pending);
+				// Cover the obsolete submit continuation's full minimum-age delay as well.
+				await page.waitForTimeout(1200);
+				check('reset: a late challenge response cannot send the reset form', await page.evaluate(() => window.submissions.length === 0));
+				check('reset: a late response does not resurrect waiting UI or overwrite the original busy value',
+					await page.locator('button').getAttribute('aria-busy') === originalBusy && await page.locator('form').getAttribute('aria-busy') === 'false' &&
+					!(await page.locator('.shouse-hp-status').isVisible()));
+			}
+		} finally {
+			release();
+			await ctx.close();
+		}
+	}
+}
 try {
 	if (!process.env.SHOUSE_HP_FIXTURES_ONLY) await issueQuotaFixture();
-	if (!process.env.SHOUSE_HP_ISSUE_FIXTURE_ONLY) await browserFixtures();
+	if (!process.env.SHOUSE_HP_ISSUE_FIXTURE_ONLY) {
+		await browserFixtures();
+		await pendingFixtures();
+	}
 	if (!process.env.SHOUSE_HP_FIXTURES_ONLY && !process.env.SHOUSE_HP_ISSUE_FIXTURE_ONLY) {
 	const { ctx, page } = await fresh();
 	const url = `${U}/wp-admin/admin-ajax.php`;
