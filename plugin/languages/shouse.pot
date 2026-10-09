@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-09T19:08:53+00:00\n"
+"POT-Creation-Date: 2026-10-09T22:13:09+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: shouse\n"
@@ -433,7 +433,7 @@ msgid "Applies only when this server cannot reach Cloudflare, or Cloudflare reje
 msgstr ""
 
 #: src/Modules/Bots.php:126
-msgid "Let the submission through and log it"
+msgid "Allow and log"
 msgstr ""
 
 #: src/Modules/Bots.php:127
@@ -441,40 +441,64 @@ msgid "Block the submission"
 msgstr ""
 
 #: src/Modules/Bots.php:333
-msgid "The form check could not finish. Enable cookies and JavaScript, then submit again."
+msgid "Checking the form…"
 msgstr ""
 
 #: src/Modules/Bots.php:334
-#: src/Modules/Bots.php:373
-msgid "Too many attempts. Please wait a few minutes and try again."
+msgid "The form check could not finish. Please try again."
 msgstr ""
 
 #: src/Modules/Bots.php:335
-#: src/Modules/Bots.php:376
-msgid "The form check is unavailable right now. Please try again in a few minutes."
+msgid "Could not connect to form verification. Check your connection and try again."
+msgstr ""
+
+#: src/Modules/Bots.php:336
+msgid "Too many attempts."
+msgstr ""
+
+#: src/Modules/Bots.php:337
+msgid "The form check is unavailable right now."
+msgstr ""
+
+#. translators: %s: seconds remaining until the visitor can retry.
+#: src/Modules/Bots.php:339
+#, php-format
+msgid "Try again in %s s."
+msgstr ""
+
+#: src/Modules/Bots.php:340
+msgid "You can submit the form again."
 msgstr ""
 
 #: src/Modules/Bots.php:378
+msgid "Too many attempts. Please wait a few minutes and try again."
+msgstr ""
+
+#: src/Modules/Bots.php:381
+msgid "The form check is unavailable right now. Please try again in a few minutes."
+msgstr ""
+
+#: src/Modules/Bots.php:383
 msgid "The form check did not pass. Reload the page, allow cookies and JavaScript, and try again."
 msgstr ""
 
-#: src/Modules/Bots.php:396
+#: src/Modules/Bots.php:401
 msgid "The anti-bot check is unavailable right now. Please try again in a few minutes."
 msgstr ""
 
-#: src/Modules/Bots.php:399
+#: src/Modules/Bots.php:404
 msgid "The anti-bot check did not pass. Please wait for it to finish and try again."
 msgstr ""
 
-#: src/Modules/Bots.php:421
+#: src/Modules/Bots.php:426
 msgid "Turnstile is off: add SHOUSE_TURNSTILE_SITE_KEY and SHOUSE_TURNSTILE_SECRET_KEY to wp-config.php. The honeypot works without them."
 msgstr ""
 
-#: src/Modules/Bots.php:423
+#: src/Modules/Bots.php:428
 msgid "Turnstile is off: wp-config.php has Cloudflare test keys, which always give the same answer and are not allowed on a production site."
 msgstr ""
 
-#: src/Modules/Bots.php:425
+#: src/Modules/Bots.php:430
 msgid "Turnstile is on, with keys from wp-config.php."
 msgstr ""
 

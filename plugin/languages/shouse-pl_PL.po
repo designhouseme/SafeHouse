@@ -945,21 +945,19 @@ msgstr "Honeypot przy rejestracji, resecie hasła i komentarzach"
 msgid "A rotating trap field, one-use browser challenges and limits on repeated submissions. Needs JavaScript and cookies, but no outside service. Automated browsers can still pass within the limits; use Turnstile for stronger checks."
 msgstr "Zmienna nazwa pola pułapki, jednorazowe wyzwania powiązane z przeglądarką i limity kolejnych zgłoszeń. Wymaga JavaScriptu i plików cookie, bez zewnętrznej usługi. Automatyczne przeglądarki nadal mogą przejść weryfikację w ramach limitów; silniejszą ochronę zapewnia Turnstile."
 
-#: src/Modules/Bots.php:333
-msgid "The form check could not finish. Enable cookies and JavaScript, then submit again."
-msgstr "Nie udało się dokończyć weryfikacji formularza. Włącz pliki cookie i JavaScript, a następnie wyślij formularz ponownie."
-
 #: src/Modules/Bots.php:334
-#: src/Modules/Bots.php:373
+msgid "The form check could not finish. Please try again."
+msgstr "Nie udało się sprawdzić formularza. Spróbuj ponownie."
+
+#: src/Modules/Bots.php:378
 msgid "Too many attempts. Please wait a few minutes and try again."
 msgstr "Zbyt wiele prób. Odczekaj kilka minut i spróbuj ponownie."
 
-#: src/Modules/Bots.php:335
-#: src/Modules/Bots.php:376
+#: src/Modules/Bots.php:381
 msgid "The form check is unavailable right now. Please try again in a few minutes."
 msgstr "Weryfikacja formularza jest chwilowo niedostępna. Spróbuj ponownie za kilka minut."
 
-#: src/Modules/Bots.php:378
+#: src/Modules/Bots.php:383
 msgid "The form check did not pass. Reload the page, allow cookies and JavaScript, and try again."
 msgstr "Formularz nie przeszedł weryfikacji. Odśwież stronę, zezwól na pliki cookie i JavaScript, a następnie spróbuj ponownie."
 
@@ -1028,8 +1026,8 @@ msgid "Applies only when this server cannot reach Cloudflare, or Cloudflare reje
 msgstr "Dotyczy tylko sytuacji, gdy ten serwer nie może połączyć się z Cloudflare albo Cloudflare odrzuca klucz tajny. Odwiedzający, którego przeglądarka blokuje Turnstile, i tak zobaczy prośbę o ponowną próbę."
 
 #: src/Modules/Bots.php:126
-msgid "Let the submission through and log it"
-msgstr "Przepuść formularz i zapisz to w dzienniku"
+msgid "Allow and log"
+msgstr "Przepuść i zapisz w dzienniku"
 
 #: src/Modules/Bots.php:127
 msgid "Block the submission"
@@ -1039,23 +1037,23 @@ msgstr "Zablokuj formularz"
 msgid "Leave this field empty"
 msgstr "Zostaw to pole puste"
 
-#: src/Modules/Bots.php:396
+#: src/Modules/Bots.php:401
 msgid "The anti-bot check is unavailable right now. Please try again in a few minutes."
 msgstr "Weryfikacja antybotowa jest teraz niedostępna. Spróbuj ponownie za kilka minut."
 
-#: src/Modules/Bots.php:399
+#: src/Modules/Bots.php:404
 msgid "The anti-bot check did not pass. Please wait for it to finish and try again."
 msgstr "Weryfikacja antybotowa nie powiodła się. Poczekaj, aż się zakończy, i spróbuj ponownie."
 
-#: src/Modules/Bots.php:421
+#: src/Modules/Bots.php:426
 msgid "Turnstile is off: add SHOUSE_TURNSTILE_SITE_KEY and SHOUSE_TURNSTILE_SECRET_KEY to wp-config.php. The honeypot works without them."
 msgstr "Turnstile jest wyłączony: dodaj SHOUSE_TURNSTILE_SITE_KEY i SHOUSE_TURNSTILE_SECRET_KEY do wp-config.php. Honeypot działa bez nich."
 
-#: src/Modules/Bots.php:423
+#: src/Modules/Bots.php:428
 msgid "Turnstile is off: wp-config.php has Cloudflare test keys, which always give the same answer and are not allowed on a production site."
 msgstr "Turnstile jest wyłączony: w wp-config.php są testowe klucze Cloudflare, które zawsze dają tę samą odpowiedź i nie są dozwolone na stronie produkcyjnej."
 
-#: src/Modules/Bots.php:425
+#: src/Modules/Bots.php:430
 msgid "Turnstile is on, with keys from wp-config.php."
 msgstr "Turnstile jest włączony, z kluczami z wp-config.php."
 
@@ -1864,3 +1862,29 @@ msgstr "Brak stanu porównawczego. Zostanie zapisany podczas zaplanowanego spraw
 #: src/Modules/Stability.php:172
 msgid "Basic recording observes requests over 3 seconds, high memory use and PHP failures after SafeHouse loads. Detailed sampling adds HTTP timing for about 10% of requests, up to 20 calls per sampled request. At most one observation is saved per 10 seconds site-wide. Storage is capped at 256 groups; the panel shows the last 7 days and scheduled cleanup removes older records. Counts are recorded samples, not traffic totals."
 msgstr "Podstawowy zapis obejmuje żądania trwające ponad 3 sekundy, wysokie zużycie pamięci i błędy PHP po załadowaniu SafeHouse. Szczegółowe próbkowanie dodaje pomiary czasu HTTP dla około 10% żądań, do 20 wywołań na próbkowane żądanie. W całej witrynie zapisywana jest najwyżej jedna obserwacja na 10 sekund. Zapis jest ograniczony do 256 grup; panel pokazuje ostatnie 7 dni, a zaplanowane czyszczenie usuwa starsze rekordy. Liczniki pokazują zapisane próbki, a nie cały ruch."
+
+#: src/Modules/Bots.php:333
+msgid "Checking the form…"
+msgstr "Weryfikuję formularz…"
+
+#: src/Modules/Bots.php:335
+msgid "Could not connect to form verification. Check your connection and try again."
+msgstr "Nie udało się połączyć z usługą weryfikacji formularza. Sprawdź połączenie i spróbuj ponownie."
+
+#: src/Modules/Bots.php:336
+msgid "Too many attempts."
+msgstr "Zbyt wiele prób."
+
+#: src/Modules/Bots.php:337
+msgid "The form check is unavailable right now."
+msgstr "Weryfikacja formularza jest chwilowo niedostępna."
+
+#. translators: %s: seconds remaining until the visitor can retry.
+#: src/Modules/Bots.php:339
+#, php-format
+msgid "Try again in %s s."
+msgstr "Spróbuj ponownie za %s s."
+
+#: src/Modules/Bots.php:340
+msgid "You can submit the form again."
+msgstr "Możesz ponownie wysłać formularz."

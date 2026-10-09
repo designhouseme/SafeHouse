@@ -123,7 +123,7 @@ final class Bots extends AbstractModule {
 				'label'   => __( 'When Cloudflare cannot be reached', 'shouse' ),
 				'help'    => __( 'Applies only when this server cannot reach Cloudflare, or Cloudflare rejects the secret key. A visitor whose browser blocks Turnstile is still asked to try again.', 'shouse' ),
 				'options' => [
-					'allow' => __( 'Let the submission through and log it', 'shouse' ),
+					'allow' => __( 'Allow and log', 'shouse' ),
 					'block' => __( 'Block the submission', 'shouse' ),
 				],
 			],
@@ -324,15 +324,20 @@ final class Bots extends AbstractModule {
 		if ( wp_script_is( 'shouse-bots' ) ) {
 			return;
 		}
-		wp_enqueue_script( 'shouse-bots', plugins_url( 'assets/bots.js', SHOUSE_FILE ), $checkout ? [ 'wp-api-fetch' ] : [], SHOUSE_VERSION . '-forms-v3', [ 'in_footer' => true ] );
+		wp_enqueue_script( 'shouse-bots', plugins_url( 'assets/bots.js', SHOUSE_FILE ), $checkout ? [ 'wp-api-fetch' ] : [], SHOUSE_VERSION . '-forms-v4', [ 'in_footer' => true ] );
 		$config = [
 			'sitekey'                   => $this->turnstile ? Turnstile::site_key() : '',
 			'checkout'                  => $checkout,
 			'header'                    => Turnstile::HEADER,
 			'challengeUrl'              => admin_url( 'admin-ajax.php', 'relative' ),
-			'challengeError'            => __( 'The form check could not finish. Enable cookies and JavaScript, then submit again.', 'shouse' ),
-			'challengeRateError'        => __( 'Too many attempts. Please wait a few minutes and try again.', 'shouse' ),
-			'challengeUnavailableError' => __( 'The form check is unavailable right now. Please try again in a few minutes.', 'shouse' ),
+			'challengeWaiting'          => __( 'Checking the form…', 'shouse' ),
+			'challengeError'            => __( 'The form check could not finish. Please try again.', 'shouse' ),
+			'challengeNetworkError'     => __( 'Could not connect to form verification. Check your connection and try again.', 'shouse' ),
+			'challengeRateError'        => __( 'Too many attempts.', 'shouse' ),
+			'challengeUnavailableError' => __( 'The form check is unavailable right now.', 'shouse' ),
+			/* translators: %s: seconds remaining until the visitor can retry. */
+			'challengeRetry'            => __( 'Try again in %s s.', 'shouse' ),
+			'challengeReady'            => __( 'You can submit the form again.', 'shouse' ),
 		];
 		wp_add_inline_script( 'shouse-bots', 'window.shouseBots = ' . wp_json_encode( $config ) . ';', 'before' );
 		if ( $this->turnstile ) {

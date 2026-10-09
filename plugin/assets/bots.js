@@ -52,6 +52,56 @@
 		var state = { pending: null, expires: 0, ready: 0, generation: 0, used: false, manualRetry: false, retryAt: 0 };
 		box.shouseHoneypot = state;
 		var status = box.parentNode.querySelector( '.shouse-hp-status' );
+		var retryTimer;
+		var busyButton;
+		var previousBusy;
+		state.message = function ( message ) {
+			clearTimeout( retryTimer );
+			if ( status ) {
+				status.textContent = message || '';
+				status.hidden = ! message;
+			}
+		};
+		state.stopWaiting = function () {
+			if ( busyButton && busyButton.getAttribute( 'aria-busy' ) === 'true' ) {
+				if ( previousBusy === null ) { busyButton.removeAttribute( 'aria-busy' ); }
+				else { busyButton.setAttribute( 'aria-busy', previousBusy ); }
+			}
+			busyButton = null;
+			state.submitting = false;
+		};
+		state.startWaiting = function ( submitter ) {
+			state.submitting = true;
+			busyButton = submitter;
+			if ( busyButton ) {
+				previousBusy = busyButton.getAttribute( 'aria-busy' );
+				// Keep the live region outside the busy element, and preserve the submitter's payload.
+				busyButton.setAttribute( 'aria-busy', 'true' );
+			}
+			state.message( config.challengeWaiting );
+		};
+		state.showRetry = function ( message ) {
+			state.message( message );
+			if ( ! status || ! config.challengeRetry ) { return; }
+			var countdown = document.createElement( 'span' );
+			countdown.className = 'shouse-hp-retry';
+			countdown.setAttribute( 'role', 'timer' );
+			countdown.setAttribute( 'aria-live', 'off' );
+			status.appendChild( document.createTextNode( ' ' ) );
+			status.appendChild( countdown );
+			var tick = function () {
+				if ( ! document.contains( box ) ) { return; }
+				var seconds = Math.ceil( ( state.retryAt - Date.now() ) / 1000 );
+				if ( seconds <= 0 ) {
+					state.retryAt = 0;
+					state.message( config.challengeReady );
+					return;
+				}
+				countdown.textContent = config.challengeRetry.replace( '%s', seconds );
+				retryTimer = setTimeout( tick, Math.min( 1000, state.retryAt - Date.now() ) );
+			};
+			tick();
+		};
 		var target = function () {
 			var post = form.elements.namedItem( 'comment_post_ID' );
 			return box.getAttribute( 'data-form' ) === 'comments' && post ? post.value : ( box.getAttribute( 'data-target' ) || '0' );
@@ -61,6 +111,8 @@
 		};
 		state.invalidate = function () {
 			state.generation++;
+			state.stopWaiting();
+			if ( Date.now() >= state.retryAt ) { state.message( '' ); }
 			state.used = true;
 			state.inactive = false;
 			state.expires = 0;
@@ -75,7 +127,16 @@
 			}, 0 );
 		};
 		state.prepare = function ( manual ) {
+			var generation = state.generation;
 			if ( state.pending ) {
+				if ( manual && state.pendingGeneration !== generation ) {
+					// A reset may leave an older cookie/bootstrap request in flight. Let it settle
+					// before preparing the new submission, without reusing its stale proof.
+					return state.pending.catch( function () {} ).then( function () {
+						if ( generation !== state.generation ) { throw new Error( 'challenge-stale' ); }
+						return state.prepare( true );
+					} );
+				}
 				return state.pending;
 			}
 			if ( state.valid() ) {
@@ -84,8 +145,8 @@
 			if ( ( ! manual && ( state.used || state.manualRetry ) ) || Date.now() < state.retryAt ) {
 				return Promise.reject( new Error( 'challenge-retry' ) );
 			}
-			var generation = state.generation;
 			proof.value = '';
+			state.pendingGeneration = generation;
 			state.pending = challengeQueue.then( function () {
 				var controller = new AbortController();
 				var timer = setTimeout( function () { controller.abort(); }, WAIT_MS );
@@ -98,6 +159,9 @@
 				return fetch( config.challengeUrl, {
 					method: 'POST', credentials: 'same-origin', cache: 'no-store',
 					headers: { 'X-SHouse-Form': '1' }, body: body, signal: controller.signal,
+				} ).catch( function ( error ) {
+					error.network = true;
+					throw error;
 				} ).then( function ( response ) {
 					// An open/cached page may outlive module disable or safe mode. WordPress returns
 					// exactly 400/0 for an unregistered AJAX action; defer to the real form handler.
@@ -137,16 +201,16 @@
 					state.used = false;
 					state.manualRetry = false;
 					state.retryAt = 0;
-					if ( status ) { status.textContent = ''; status.hidden = true; }
+					if ( ! state.submitting ) { state.message( '' ); }
 				} ).finally( function () { clearTimeout( timer ); } );
 			} ).catch( function ( error ) {
 				if ( generation === state.generation ) {
 					state.manualRetry = true;
 					state.retryAt = Date.now() + Math.max( 0, error.retryAfter || 0 ) * 1000;
-					if ( status ) {
-						status.textContent = ( error.rate && config.challengeRateError ) || ( error.unavailable && config.challengeUnavailableError ) || config.challengeError;
-						status.hidden = false;
-					}
+					var message = ( error.rate && config.challengeRateError ) || ( error.unavailable && config.challengeUnavailableError ) ||
+						( error.network && config.challengeNetworkError ) || config.challengeError;
+					if ( state.retryAt > Date.now() ) { state.showRetry( message ); }
+					else { state.message( message ); }
 				}
 				throw error;
 			} ).finally( function () { state.pending = null; } );
@@ -179,18 +243,24 @@
 		armHoneypot( box );
 		var state = box.shouseHoneypot;
 		if ( ! state ) { return; }
-		if ( state.valid() && Date.now() >= state.ready ) { state.afterSubmit( event ); return; }
+		if ( ! state.submitting && state.valid() && Date.now() >= state.ready ) { state.afterSubmit( event ); return; }
 		event.preventDefault();
 		event.stopImmediatePropagation();
-		if ( state.submitting ) { return; }
-		state.submitting = true;
+		if ( state.submitting || Date.now() < state.retryAt ) { return; }
 		var submitter = event.submitter && event.submitter.form === form ? event.submitter : null;
+		var generation = state.generation;
+		state.startWaiting( submitter );
 		state.prepare( true ).then( function () {
 			return new Promise( function ( resolve ) { setTimeout( resolve, Math.max( 0, state.ready - Date.now() ) ); } );
 		} ).then( function () {
-			state.submitting = false;
+			// Reset/back navigation cancels this attempt, including its minimum-age wait.
+			if ( generation !== state.generation ) { return; }
+			state.stopWaiting();
+			state.message( '' );
 			if ( document.contains( form ) && form.contains( box ) ) { resumeForm( form, submitter ); }
-		} ).catch( function () { state.submitting = false; } );
+		} ).catch( function () {
+			if ( generation === state.generation ) { state.stopWaiting(); }
+		} );
 	}, true );
 
 	/* Turnstile */

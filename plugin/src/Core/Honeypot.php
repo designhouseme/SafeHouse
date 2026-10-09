@@ -47,7 +47,7 @@ final class Honeypot {
 			. '<label>' . esc_html__( 'Leave this field empty', 'shouse' ) . ' <input type="text" name="' . esc_attr( $trap ) . '" data-shouse-trap value="" tabindex="-1" autocomplete="off"></label>'
 			. '<input type="hidden" name="' . esc_attr( self::FIELD ) . '" value="">'
 			. '</div>'
-			. '<p class="shouse-hp-status" role="status" aria-live="polite" hidden></p>'
+			. '<p class="shouse-hp-status" role="status" aria-live="polite" aria-atomic="false" style="margin-block:1em" hidden></p>'
 			. '<noscript><p>' . esc_html__( 'JavaScript and cookies are required to submit this form. Please enable them and reload the page.', 'shouse' ) . '</p></noscript>';
 	}
 
