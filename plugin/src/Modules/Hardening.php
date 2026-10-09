@@ -41,7 +41,9 @@ final class Hardening extends AbstractModule {
 			'safe_default_role' => true,
 			'login_errors'      => true,
 			'hide_version'      => true,
+			'reduce_discovery'  => false,
 			'xmlrpc'            => true,
+			'disable_pingbacks' => true,
 			'headers'           => true,
 			'hsts'              => false,
 		];
@@ -103,10 +105,20 @@ final class Hardening extends AbstractModule {
 				'type'  => 'toggle',
 				'label' => __( 'Hide the WordPress version', 'shouse' ),
 			],
+			'reduce_discovery'  => [
+				'type'  => 'toggle',
+				'label' => __( 'Reduce passive WordPress discovery', 'shouse' ),
+				'help'  => __( 'Remove REST API discovery links, RSD, Windows Live Writer and shortlinks from page metadata and headers. REST endpoints and asset versions keep working. Some publishing clients may need manual configuration; this does not hide WordPress from a determined scanner.', 'shouse' ),
+			],
 			'xmlrpc'            => [
 				'type'  => 'toggle',
 				'label' => __( 'Disable XML-RPC', 'shouse' ),
 				'help'  => __( 'xmlrpc.php answers 403. The WordPress mobile app and old desktop editors stop working with this site. Skipped automatically when Jetpack or WooPayments is active.', 'shouse' ),
+			],
+			'disable_pingbacks' => [
+				'type'  => 'toggle',
+				'label' => __( 'Disable XML-RPC pingbacks', 'shouse' ),
+				'help'  => __( 'Remove pingback methods and the X-Pingback header, including when Jetpack or WooPayments needs authenticated XML-RPC. Other XML-RPC methods are unchanged.', 'shouse' ),
 			],
 			'headers'           => [
 				'type'  => 'toggle',
@@ -143,10 +155,21 @@ final class Hardening extends AbstractModule {
 			remove_action( 'wp_head', 'wp_generator' );
 			add_filter( 'the_generator', '__return_empty_string' );
 		}
-		if ( $this->feature_on( 'xmlrpc' ) ) {
-			add_filter( 'xmlrpc_enabled', '__return_false' );
+		if ( $this->feature_on( 'reduce_discovery' ) ) {
+			remove_action( 'wp_head', 'rest_output_link_wp_head' );
+			remove_action( 'template_redirect', 'rest_output_link_header', 11 );
+			remove_action( 'wp_head', 'rsd_link' );
+			remove_action( 'wp_head', 'wlwmanifest_link' );
+			remove_action( 'wp_head', 'wp_shortlink_wp_head' );
+			remove_action( 'template_redirect', 'wp_shortlink_header', 11 );
+		}
+		$disable_xmlrpc = $this->feature_on( 'xmlrpc' );
+		if ( $disable_xmlrpc || $this->feature_on( 'disable_pingbacks' ) ) {
 			add_filter( 'xmlrpc_methods', [ $this, 'drop_pingback_methods' ] );
 			add_filter( 'wp_headers', [ $this, 'drop_pingback_header' ] );
+		}
+		if ( $disable_xmlrpc ) {
+			add_filter( 'xmlrpc_enabled', '__return_false' );
 			remove_action( 'wp_head', 'rsd_link' );
 			add_action( 'init', [ $this, 'deny_xmlrpc_request' ], 0 );
 		}
@@ -321,7 +344,11 @@ final class Hardening extends AbstractModule {
 	 * @return array<string, string>
 	 */
 	public function drop_pingback_header( array $headers ): array {
-		unset( $headers['X-Pingback'] );
+		foreach ( array_keys( $headers ) as $name ) {
+			if ( 0 === strcasecmp( $name, 'X-Pingback' ) ) {
+				unset( $headers[ $name ] );
+			}
+		}
 		return $headers;
 	}
 
